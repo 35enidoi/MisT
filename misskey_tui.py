@@ -3,10 +3,13 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions
+from random import randint
 import sys
 
 class MkAPIs():
     def __init__(self) -> None:
+        self.theme = "default"
+
         self.instance="misskey.io"
         self.i = None
         self.mk = None
@@ -20,8 +23,10 @@ class MkAPIs():
         bef_mk = self.mk
         try:
             self.mk=Misskey(self.instance,self.i)
+            return True
         except exceptions.MisskeyAPIException as e:
             self.mk = bef_mk
+            return False
 
     def get_note(self):
         try:
@@ -45,6 +50,7 @@ class NoteView(Frame):
                                        reduce_cpu=True,
                                        can_scroll=False)
         self.msk_ = msk
+        self.set_theme(self.msk_.theme)
         layout = Layout([1,98,1])
         layout2 = Layout([1,1,1,1,1])
         self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
@@ -126,6 +132,7 @@ class ConfigMenu(Frame):
                                        reduce_cpu=True,
                                        can_scroll=False)
         self.msk_ = msk
+        self.set_theme(self.msk_.theme)
         layout = Layout([screen.width-17,1,16])
         self.add_layout(layout)
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
@@ -134,13 +141,16 @@ class ConfigMenu(Frame):
         layout.add_widget(VerticalDivider(screen.height),1)
         layout.add_widget(Button("Return",self.return_),2)
         layout.add_widget(Button("Change TL",self.poptl),2)
+        layout.add_widget(Button("Change Theme",self.poptheme),2)
         layout.add_widget(Button("Version",self.version_),2)
         layout.add_widget(Button("Clear",self.clear_),2)
         self.fix()
-    
+
     def version_(self):
-        version = "MisT v0.0.1"
-        self.txtbx.value += version+"\n\nwrite by 35enidoi\n@iodine53@misskey.io\n"
+        with open(r"misttexts.txt", "r") as f:
+            mist_figs = (f.read()).split("\n\n")
+        version = "v0.0.1"
+        self._txtbxput(mist_figs[randint(0,len(mist_figs)-1)]+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
         self.txtbx.value = ""
@@ -148,22 +158,40 @@ class ConfigMenu(Frame):
     def poptl(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl, has_shadow=True))
 
+    def poptheme(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright"],on_close=self._ser_theme, has_shadow=True))
+
     def _ser_tl(self,arg):
         if arg == 0:
             if self.msk_.i is not None:
                 self.msk_.tl = "HTL"
-                self.txtbx.value += "change TL:HomeTL\n"
+                self._txtbxput("change TL:HomeTL")
             else:
-                self.txtbx.value += "HTL is credential required\n"
+                self._txtbxput("HTL is credential required")
         elif arg == 1:
             self.msk_.tl = "LTL"
-            self.txtbx.value += "change TL:LocalTL\n"
+            self._txtbxput("change TL:LocalTL")
         elif arg == 2:
             self.msk_.tl = "STL"
-            self.txtbx.value += "change TL:SocialTL\n"
+            self._txtbxput("change TL:SocialTL")
         elif arg == 3:
             self.msk_.tl = "GTL"
-            self.txtbx.value += "change TL:GlobalTL\n"
+            self._txtbxput("change TL:GlobalTL")
+
+    def _ser_theme(self,arg):
+        if arg == 0:
+            self.msk_.theme = "default"
+        elif arg == 1:
+            self.msk_.theme = "monochrome"
+        elif arg == 2:
+            self.msk_.theme = "green"
+        elif arg == 3:
+            self.msk_.theme = "bright"
+        raise ResizeScreenError("self error")
+
+    def _txtbxput(self,*arg):
+        for i in arg:
+            self.txtbx.value += str(i)+"\n"
 
     @staticmethod
     def return_():
