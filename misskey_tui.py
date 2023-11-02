@@ -80,7 +80,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self.note.value += "something occured or welcome to Misskey TUI!"
+            self._noteput("something occured or welcome to MisT!")
         else:
             noteval = self.msk_.notes[self.msk_.nowpoint]
             if noteval["user"]["host"] is None:
@@ -88,11 +88,9 @@ class NoteView(Frame):
             else:
                 username = f'@{noteval["user"]["username"]}@{noteval["user"]["host"]}'
             if noteval["renoteId"] is not None:
-                self.note.value += f"{noteval['user']['name']} [{username}] was renoted\n"
-                self.note.value += str(noteval["text"])+"\n"
+                self._noteput(f"{noteval['user']['name']} [{username}] was renoted", "-"*(self.screen.width-8), noteval["text"])
             else:
-                self.note.value += f"{noteval['user']['name']} [{username}] was noted\n"
-                self.note.value += str(noteval["text"])+"\n"
+                self._noteput(f"{noteval['user']['name']} [{username}] was noted", "-"*(self.screen.width-8), noteval["text"])
         if self.msk_.nowpoint == 0:
             self._move_l.disabled = True
             self.switch_focus(self.layout2,2,0)
@@ -103,6 +101,10 @@ class NoteView(Frame):
             self.switch_focus(self.layout2,1,0)
         else:
             self._move_r.disabled = False
+
+    def _noteput(self,*arg):
+        for i in arg:
+            self.note.value += str(i)+"\n"
 
     def _quit(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes, has_shadow=True))
@@ -124,7 +126,7 @@ class ConfigMenu(Frame):
                                        reduce_cpu=True,
                                        can_scroll=False)
         self.msk_ = msk
-        layout = Layout([screen.width-15,1,14])
+        layout = Layout([screen.width-17,1,16])
         self.add_layout(layout)
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         layout.add_widget(self.txtbx)
@@ -137,8 +139,8 @@ class ConfigMenu(Frame):
         self.fix()
     
     def version_(self):
-        varsion = "v 0.0.1"
-        self.txtbx.value += varsion+"\n\nwrite by 35enidoi\n@iodine53@misskey.io\n"
+        version = "MisT v0.0.1"
+        self.txtbx.value += version+"\n\nwrite by 35enidoi\n@iodine53@misskey.io\n"
 
     def clear_(self):
         self.txtbx.value = ""
@@ -167,7 +169,7 @@ class ConfigMenu(Frame):
     def return_():
         raise NextScene("Main")
 
-def weap(screen, scene):
+def wrap(screen, scene):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"), Scene([ConfigMenu(screen, msk)], -1, name="Configration")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
@@ -175,7 +177,7 @@ msk = MkAPIs()
 last_scene = None
 while True:
     try:
-        Screen.wrapper(weap, catch_interrupt=True, arguments=[last_scene])
+        Screen.wrapper(wrap, catch_interrupt=True, arguments=[last_scene])
         sys.exit(0)
     except ResizeScreenError as e:
         last_scene = e.scene
