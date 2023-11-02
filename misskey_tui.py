@@ -3,6 +3,7 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions
+from random import randint
 import sys
 
 class MkAPIs():
@@ -20,8 +21,10 @@ class MkAPIs():
         bef_mk = self.mk
         try:
             self.mk=Misskey(self.instance,self.i)
+            return True
         except exceptions.MisskeyAPIException as e:
             self.mk = bef_mk
+            return False
 
     def get_note(self):
         try:
@@ -137,10 +140,12 @@ class ConfigMenu(Frame):
         layout.add_widget(Button("Version",self.version_),2)
         layout.add_widget(Button("Clear",self.clear_),2)
         self.fix()
-    
+
     def version_(self):
-        version = "MisT v0.0.1"
-        self.txtbx.value += version+"\n\nwrite by 35enidoi\n@iodine53@misskey.io\n"
+        with open(r"misttexts.txt", "r") as f:
+            mist_figs = (f.read()).split("\n\n")
+        version = "v0.0.1"
+        self._txtbxput(mist_figs[randint(0,len(mist_figs)-1)]+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
         self.txtbx.value = ""
@@ -152,18 +157,22 @@ class ConfigMenu(Frame):
         if arg == 0:
             if self.msk_.i is not None:
                 self.msk_.tl = "HTL"
-                self.txtbx.value += "change TL:HomeTL\n"
+                self._txtbxput("change TL:HomeTL")
             else:
-                self.txtbx.value += "HTL is credential required\n"
+                self._txtbxput("HTL is credential required")
         elif arg == 1:
             self.msk_.tl = "LTL"
-            self.txtbx.value += "change TL:LocalTL\n"
+            self._txtbxput("change TL:LocalTL")
         elif arg == 2:
             self.msk_.tl = "STL"
-            self.txtbx.value += "change TL:SocialTL\n"
+            self._txtbxput("change TL:SocialTL")
         elif arg == 3:
             self.msk_.tl = "GTL"
-            self.txtbx.value += "change TL:GlobalTL\n"
+            self._txtbxput("change TL:GlobalTL")
+
+    def _txtbxput(self,*arg):
+        for i in arg:
+            self.txtbx.value += str(i)+"\n"
 
     @staticmethod
     def return_():
