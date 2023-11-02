@@ -1,0 +1,181 @@
+from asciimatics.scene import Scene
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider
+from asciimatics.screen import Screen
+from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
+from misskey import Misskey, exceptions
+import sys
+
+class MkAPIs():
+    def __init__(self) -> None:
+        self.instance="misskey.io"
+        self.i = None
+        self.mk = None
+        self.tl = "LTL"
+        self.tl_len = 10
+        self.nowpoint = 0
+        self.notes = []
+        self.reload()
+
+    def reload(self):
+        bef_mk = self.mk
+        try:
+            self.mk=Misskey(self.instance,self.i)
+        except exceptions.MisskeyAPIException as e:
+            self.mk = bef_mk
+
+    def get_note(self):
+        try:
+            if self.tl == "HTL":
+                self.notes = self.mk.notes_timeline(self.tl_len)
+            elif self.tl == "LTL":
+                self.notes = self.mk.notes_local_timeline(self.tl_len)
+            elif self.tl == "STL":
+                self.notes = self.mk.notes_hybrid_timeline(self.tl_len)
+            elif self.tl == "GTL":
+                self.notes = self.mk.notes_global_timeline(self.tl_len)
+        except exceptions.MisskeyAPIException:
+            self.notes = []
+
+class NoteView(Frame):
+    def __init__(self, screen, msk):
+        super(NoteView, self).__init__(screen,
+                                       screen.height,
+                                       screen.width,
+                                       title="Notes",
+                                       reduce_cpu=True,
+                                       can_scroll=False)
+        self.msk_ = msk
+        layout = Layout([1,98,1])
+        layout2 = Layout([1,1,1,1,1])
+        self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
+        self._move_r = Button("Move R",self.move_r,name="move r")
+        self._move_l = Button("Move L",self.move_l,name="move l")
+        self.note.disabled = True
+        self.add_layout(layout)
+        self.add_layout(layout2)
+        layout.add_widget(self.note,1)
+        layout2.add_widget(Button("Quit",self._quit),0)
+        layout2.add_widget(self._move_l,1)
+        layout2.add_widget(self._move_r,2)
+        layout2.add_widget(Button("Note Get",self.get_note),3)
+        layout2.add_widget(Button("Config",self.config),4)
+        self.layout = layout
+        self.layout2 = layout2
+        self._note_reload()
+        self.fix()
+
+    def get_note(self):
+        self.msk_.get_note()
+        self.msk_.nowpoint=0
+        self._note_reload()
+
+    def move_r(self):
+        self.msk_.nowpoint += 1
+        self._note_reload()
+
+    def move_l(self):
+        self.msk_.nowpoint -= 1
+        self._note_reload()
+
+    def _note_reload(self):
+        self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
+        if len(self.msk_.notes) == 0:
+            self.note.value += "something occured or welcome to Misskey TUI!"
+        else:
+            noteval = self.msk_.notes[self.msk_.nowpoint]
+            if noteval["user"]["host"] is None:
+                username = f'@{noteval["user"]["username"]}@{self.msk_.instance}'
+            else:
+                username = f'@{noteval["user"]["username"]}@{noteval["user"]["host"]}'
+            if noteval["renoteId"] is not None:
+                self.note.value += f"{noteval['user']['name']} [{username}] was renoted\n"
+                self.note.value += str(noteval["text"])+"\n"
+            else:
+                self.note.value += f"{noteval['user']['name']} [{username}] was noted\n"
+                self.note.value += str(noteval["text"])+"\n"
+        if self.msk_.nowpoint == 0:
+            self._move_l.disabled = True
+            self.switch_focus(self.layout2,2,0)
+        else:
+            self._move_l.disabled = False
+        if (self.msk_.nowpoint == len(self.msk_.notes)-1) or (self.msk_.nowpoint == len(self.msk_.notes)):
+            self._move_r.disabled = True
+            self.switch_focus(self.layout2,1,0)
+        else:
+            self._move_r.disabled = False
+
+    def _quit(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes, has_shadow=True))
+
+    def _quit_yes(self,arg):
+        if arg == 0:
+            raise StopApplication("UserQuit")
+
+    @staticmethod
+    def config():
+        raise NextScene("Configration")
+
+class ConfigMenu(Frame):
+    def __init__(self, screen, msk):
+        super(ConfigMenu, self).__init__(screen,
+                                       screen.height,
+                                       screen.width,
+                                       title="ConfigMenu",
+                                       reduce_cpu=True,
+                                       can_scroll=False)
+        self.msk_ = msk
+        layout = Layout([screen.width-15,1,14])
+        self.add_layout(layout)
+        self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
+        layout.add_widget(self.txtbx)
+        self.txtbx.disabled=True
+        layout.add_widget(VerticalDivider(screen.height),1)
+        layout.add_widget(Button("Return",self.return_),2)
+        layout.add_widget(Button("Change TL",self.poptl),2)
+        layout.add_widget(Button("Version",self.version_),2)
+        layout.add_widget(Button("Clear",self.clear_),2)
+        self.fix()
+    
+    def version_(self):
+        varsion = "v 0.0.1"
+        self.txtbx.value += varsion+"\n\nwrite by 35enidoi\n@iodine53@misskey.io\n"
+
+    def clear_(self):
+        self.txtbx.value = ""
+
+    def poptl(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl, has_shadow=True))
+
+    def _ser_tl(self,arg):
+        if arg == 0:
+            if self.msk_.i is not None:
+                self.msk_.tl = "HTL"
+                self.txtbx.value += "change TL:HomeTL\n"
+            else:
+                self.txtbx.value += "HTL is credential required\n"
+        elif arg == 1:
+            self.msk_.tl = "LTL"
+            self.txtbx.value += "change TL:LocalTL\n"
+        elif arg == 2:
+            self.msk_.tl = "STL"
+            self.txtbx.value += "change TL:SocialTL\n"
+        elif arg == 3:
+            self.msk_.tl = "GTL"
+            self.txtbx.value += "change TL:GlobalTL\n"
+
+    @staticmethod
+    def return_():
+        raise NextScene("Main")
+
+def weap(screen, scene):
+    scenes = [Scene([NoteView(screen, msk)], -1, name="Main"), Scene([ConfigMenu(screen, msk)], -1, name="Configration")]
+    screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
+
+msk = MkAPIs()
+last_scene = None
+while True:
+    try:
+        Screen.wrapper(weap, catch_interrupt=True, arguments=[last_scene])
+        sys.exit(0)
+    except ResizeScreenError as e:
+        last_scene = e.scene
