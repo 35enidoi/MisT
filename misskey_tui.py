@@ -8,6 +8,8 @@ import sys
 
 class MkAPIs():
     def __init__(self) -> None:
+        self.theme = "default"
+
         self.instance="misskey.io"
         self.i = None
         self.mk = None
@@ -48,6 +50,7 @@ class NoteView(Frame):
                                        reduce_cpu=True,
                                        can_scroll=False)
         self.msk_ = msk
+        self.set_theme(self.msk_.theme)
         layout = Layout([1,98,1])
         layout2 = Layout([1,1,1,1,1])
         self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
@@ -129,6 +132,7 @@ class ConfigMenu(Frame):
                                        reduce_cpu=True,
                                        can_scroll=False)
         self.msk_ = msk
+        self.set_theme(self.msk_.theme)
         layout = Layout([screen.width-17,1,16])
         self.add_layout(layout)
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
@@ -137,6 +141,7 @@ class ConfigMenu(Frame):
         layout.add_widget(VerticalDivider(screen.height),1)
         layout.add_widget(Button("Return",self.return_),2)
         layout.add_widget(Button("Change TL",self.poptl),2)
+        layout.add_widget(Button("Change Theme",self.poptheme),2)
         layout.add_widget(Button("Version",self.version_),2)
         layout.add_widget(Button("Clear",self.clear_),2)
         self.fix()
@@ -152,6 +157,9 @@ class ConfigMenu(Frame):
 
     def poptl(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl, has_shadow=True))
+
+    def poptheme(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright"],on_close=self._ser_theme, has_shadow=True))
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -169,6 +177,17 @@ class ConfigMenu(Frame):
         elif arg == 3:
             self.msk_.tl = "GTL"
             self._txtbxput("change TL:GlobalTL")
+
+    def _ser_theme(self,arg):
+        if arg == 0:
+            self.msk_.theme = "default"
+        elif arg == 1:
+            self.msk_.theme = "monochrome"
+        elif arg == 2:
+            self.msk_.theme = "green"
+        elif arg == 3:
+            self.msk_.theme = "bright"
+        raise ResizeScreenError("self error")
 
     def _txtbxput(self,*arg):
         for i in arg:
