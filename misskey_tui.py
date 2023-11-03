@@ -3,7 +3,6 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from pyfiglet import figlet_format
-import requests
 from misskey import Misskey, exceptions
 from random import randint
 import sys
@@ -322,7 +321,7 @@ class CreateNote(Frame):
 
         # buttons create
         buttonnames = ("Note Create", "return")
-        on_click = (self.createnote, self.return_)
+        on_click = (self.popcreatenote, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -339,8 +338,16 @@ class CreateNote(Frame):
         # fix
         self.fix()
 
-    def createnote(self):
-        self.txtbx.value += "sorry, this is not working:("
+    def popcreatenote(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Are you sure about that?", ["Sure", "No"],self._ser_createnote))
+
+    def _ser_createnote(self,arg):
+        if arg == 0:
+            return_ = self.msk_.create_note(self.txtbx.value)
+            if return_ is not None:
+                self._scene.add_effect(PopUpDialog(self.screen,"Create note success :(", ["Ok"]))
+            else:
+                self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
 
     @staticmethod
     def return_():
