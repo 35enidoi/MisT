@@ -9,8 +9,9 @@ import sys
 
 class MkAPIs():
     def __init__(self) -> None:
+        # MisT settings
         self.theme = "default"
-
+        # Misskey py settings
         self.instance="misskey.io"
         self.i = None
         self.mk = None
@@ -140,7 +141,7 @@ class ConfigMenu(Frame):
                                        can_scroll=False)
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
-        layout = Layout([screen.width-19,1,18])
+        layout = Layout([screen.width-21,1,20])
         self.add_layout(layout)
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         layout.add_widget(self.txtbx)
@@ -183,8 +184,11 @@ class ConfigMenu(Frame):
             self.msk_.tl = "LTL"
             self._txtbxput("change TL:LocalTL")
         elif arg == 2:
-            self.msk_.tl = "STL"
-            self._txtbxput("change TL:SocialTL")
+            if self.msk_.i is not None:
+                self.msk_.tl = "STL"
+                self._txtbxput("change TL:SocialTL")
+            else:
+                self._txtbxput("STL is credential required")
         elif arg == 3:
             self.msk_.tl = "GTL"
             self._txtbxput("change TL:GlobalTL")
