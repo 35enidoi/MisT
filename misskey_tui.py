@@ -25,8 +25,10 @@ class MkAPIs():
         bef_mk = self.mk
         try:
             self.mk=Misskey(self.instance,self.i)
+            if self.i is not None:
+                self.mk.i()
             return True
-        except exceptions.MisskeyAPIException as e:
+        except exceptions.MisskeyAPIException:
             self.mk = bef_mk
             return False
 
@@ -126,7 +128,7 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def _quit(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes, has_shadow=True))
+        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes))
 
     def _quit_yes(self,arg):
         if arg == 0:
@@ -144,30 +146,36 @@ class ConfigMenu(Frame):
                                        title="ConfigMenu",
                                        reduce_cpu=True,
                                        can_scroll=False)
+        # initialize
         self.msk_ = msk
+        self._ok_value = ""
 
         # Layout create
         self.set_theme(self.msk_.theme)
         layout = Layout([screen.width,2,20])
         self.add_layout(layout)
+        self.layout = layout
 
         #txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         self.txt = Text()
-        self.txtbx.disabled = True
-        self.txt.disabled = True
 
         #buttons create
-        buttonnames = ["Return","Change TL","Change Theme","Version","Clear"]
-        onclicks = [self.return_,self.poptl,self.poptheme,self.version_,self.clear_]
-        buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
+        buttonnames = ("Return","Change TL","Change Theme","Version","Clear","TOKEN","OK")
+        onclicks = (self.return_,self.poptl,self.poptheme,self.version_,self.clear_,self.poptoken,self.ok_)
+        self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         #add widget
         layout.add_widget(self.txtbx,0)
         layout.add_widget(VerticalDivider(screen.height),1)
-        for i in buttons:
+        for i in self.buttons:
             layout.add_widget(i,2)
         layout.add_widget(self.txt,2)
+
+        #disables
+        self.txtbx.disabled = True
+        self.txt.disabled = True
+        self.buttons[-1].disabled = True
 
         self.fix()
 
@@ -185,10 +193,13 @@ class ConfigMenu(Frame):
         self.txtbx.value = ""
 
     def poptl(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl, has_shadow=True))
+        self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl))
 
     def poptheme(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme, has_shadow=True))
+        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme))
+
+    def poptoken(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"How to?", ["MiAuth(recommend)", "TOKEN", "return"],self._ser_token))
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -222,6 +233,33 @@ class ConfigMenu(Frame):
         elif arg == 4:
             return
         raise ResizeScreenError("self error")
+
+    def _ser_token(self,arg):
+        if arg == 0:
+            self._txtbxput("this is not working sorry :(")
+        elif arg == 1:
+            self._ok_value="TOKEN"
+            self.txt.disabled = False
+            for i in self.buttons:
+                i.disabled = True
+            self.buttons[-1].disabled = False
+            self.switch_focus(self.layout,2,len(self.buttons))
+
+    def ok_(self):
+        if self._ok_value == "TOKEN":
+            self.msk_.i = self.txt.value
+            is_ok = self.msk_.reload()
+            if is_ok:
+                self._txtbxput("TOKEN check OK :)")
+            else:
+                self._txtbxput("TOKEN check fail :(")
+        self._ok_value = ""
+        self.txt.value = ""
+        self.txt.disabled = True
+        for i in self.buttons:
+            i.disabled = False
+        self.buttons[-1].disabled = True
+        self.switch_focus(self.layout,2,0)
 
     def _txtbxput(self,*arg):
         for i in arg:
