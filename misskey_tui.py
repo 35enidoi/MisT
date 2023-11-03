@@ -1,5 +1,5 @@
 from asciimatics.scene import Scene
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, RadioButtons
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from pyfiglet import figlet_format
@@ -145,18 +145,30 @@ class ConfigMenu(Frame):
                                        reduce_cpu=True,
                                        can_scroll=False)
         self.msk_ = msk
+
+        # Layout create
         self.set_theme(self.msk_.theme)
-        layout = Layout([screen.width-21,1,20])
+        layout = Layout([screen.width,2,20])
         self.add_layout(layout)
+
+        #txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
-        layout.add_widget(self.txtbx)
-        self.txtbx.disabled=True
+        self.txt = Text()
+        self.txtbx.disabled = True
+        self.txt.disabled = True
+
+        #buttons create
+        buttonnames = ["Return","Change TL","Change Theme","Version","Clear"]
+        onclicks = [self.return_,self.poptl,self.poptheme,self.version_,self.clear_]
+        buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
+
+        #add widget
+        layout.add_widget(self.txtbx,0)
         layout.add_widget(VerticalDivider(screen.height),1)
-        layout.add_widget(Button("Return",self.return_),2)
-        layout.add_widget(Button("Change TL",self.poptl),2)
-        layout.add_widget(Button("Change Theme",self.poptheme),2)
-        layout.add_widget(Button("Version",self.version_),2)
-        layout.add_widget(Button("Clear",self.clear_),2)
+        for i in buttons:
+            layout.add_widget(i,2)
+        layout.add_widget(self.txt,2)
+
         self.fix()
 
     def version_(self):
@@ -176,7 +188,7 @@ class ConfigMenu(Frame):
         self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl, has_shadow=True))
 
     def poptheme(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright"],on_close=self._ser_theme, has_shadow=True))
+        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme, has_shadow=True))
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -207,6 +219,8 @@ class ConfigMenu(Frame):
             self.msk_.theme = "green"
         elif arg == 3:
             self.msk_.theme = "bright"
+        elif arg == 4:
+            return
         raise ResizeScreenError("self error")
 
     def _txtbxput(self,*arg):
