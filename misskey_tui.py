@@ -3,6 +3,7 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from pyfiglet import figlet_format
+import requests
 from misskey import Misskey, exceptions
 from random import randint
 import sys
@@ -35,15 +36,21 @@ class MkAPIs():
     def get_note(self):
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(self.tl_len)
+                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(self.tl_len)
+                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(self.tl_len)
+                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(self.tl_len)
+                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False)
         except exceptions.MisskeyAPIException:
             self.notes = []
+    
+    def create_note(self, text):
+        try:
+            return self.mk.notes_create(text)
+        except exceptions.MisskeyAPIException:
+            return None
 
 class NoteView(Frame):
     def __init__(self, screen, msk):
@@ -53,24 +60,37 @@ class NoteView(Frame):
                                        title="Notes",
                                        reduce_cpu=True,
                                        can_scroll=False)
+        # initialize
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
-        layout = Layout([1,98,1])
-        layout2 = Layout([1,1,1,1,1])
+
+        # notebox create
         self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
-        self._move_r = Button("Move R",self.move_r,name="move r")
-        self._move_l = Button("Move L",self.move_l,name="move l")
         self.note.disabled = True
+
+        # button create
+        buttonnames = ("Quit", "Move L", "Move R", "Note Get", "Create Note", "Config")
+        on_click = (self._quit,self.move_l,self.move_r,self.get_note,self.createnote,self.config)
+        self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
+
+        # layout create
+        layout = Layout([100])
+        layout2 = Layout([1 for _ in range(len(self.buttons))])
         self.add_layout(layout)
         self.add_layout(layout2)
-        layout.add_widget(self.note,1)
-        layout2.add_widget(Button("Quit",self._quit),0)
-        layout2.add_widget(self._move_l,1)
-        layout2.add_widget(self._move_r,2)
-        layout2.add_widget(Button("Note Get",self.get_note),3)
-        layout2.add_widget(Button("Config",self.config),4)
+
+        # add widget
+        layout.add_widget(self.note)
+        for i in range(len(self.buttons)):
+            layout2.add_widget(self.buttons[i],i)
+
+        # define selfs
+        self._move_l = self.buttons[1]
+        self._move_r = self.buttons[2]
         self.layout = layout
         self.layout2 = layout2
+
+        # fix
         self._note_reload()
         self.fix()
 
@@ -106,7 +126,7 @@ class NoteView(Frame):
             else:
                 self._noteput(f"{name} [{username}] was noted    noteId:{noteval['id']}", "-"*(self.screen.width-8))
             if noteval["cw"] is not None:
-                self._noteput("CW detect!","~"*(self.screen.width-8))
+                self._noteput("CW detect!","~"*(self.screen.width-8),noteval["cw"])
             self._noteput(noteval["text"],"")
             if len(noteval["files"]) != 0:
                 self._noteput(f'{len(noteval["files"])} files')
@@ -138,6 +158,10 @@ class NoteView(Frame):
     def config():
         raise NextScene("Configration")
 
+    @staticmethod
+    def createnote():
+        raise NextScene("CreateNote")
+
 class ConfigMenu(Frame):
     def __init__(self, screen, msk):
         super(ConfigMenu, self).__init__(screen,
@@ -150,33 +174,34 @@ class ConfigMenu(Frame):
         self.msk_ = msk
         self._ok_value = ""
 
+        # txts create
+        self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
+        self.txt = Text()
+
+        # buttons create
+        buttonnames = ("Return","Change TL","Change Theme","Version","Clear","TOKEN","OK")
+        onclicks = (self.return_,self.poptl,self.poptheme,self.version_,self.clear_,self.poptoken,self.ok_)
+        self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
+
         # Layout create
         self.set_theme(self.msk_.theme)
         layout = Layout([screen.width,2,20])
         self.add_layout(layout)
         self.layout = layout
 
-        #txts create
-        self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
-        self.txt = Text()
-
-        #buttons create
-        buttonnames = ("Return","Change TL","Change Theme","Version","Clear","TOKEN","OK")
-        onclicks = (self.return_,self.poptl,self.poptheme,self.version_,self.clear_,self.poptoken,self.ok_)
-        self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
-
-        #add widget
+        # add widget
         layout.add_widget(self.txtbx,0)
         layout.add_widget(VerticalDivider(screen.height),1)
         for i in self.buttons:
             layout.add_widget(i,2)
         layout.add_widget(self.txt,2)
 
-        #disables
+        # disables
         self.txtbx.disabled = True
         self.txt.disabled = True
         self.buttons[-1].disabled = True
 
+        # fix
         self.fix()
 
     def version_(self):
@@ -186,7 +211,7 @@ class ConfigMenu(Frame):
             mist_figs = "MisT\n"
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
-        version = "v0.0.1"
+        version = "v0.1.0"
         self._txtbxput(mist_figs+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
@@ -269,8 +294,52 @@ class ConfigMenu(Frame):
     def return_():
         raise NextScene("Main")
 
+class CreateNote(Frame):
+    def __init__(self, screen, msk):
+        super(CreateNote, self).__init__(screen,
+                                      screen.height,
+                                      screen.width,
+                                      title="CreateNote",
+                                      reduce_cpu=True,
+                                      can_scroll=False)
+        # initialize
+        self.msk_ = msk
+        self.set_theme(self.msk_.theme)
+
+        # txtbox create
+        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True)
+        self.txtbx.value += "Tab to change widget"
+
+        # buttons create
+        buttonnames = ("Note Create","return")
+        on_click = (self.createnote,self.return_)
+        self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
+
+        # Layout create
+        layout = Layout([100])
+        layout2 = Layout([1 for _ in range(len(self.buttons))])
+        self.add_layout(layout)
+        self.add_layout(layout2)
+
+        # add widget
+        layout.add_widget(self.txtbx)
+        for i in range(len(self.buttons)):
+            layout2.add_widget(self.buttons[i],i)
+
+        # fix
+        self.fix()
+
+    def createnote(self):
+        self.txtbx.value += "sorry, this is not working:("
+
+    @staticmethod
+    def return_():
+        raise NextScene("Main")
+
 def wrap(screen, scene):
-    scenes = [Scene([NoteView(screen, msk)], -1, name="Main"), Scene([ConfigMenu(screen, msk)], -1, name="Configration")]
+    scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
+              Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
+              Scene([CreateNote(screen,msk)], -1, name="CreateNote")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 msk = MkAPIs()
