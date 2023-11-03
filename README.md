@@ -1,9 +1,9 @@
 # MisT
 Misskey in TUI Program  
-Mis skey in T UI  
+**Mis** skey in **T** UI  
 MisT  
 ## 説明  
-TUIのMisskeyクライアントです  
+テキストベースのMisskeyクライアントです  
 なんでGUIでもなくCUIでもないのかというと**かっこいいから**です    
 (CUIだと操作が難しい、GUIだと他にもある、じゃあTUIでやろうっていうのもあります)  
 ## 使ってるライブラリ  
