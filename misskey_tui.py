@@ -69,8 +69,10 @@ class NoteView(Frame):
         self.note.disabled = True
 
         # button create
-        buttonnames = ("Quit", "Move L", "Move R", "Note Get", "Create Note", "Config")
-        on_click = (self._quit,self.move_l,self.move_r,self.get_note,self.createnote,self.config)
+        buttonnames = ("Quit", "Move L", "Move R",
+                       "Note Get", "Create Note", "Config")
+        on_click = (self._quit, self.move_l, self.move_r,
+                    self.get_note, self.createnote, self.config)
         self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
 
         # layout create
@@ -150,7 +152,8 @@ class NoteView(Frame):
     def _quit(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes))
 
-    def _quit_yes(self,arg):
+    @staticmethod
+    def _quit_yes(arg):
         if arg == 0:
             raise StopApplication("UserQuit")
 
@@ -179,8 +182,12 @@ class ConfigMenu(Frame):
         self.txt = Text()
 
         # buttons create
-        buttonnames = ("Return","Change TL","Change Theme","Version","Clear","TOKEN","OK")
-        onclicks = (self.return_,self.poptl,self.poptheme,self.version_,self.clear_,self.poptoken,self.ok_)
+        buttonnames = ("Return", "Change TL", "Change Theme",
+                       "TOKEN", "Version", "Clear",
+                       "Refresh", "OK")
+        onclicks = (self.return_, self.poptl, self.poptheme,
+                    self.poptoken, self.version_, self.clear_,
+                    self.refresh_,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -216,6 +223,10 @@ class ConfigMenu(Frame):
 
     def clear_(self):
         self.txtbx.value = ""
+
+    def _txtbxput(self,*arg):
+        for i in arg:
+            self.txtbx.value += str(i)+"\n"
 
     def poptl(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl))
@@ -286,9 +297,8 @@ class ConfigMenu(Frame):
         self.buttons[-1].disabled = True
         self.switch_focus(self.layout,2,0)
 
-    def _txtbxput(self,*arg):
-        for i in arg:
-            self.txtbx.value += str(i)+"\n"
+    def refresh_(self):
+        raise ResizeScreenError("self error", self._scene)
 
     @staticmethod
     def return_():
@@ -311,8 +321,8 @@ class CreateNote(Frame):
         self.txtbx.value += "Tab to change widget"
 
         # buttons create
-        buttonnames = ("Note Create","return")
-        on_click = (self.createnote,self.return_)
+        buttonnames = ("Note Create", "return")
+        on_click = (self.createnote, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
