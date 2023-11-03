@@ -1,7 +1,8 @@
 from asciimatics.scene import Scene
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, RadioButtons
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
+from pyfiglet import figlet_format
 from misskey import Misskey, exceptions
 from random import randint
 import sys
@@ -94,9 +95,15 @@ class NoteView(Frame):
             else:
                 username = f'@{noteval["user"]["username"]}@{noteval["user"]["host"]}'
             if noteval["renoteId"] is not None:
-                self._noteput(f"{noteval['user']['name']} [{username}] was renoted", "-"*(self.screen.width-8), noteval["text"])
+                self._noteput(f"{noteval['user']['name']} [{username}] was renoted", "-"*(self.screen.width-8))
             else:
-                self._noteput(f"{noteval['user']['name']} [{username}] was noted", "-"*(self.screen.width-8), noteval["text"])
+                self._noteput(f"{noteval['user']['name']} [{username}] was noted", "-"*(self.screen.width-8))
+            if noteval["cw"] is not None:
+                self._noteput("CW detect!","~"*(self.screen.width-8))
+            self._noteput(noteval["text"],"")
+            if len(noteval["files"]) != 0:
+                self._noteput(f'{len(noteval["files"])} files')
+            self._noteput(f'{noteval["renoteCount"]} renotes, {noteval["repliesCount"]} replys',)
         if self.msk_.nowpoint == 0:
             self._move_l.disabled = True
             self.switch_focus(self.layout2,2,0)
@@ -133,7 +140,7 @@ class ConfigMenu(Frame):
                                        can_scroll=False)
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
-        layout = Layout([screen.width-17,1,16])
+        layout = Layout([screen.width-19,1,18])
         self.add_layout(layout)
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         layout.add_widget(self.txtbx)
@@ -147,10 +154,14 @@ class ConfigMenu(Frame):
         self.fix()
 
     def version_(self):
-        with open(r"misttexts.txt", "r") as f:
-            mist_figs = (f.read()).split("\n\n")
+        fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
+        randomint = randint(0,len(fonts))
+        if randomint == len(fonts):
+            mist_figs = "MisT\n"
+        else:
+            mist_figs = figlet_format("MisT",fonts[randomint])
         version = "v0.0.1"
-        self._txtbxput(mist_figs[randint(0,len(mist_figs)-1)]+version,"","write by 35enidoi","@iodine53@misskey.io","")
+        self._txtbxput(mist_figs+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
         self.txtbx.value = ""
