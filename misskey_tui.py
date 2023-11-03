@@ -88,23 +88,28 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput("something occured or welcome to MisT!")
+            self._noteput("something occured while noteget or welcome to MisT!")
         else:
             noteval = self.msk_.notes[self.msk_.nowpoint]
             if noteval["user"]["host"] is None:
                 username = f'@{noteval["user"]["username"]}@{self.msk_.instance}'
             else:
                 username = f'@{noteval["user"]["username"]}@{noteval["user"]["host"]}'
-            if noteval["renoteId"] is not None:
-                self._noteput(f"{noteval['user']['name']} [{username}] was renoted", "-"*(self.screen.width-8))
+            if noteval["user"]["name"] is None:
+                name = noteval["user"]["username"]
             else:
-                self._noteput(f"{noteval['user']['name']} [{username}] was noted", "-"*(self.screen.width-8))
+                name = noteval["user"]["name"]
+            if noteval["renoteId"] is not None:
+                self._noteput(f"{name} [{username}] was renoted    noteId:{noteval['id']}", "-"*(self.screen.width-8))
+            else:
+                self._noteput(f"{name} [{username}] was noted    noteId:{noteval['id']}", "-"*(self.screen.width-8))
             if noteval["cw"] is not None:
                 self._noteput("CW detect!","~"*(self.screen.width-8))
             self._noteput(noteval["text"],"")
             if len(noteval["files"]) != 0:
                 self._noteput(f'{len(noteval["files"])} files')
-            self._noteput(f'{noteval["renoteCount"]} renotes, {noteval["repliesCount"]} replys',)
+            self._noteput(f'{noteval["renoteCount"]} renotes {noteval["repliesCount"]} replys {sum(noteval["reactions"].values())} reactions',
+                          "  ".join(f'{i.replace("@.","")}[{noteval["reactions"][i]}]' for i in noteval["reactions"].keys()))
         if self.msk_.nowpoint == 0:
             self._move_l.disabled = True
             self.switch_focus(self.layout2,2,0)
