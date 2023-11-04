@@ -14,6 +14,8 @@ class MkAPIs():
     def __init__(self) -> None:
         # MisT settings
         self.theme = "default"
+        self.cfgtxts = ""
+        self.crnotetxts = "Tab to change widget"
         # Misskey py settings
         self.instance="misskey.io"
         self.i = None
@@ -51,8 +53,12 @@ class MkAPIs():
     def get_instance_icon(self):
         try:
             iconurl = self.mk.meta()["iconUrl"]
-            icon = io.BytesIO(requests.get(iconurl).content)
-            return icon
+            returns = requests.get(iconurl)
+            if returns.status_code == 200:
+                icon = io.BytesIO(returns.content)
+                return icon
+            else:
+                raise exceptions.MisskeyAPIException
         except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
             return "Error"
 
@@ -196,6 +202,7 @@ class ConfigMenu(Frame):
         # txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         self.txt = Text()
+        self.txtbx.value = self.msk_.cfgtxts
 
         # buttons create
         buttonnames = ("Return", "Change TL", "Change Theme",
@@ -239,10 +246,12 @@ class ConfigMenu(Frame):
 
     def clear_(self):
         self.txtbx.value = ""
+        self.msk_.cfgtxts = ""
 
     def _txtbxput(self,*arg):
         for i in arg:
             self.txtbx.value += str(i)+"\n"
+        self.msk_.cfgtxts = self.txtbx.value
 
     def poptl(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl))
@@ -319,10 +328,13 @@ class ConfigMenu(Frame):
             self.msk_.instance = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput("instance connected! :)","")
+                self._txtbxput("instance connected! :)")
                 icon_bytes = self.msk_.get_instance_icon()
-                icon = ImageFile(icon_bytes,self.screen.height//2)
-                self._txtbxput(icon)
+                if icon_bytes == "Error":
+                    self._txtbxput("error occured while get icon :(")
+                else:
+                    icon = ImageFile(icon_bytes,self.screen.height//2)
+                    self._txtbxput(icon)
             else:
                 self.msk_.instance = before_instance
                 self._txtbxput("instance connect fail :(")
@@ -355,8 +367,8 @@ class CreateNote(Frame):
         self.set_theme(self.msk_.theme)
 
         # txtbox create
-        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True)
-        self.txtbx.value += "Tab to change widget"
+        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,on_change=self.reminder)
+        self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
         buttonnames = ("Note Create", "return")
@@ -376,6 +388,9 @@ class CreateNote(Frame):
 
         # fix
         self.fix()
+
+    def reminder(self):
+        self.msk_.crnotetxts = self.txtbx.value
 
     def popcreatenote(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Are you sure about that?", ["Sure", "No"],self._ser_createnote))
