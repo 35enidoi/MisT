@@ -142,26 +142,9 @@ class NoteView(Frame):
         if len(self.msk_.notes) == 0:
             self._noteput("something occured while noteget or welcome to MisT!")
         else:
-            noteval = self.msk_.notes[self.msk_.nowpoint]
-            if noteval["user"]["host"] is None:
-                username = f'@{noteval["user"]["username"]}@{self.msk_.instance}'
-            else:
-                username = f'@{noteval["user"]["username"]}@{noteval["user"]["host"]}'
-            if noteval["user"]["name"] is None:
-                name = noteval["user"]["username"]
-            else:
-                name = noteval["user"]["name"]
-            if noteval["renoteId"] is not None:
-                self._noteput(f"{name} [{username}] was renoted    noteId:{noteval['id']}", "-"*(self.screen.width-8))
-            else:
-                self._noteput(f"{name} [{username}] was noted    noteId:{noteval['id']}", "-"*(self.screen.width-8))
-            if noteval["cw"] is not None:
-                self._noteput("CW detect!","~"*(self.screen.width-8),noteval["cw"])
-            self._noteput(noteval["text"],"")
-            if len(noteval["files"]) != 0:
-                self._noteput(f'{len(noteval["files"])} files')
-            self._noteput(f'{noteval["renoteCount"]} renotes {noteval["repliesCount"]} replys {sum(noteval["reactions"].values())} reactions',
-                          "  ".join(f'{i.replace("@.","")}[{noteval["reactions"][i]}]' for i in noteval["reactions"].keys()))
+            self._note_inp(self.msk_.notes[self.msk_.nowpoint])
+            if self.msk_.notes[self.msk_.nowpoint].get("renote"):
+                self._note_inp(self.msk_.notes[self.msk_.nowpoint]["renote"])
         if self.msk_.nowpoint == 0:
             self._move_l.disabled = True
             self.switch_focus(self.layout2,2,0)
@@ -172,6 +155,28 @@ class NoteView(Frame):
             self.switch_focus(self.layout2,1,0)
         else:
             self._move_r.disabled = False
+
+    def _note_inp(self,note):
+        if note["user"]["host"] is None:
+            username = f'@{note["user"]["username"]}@{self.msk_.instance}'
+        else:
+            username = f'@{note["user"]["username"]}@{note["user"]["host"]}'
+        if note["user"]["name"] is None:
+            name = note["user"]["username"]
+        else:
+            name = note["user"]["name"]
+        if note["renoteId"] is not None:
+            self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}", "-"*(self.screen.width-8))
+        else:
+            self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}", "-"*(self.screen.width-8))
+        if note["cw"] is not None:
+            self._noteput("CW detect!","~"*(self.screen.width-8),note["cw"])
+        self._noteput(note["text"],"")
+        if len(note["files"]) != 0:
+            self._noteput(f'{len(note["files"])} files')
+        self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
+                        "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()))
+        
 
     def _noteput(self,*arg):
         for i in arg:
