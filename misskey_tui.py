@@ -1,8 +1,10 @@
 from asciimatics.scene import Scene
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.screen import Screen
+from asciimatics.renderers import ImageFile
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 import requests
+import io
 from pyfiglet import figlet_format
 from misskey import Misskey, exceptions
 from random import randint
@@ -46,6 +48,14 @@ class MkAPIs():
         except exceptions.MisskeyAPIException:
             self.notes = []
     
+    def get_instance_icon(self):
+        try:
+            iconurl = self.mk.meta()["iconUrl"]
+            icon = io.BytesIO(requests.get(iconurl).content)
+            return icon
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
+            return "Error"
+
     def create_note(self, text):
         try:
             return self.mk.notes_create(text)
@@ -309,7 +319,10 @@ class ConfigMenu(Frame):
             self.msk_.instance = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput("instance connected! :)")
+                self._txtbxput("instance connected! :)","")
+                icon_bytes = self.msk_.get_instance_icon()
+                icon = ImageFile(icon_bytes,self.screen.height//2)
+                self._txtbxput(icon)
             else:
                 self.msk_.instance = before_instance
                 self._txtbxput("instance connect fail :(")
