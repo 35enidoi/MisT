@@ -40,7 +40,7 @@ class MkAPIs():
     def get_i(self):
         try:
             return self.mk.i()
-        except exceptions.MisskeyAPIException:
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
             return None
 
     def get_note(self):
@@ -53,8 +53,17 @@ class MkAPIs():
                 self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False)
             elif self.tl == "GTL":
                 self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False)
-        except exceptions.MisskeyAPIException:
+        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
             self.notes = []
+    
+    def note_update(self):
+        noteid = self.notes[self.nowpoint]["id"]
+        try:
+            new_note = self.mk.notes_show(noteid)
+            self.notes[self.nowpoint] = new_note
+            return True
+        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+            return False
     
     def get_instance_icon(self):
         try:
@@ -91,9 +100,9 @@ class NoteView(Frame):
 
         # button create
         buttonnames = ("Quit", "Move L", "Move R",
-                       "Note Get", "Create Note", "Config")
+                       "Noteupdate","Note Get", "Create Note", "Config")
         on_click = (self._quit, self.move_l, self.move_r,
-                    self.get_note, self.createnote, self.config)
+                    self.noteupdate,self.get_note, self.createnote, self.config)
         self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
 
         # layout create
@@ -116,9 +125,13 @@ class NoteView(Frame):
         # disable
         self.note.disabled = True
         if self.msk_.i is None:
-            self.buttons[4].disabled = True
+            self.buttons[-2].disabled = True
         else:
-            self.buttons[4].disabled = False
+            self.buttons[-2].disabled = False
+        if len(self.msk_.notes) == 0:
+            self.buttons[3].disabled = True
+        else:
+            self.buttons[3].disabled = False
 
         # fix
         self._note_reload()
@@ -128,6 +141,13 @@ class NoteView(Frame):
         self.msk_.get_note()
         self.msk_.nowpoint=0
         self._note_reload()
+    
+    def noteupdate(self):
+        is_ok = self.msk_.note_update()
+        if is_ok:
+            self._note_reload()
+        else:
+            self._scene.add_effect(PopUpDialog(self.screen,"something occured", ["ok"]))
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -141,7 +161,9 @@ class NoteView(Frame):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
             self._noteput("something occured while noteget or welcome to MisT!")
+            self.buttons[3].disabled = True
         else:
+            self.buttons[3].disabled = False
             self._note_inp(self.msk_.notes[self.msk_.nowpoint])
             if self.msk_.notes[self.msk_.nowpoint].get("renote"):
                 self._note_inp(self.msk_.notes[self.msk_.nowpoint]["renote"])
