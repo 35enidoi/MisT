@@ -236,9 +236,18 @@ class ConfigMenu(Frame):
 
     def version_(self):
         fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
-        randomint = randint(0,len(fonts))
+        randomint = randint(0,len(fonts)+1)
         if randomint == len(fonts):
             mist_figs = "MisT\n"
+        elif randomint == len(fonts)+1:
+            mist_figs = """
+MM     MM     TTTTTTTTTTT
+M M   M M  I       T
+M  M M  M  I  SSS  T
+M   M   M     S    T
+M       M  I  SSS  T
+M       M  I    S  T
+M       M  I  SSS  T """
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
         version = "v0.1.0"
