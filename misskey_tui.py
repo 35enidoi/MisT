@@ -2,6 +2,7 @@ from asciimatics.scene import Scene
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
+import requests
 from pyfiglet import figlet_format
 from misskey import Misskey, exceptions
 from random import randint
@@ -28,7 +29,7 @@ class MkAPIs():
             if self.i is not None:
                 self.mk.i()
             return True
-        except exceptions.MisskeyAPIException:
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
             self.mk = bef_mk
             return False
 
@@ -65,7 +66,6 @@ class NoteView(Frame):
 
         # notebox create
         self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
-        self.note.disabled = True
 
         # button create
         buttonnames = ("Quit", "Move L", "Move R",
@@ -90,6 +90,13 @@ class NoteView(Frame):
         self._move_r = self.buttons[2]
         self.layout = layout
         self.layout2 = layout2
+
+        # disable
+        self.note.disabled = True
+        if self.msk_.i is None:
+            self.buttons[4].disabled = True
+        else:
+            self.buttons[4].disabled = False
 
         # fix
         self._note_reload()
@@ -182,10 +189,10 @@ class ConfigMenu(Frame):
 
         # buttons create
         buttonnames = ("Return", "Change TL", "Change Theme",
-                       "TOKEN", "Version", "Clear",
+                       "TOKEN", "Instance", "Version", "Clear",
                        "Refresh", "OK")
         onclicks = (self.return_, self.poptl, self.poptheme,
-                    self.poptoken, self.version_, self.clear_,
+                    self.poptoken, self.instance_, self.version_, self.clear_,
                     self.refresh_,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
@@ -280,6 +287,15 @@ class ConfigMenu(Frame):
             self.buttons[-1].disabled = False
             self.switch_focus(self.layout,2,len(self.buttons))
 
+    def instance_(self):
+        self._ok_value = "INSTANCE"
+        self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
+        self.txt.disabled = False
+        for i in self.buttons:
+            i.disabled = True
+        self.buttons[-1].disabled = False
+        self.switch_focus(self.layout,2,len(self.buttons))
+
     def ok_(self):
         if self._ok_value == "TOKEN":
             self.msk_.i = self.txt.value
@@ -288,6 +304,16 @@ class ConfigMenu(Frame):
                 self._txtbxput("TOKEN check OK :)")
             else:
                 self._txtbxput("TOKEN check fail :(")
+        elif self._ok_value == "INSTANCE":
+            before_instance = self.msk_.instance
+            self.msk_.instance = self.txt.value
+            is_ok = self.msk_.reload()
+            if is_ok:
+                self._txtbxput("instance connected! :)")
+            else:
+                self.msk_.instance = before_instance
+                self._txtbxput("instance connect fail :(")
+            self._txtbxput(f"current instance:{self.msk_.instance}","")
         self._ok_value = ""
         self.txt.value = ""
         self.txt.disabled = True
