@@ -36,6 +36,12 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
             self.mk = bef_mk
             return False
+    
+    def get_i(self):
+        try:
+            return self.mk.i()
+        except exceptions.MisskeyAPIException:
+            return None
 
     def get_note(self):
         try:
@@ -269,7 +275,7 @@ M       M  I  SSS  T """
         self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme))
 
     def poptoken(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"How to?", ["MiAuth(recommend)", "TOKEN", "return"],self._ser_token))
+        self._scene.add_effect(PopUpDialog(self.screen,"How to?", ["MiAuth", "TOKEN", "return"],self._ser_token))
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -277,7 +283,7 @@ M       M  I  SSS  T """
                 self.msk_.tl = "HTL"
                 self._txtbxput("change TL:HomeTL")
             else:
-                self._txtbxput("HTL is credential required")
+                self._txtbxput("HTL is TOKEN required")
         elif arg == 1:
             self.msk_.tl = "LTL"
             self._txtbxput("change TL:LocalTL")
@@ -286,7 +292,7 @@ M       M  I  SSS  T """
                 self.msk_.tl = "STL"
                 self._txtbxput("change TL:SocialTL")
             else:
-                self._txtbxput("STL is credential required")
+                self._txtbxput("STL is TOKEN required")
         elif arg == 3:
             self.msk_.tl = "GTL"
             self._txtbxput("change TL:GlobalTL")
@@ -330,6 +336,11 @@ M       M  I  SSS  T """
             is_ok = self.msk_.reload()
             if is_ok:
                 self._txtbxput("TOKEN check OK :)")
+                i = self.msk_.get_i()
+                if i is None:
+                    self._txtbxput("fail to get your info :(")
+                else:
+                    self._txtbxput(f"Hello {i['name']}!")
             else:
                 self._txtbxput("TOKEN check fail :(")
         elif self._ok_value == "INSTANCE":
