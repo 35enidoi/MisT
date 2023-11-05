@@ -193,6 +193,9 @@ class NoteView(Frame):
             self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}", "-"*(self.screen.width-8))
         else:
             self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}", "-"*(self.screen.width-8))
+        if note["text"] is None:
+            if len(note["files"]) == 0:
+                return
         if note["cw"] is not None:
             self._noteput("CW detect!","~"*(self.screen.width-8),note["cw"])
         self._noteput(note["text"],"")
