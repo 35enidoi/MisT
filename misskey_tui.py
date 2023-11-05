@@ -1,7 +1,10 @@
 from asciimatics.scene import Scene
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, RadioButtons
 from asciimatics.screen import Screen
+from asciimatics.renderers import ImageFile
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
+import requests
+import io
 from pyfiglet import figlet_format
 from misskey import Misskey, exceptions
 from random import randint
@@ -9,8 +12,11 @@ import sys
 
 class MkAPIs():
     def __init__(self) -> None:
+        # MisT settings
         self.theme = "default"
-
+        self.cfgtxts = ""
+        self.crnotetxts = "Tab to change widget"
+        # Misskey py settings
         self.instance="misskey.io"
         self.i = None
         self.mk = None
@@ -24,23 +30,64 @@ class MkAPIs():
         bef_mk = self.mk
         try:
             self.mk=Misskey(self.instance,self.i)
+            if self.i is not None:
+                self.mk.i()
             return True
-        except exceptions.MisskeyAPIException as e:
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError, exceptions.MisskeyAuthorizeFailedException):
             self.mk = bef_mk
             return False
+    
+    def get_i(self):
+        try:
+            return self.mk.i()
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
+            return None
 
     def get_note(self):
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(self.tl_len)
+                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(self.tl_len)
+                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(self.tl_len)
+                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(self.tl_len)
-        except exceptions.MisskeyAPIException:
+                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False)
+        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
             self.notes = []
+    
+    def note_update(self):
+        noteid = self.notes[self.nowpoint]["id"]
+        new_note = self.noteshow(noteid)
+        if new_note is not None:
+            self.notes[self.nowpoint] = new_note
+            return True
+        else:
+            return False
+
+    def noteshow(self,noteid):
+        try:
+            return self.mk.notes_show(noteid)
+        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+            return None
+
+    def get_instance_icon(self):
+        try:
+            iconurl = self.mk.meta()["iconUrl"]
+            returns = requests.get(iconurl)
+            if returns.status_code == 200:
+                icon = io.BytesIO(returns.content)
+                return icon
+            else:
+                raise exceptions.MisskeyAPIException
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
+            return "Error"
+
+    def create_note(self, text, renoteid=None):
+        try:
+            return self.mk.notes_create(text,renote_id=renoteid)
+        except exceptions.MisskeyAPIException:
+            return None
 
 class NoteView(Frame):
     def __init__(self, screen, msk):
@@ -50,24 +97,51 @@ class NoteView(Frame):
                                        title="Notes",
                                        reduce_cpu=True,
                                        can_scroll=False)
+        # initialize
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
-        layout = Layout([1,98,1])
-        layout2 = Layout([1,1,1,1,1])
+
+        # notebox create
         self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
-        self._move_r = Button("Move R",self.move_r,name="move r")
-        self._move_l = Button("Move L",self.move_l,name="move l")
-        self.note.disabled = True
+
+        # button create
+        buttonnames = ("Quit", "Move L", "Move R",
+                       "Noteupdate", "Note Get", "More",
+                       "Config")
+        on_click = (self.pop_quit, self.move_l, self.move_r,
+                    self.noteupdate, self.get_note, self.pop_more,
+                    self.config)
+        self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
+
+        # layout create
+        layout = Layout([100])
+        layout2 = Layout([1 for _ in range(len(self.buttons))])
         self.add_layout(layout)
         self.add_layout(layout2)
-        layout.add_widget(self.note,1)
-        layout2.add_widget(Button("Quit",self._quit),0)
-        layout2.add_widget(self._move_l,1)
-        layout2.add_widget(self._move_r,2)
-        layout2.add_widget(Button("Note Get",self.get_note),3)
-        layout2.add_widget(Button("Config",self.config),4)
+
+        # add widget
+        layout.add_widget(self.note)
+        for i in range(len(self.buttons)):
+            layout2.add_widget(self.buttons[i],i)
+
+        # define selfs
+        self._move_l = self.buttons[1]
+        self._move_r = self.buttons[2]
         self.layout = layout
         self.layout2 = layout2
+
+        # disable
+        self.note.disabled = True
+        if self.msk_.i is None:
+            self.buttons[-2].disabled = True
+        else:
+            self.buttons[-2].disabled = False
+        if len(self.msk_.notes) == 0:
+            self.buttons[3].disabled = True
+        else:
+            self.buttons[3].disabled = False
+
+        # fix
         self._note_reload()
         self.fix()
 
@@ -75,6 +149,14 @@ class NoteView(Frame):
         self.msk_.get_note()
         self.msk_.nowpoint=0
         self._note_reload()
+    
+    def noteupdate(self):
+        is_ok = self.msk_.note_update()
+        if is_ok:
+            self._note_reload()
+            self._scene.add_effect(PopUpDialog(self.screen,"success", ["ok"]))
+        else:
+            self._scene.add_effect(PopUpDialog(self.screen,"something occured", ["ok"]))
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -87,23 +169,13 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput("something occured or welcome to MisT!")
+            self._noteput("something occured while noteget.","or welcome to MisT!")
+            self.buttons[3].disabled = True
         else:
-            noteval = self.msk_.notes[self.msk_.nowpoint]
-            if noteval["user"]["host"] is None:
-                username = f'@{noteval["user"]["username"]}@{self.msk_.instance}'
-            else:
-                username = f'@{noteval["user"]["username"]}@{noteval["user"]["host"]}'
-            if noteval["renoteId"] is not None:
-                self._noteput(f"{noteval['user']['name']} [{username}] was renoted", "-"*(self.screen.width-8))
-            else:
-                self._noteput(f"{noteval['user']['name']} [{username}] was noted", "-"*(self.screen.width-8))
-            if noteval["cw"] is not None:
-                self._noteput("CW detect!","~"*(self.screen.width-8))
-            self._noteput(noteval["text"],"")
-            if len(noteval["files"]) != 0:
-                self._noteput(f'{len(noteval["files"])} files')
-            self._noteput(f'{noteval["renoteCount"]} renotes, {noteval["repliesCount"]} replys',)
+            self.buttons[3].disabled = False
+            self._note_inp(self.msk_.notes[self.msk_.nowpoint])
+            if self.msk_.notes[self.msk_.nowpoint].get("renote"):
+                self._note_inp(self.msk_.notes[self.msk_.nowpoint]["renote"])
         if self.msk_.nowpoint == 0:
             self._move_l.disabled = True
             self.switch_focus(self.layout2,2,0)
@@ -115,14 +187,80 @@ class NoteView(Frame):
         else:
             self._move_r.disabled = False
 
+    def _note_inp(self,note):
+        if note["user"]["host"] is None:
+            username = f'@{note["user"]["username"]}@{self.msk_.instance}'
+        else:
+            username = f'@{note["user"]["username"]}@{note["user"]["host"]}'
+        if note["user"]["name"] is None:
+            name = note["user"]["username"]
+        else:
+            name = note["user"]["name"]
+        if note["renoteId"] is not None:
+            self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}", "-"*(self.screen.width-8))
+        else:
+            self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}", "-"*(self.screen.width-8))
+        if note["text"] is None:
+            if len(note["files"]) == 0:
+                return
+        if note["cw"] is not None:
+            self._noteput("CW detect!","~"*(self.screen.width-8),note["cw"])
+        self._noteput(note["text"],"")
+        if len(note["files"]) != 0:
+            self._noteput(f'{len(note["files"])} files')
+        self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
+                        "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()))
+
     def _noteput(self,*arg):
         for i in arg:
             self.note.value += str(i)+"\n"
 
-    def _quit(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes, has_shadow=True))
+    def pop_more(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"?", ["Create Note", "Renote", "Reaction", "return"],on_close=self._ser_more))
 
-    def _quit_yes(self,arg):
+    def pop_quit(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._ser_quit))
+
+    def _ser_more(self,arg):
+        if arg == 0:
+            # Create Note
+            raise NextScene("CreateNote")
+        elif arg == 1:
+            # Renote
+            if len(self.msk_.notes) == 0:
+                self._scene.add_effect(PopUpDialog(self.screen,"Please Note Get", ["Ok"]))
+            else:
+                if self.msk_.notes[self.msk_.nowpoint].get("renote"):
+                    noteval = self.msk_.notes[self.msk_.nowpoint]["renote"]
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+                else:
+                    noteval = self.msk_.notes[self.msk_.nowpoint]
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+                if len(noteval["text"]) <= 15:
+                    text = noteval["text"]
+                else:
+                    text = noteval["text"][0:16]+"..."
+                self._scene.add_effect(PopUpDialog(self.screen,f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote))
+        elif arg == 2:
+            #Reaction
+            self._scene.add_effect(PopUpDialog(self.screen,"this is not working :(", ["Ok"]))
+
+    def _ser_renote(self, arg):
+        if arg == 0:
+            if self.msk_.notes[self.msk_.nowpoint].get("renote"):
+                noteid = self.msk_.notes[self.msk_.nowpoint]["renote"]["id"]
+            else:
+                noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
+            createnote = self.msk_.create_note(None,noteid)
+            if createnote is not None:
+                self._scene.add_effect(PopUpDialog(self.screen,'Create success! :)', ["Ok"]))
+            else:
+                self._scene.add_effect(PopUpDialog(self.screen,"Create fail :(", ["Ok"]))
+
+    @staticmethod
+    def _ser_quit(arg):
         if arg == 0:
             raise StopApplication("UserQuit")
 
@@ -138,54 +276,103 @@ class ConfigMenu(Frame):
                                        title="ConfigMenu",
                                        reduce_cpu=True,
                                        can_scroll=False)
+        # initialize
         self.msk_ = msk
-        self.set_theme(self.msk_.theme)
-        layout = Layout([screen.width-19,1,18])
-        self.add_layout(layout)
+        self._ok_value = ""
+
+        # txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
-        layout.add_widget(self.txtbx)
-        self.txtbx.disabled=True
+        self.txt = Text()
+        self.txtbx.value = self.msk_.cfgtxts
+
+        # buttons create
+        buttonnames = ("Return", "Change TL", "Change Theme",
+                       "TOKEN", "Instance", "Version", "Clear",
+                       "Refresh", "OK")
+        onclicks = (self.return_, self.poptl, self.poptheme,
+                    self.poptoken, self.instance_, self.version_, self.clear_,
+                    self.refresh_,self.ok_)
+        self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
+
+        # Layout create
+        self.set_theme(self.msk_.theme)
+        layout = Layout([screen.width,2,20])
+        self.add_layout(layout)
+        self.layout = layout
+
+        # add widget
+        layout.add_widget(self.txtbx,0)
         layout.add_widget(VerticalDivider(screen.height),1)
-        layout.add_widget(Button("Return",self.return_),2)
-        layout.add_widget(Button("Change TL",self.poptl),2)
-        layout.add_widget(Button("Change Theme",self.poptheme),2)
-        layout.add_widget(Button("Version",self.version_),2)
-        layout.add_widget(Button("Clear",self.clear_),2)
+        for i in self.buttons:
+            layout.add_widget(i,2)
+        layout.add_widget(self.txt,2)
+
+        # disables
+        self.txtbx.disabled = True
+        self.txt.disabled = True
+        self.buttons[-1].disabled = True
+
+        # fix
         self.fix()
 
     def version_(self):
         fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
-        randomint = randint(0,len(fonts))
+        randomint = randint(0,len(fonts)+1)
         if randomint == len(fonts):
             mist_figs = "MisT\n"
+        elif randomint == len(fonts)+1:
+            mist_figs = """
+MM     MM     TTTTTTTTTTT
+M M   M M  I       T
+M  M M  M  I  SSS  T
+M   M   M     S    T
+M       M  I  SSS  T
+M       M  I    S  T
+M       M  I  SSS  T """
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
-        version = "v0.0.1"
+        version = "v0.1.0"
         self._txtbxput(mist_figs+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
         self.txtbx.value = ""
+        self.msk_.cfgtxts = ""
+
+    def _txtbxput(self,*arg):
+        for i in arg:
+            self.txtbx.value += str(i)+"\n"
+        self.msk_.cfgtxts = self.txtbx.value
 
     def poptl(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl, has_shadow=True))
+        self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl))
 
     def poptheme(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright"],on_close=self._ser_theme, has_shadow=True))
+        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme))
+
+    def poptoken(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"How to?", ["MiAuth", "TOKEN", "return"],self._ser_token))
 
     def _ser_tl(self,arg):
         if arg == 0:
+            # HTL
             if self.msk_.i is not None:
                 self.msk_.tl = "HTL"
                 self._txtbxput("change TL:HomeTL")
             else:
-                self._txtbxput("HTL is credential required")
+                self._txtbxput("HTL is TOKEN required")
         elif arg == 1:
+            # LTL
             self.msk_.tl = "LTL"
             self._txtbxput("change TL:LocalTL")
         elif arg == 2:
-            self.msk_.tl = "STL"
-            self._txtbxput("change TL:SocialTL")
+            # STL
+            if self.msk_.i is not None:
+                self.msk_.tl = "STL"
+                self._txtbxput("change TL:SocialTL")
+            else:
+                self._txtbxput("STL is TOKEN required")
         elif arg == 3:
+            # GTL
             self.msk_.tl = "GTL"
             self._txtbxput("change TL:GlobalTL")
 
@@ -198,18 +385,145 @@ class ConfigMenu(Frame):
             self.msk_.theme = "green"
         elif arg == 3:
             self.msk_.theme = "bright"
+        elif arg == 4:
+            return
         raise ResizeScreenError("self error")
 
-    def _txtbxput(self,*arg):
-        for i in arg:
-            self.txtbx.value += str(i)+"\n"
+    def _ser_token(self,arg):
+        if arg == 0:
+            # MiAuth
+            self._txtbxput("this is not working sorry :(")
+        elif arg == 1:
+            # TOKEN
+            self._txtbxput("write your TOKEN")
+            self._ok_value="TOKEN"
+            self.txt.disabled = False
+            for i in self.buttons:
+                i.disabled = True
+            self.buttons[-1].disabled = False
+            self.switch_focus(self.layout,2,len(self.buttons))
+
+    def instance_(self, select=-1):
+        if select == -1:
+            if self.msk_.i is not None:
+                self._scene.add_effect(PopUpDialog(self.screen,"TOKEN detect!\nchange instance will delete TOKEN.\nOk?", ["Ok","No"],on_close=self.instance_))
+            else:
+                self._ok_value = "INSTANCE"
+                self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
+                self.txt.disabled = False
+                for i in self.buttons:
+                    i.disabled = True
+                self.buttons[-1].disabled = False
+                self.switch_focus(self.layout,2,len(self.buttons))
+        if select == 0:
+            self.msk_.i = None
+            self.instance_()
+
+    def ok_(self):
+        if self._ok_value == "TOKEN":
+            self.msk_.i = self.txt.value
+            is_ok = self.msk_.reload()
+            if is_ok:
+                self._txtbxput("TOKEN check OK :)")
+                i = self.msk_.get_i()
+                if i is None:
+                    self._txtbxput("fail to get your info :(")
+                else:
+                    self._txtbxput(f"Hello {i['name']}!")
+                self.refresh_()
+            else:
+                self._txtbxput("TOKEN check fail :(")
+        elif self._ok_value == "INSTANCE":
+            before_instance = self.msk_.instance
+            self.msk_.instance = self.txt.value
+            is_ok = self.msk_.reload()
+            if is_ok:
+                self._txtbxput("instance connected! :)")
+                icon_bytes = self.msk_.get_instance_icon()
+                if icon_bytes == "Error":
+                    self._txtbxput("error occured while get icon :(")
+                else:
+                    icon = ImageFile(icon_bytes,self.screen.height//2)
+                    self._txtbxput(icon)
+            else:
+                self.msk_.instance = before_instance
+                self._txtbxput("instance connect fail :(")
+            self._txtbxput(f"current instance:{self.msk_.instance}","")
+            self.refresh_()
+        self._ok_value = ""
+        self.txt.value = ""
+        self.txt.disabled = True
+        for i in self.buttons:
+            i.disabled = False
+        self.buttons[-1].disabled = True
+        self.switch_focus(self.layout,2,0)
+
+    def refresh_(self):
+        raise ResizeScreenError("self error", self._scene)
 
     @staticmethod
     def return_():
         raise NextScene("Main")
 
+class CreateNote(Frame):
+    def __init__(self, screen, msk):
+        super(CreateNote, self).__init__(screen,
+                                      screen.height,
+                                      screen.width,
+                                      title="CreateNote",
+                                      reduce_cpu=True,
+                                      can_scroll=False)
+        # initialize
+        self.msk_ = msk
+        self.set_theme(self.msk_.theme)
+
+        # txtbox create
+        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,on_change=self.reminder)
+        self.txtbx.value = self.msk_.crnotetxts
+
+        # buttons create
+        buttonnames = ("Note Create", "return")
+        on_click = (self.popcreatenote, self.return_)
+        self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
+
+        # Layout create
+        layout = Layout([100])
+        layout2 = Layout([1 for _ in range(len(self.buttons))])
+        self.add_layout(layout)
+        self.add_layout(layout2)
+
+        # add widget
+        layout.add_widget(self.txtbx)
+        for i in range(len(self.buttons)):
+            layout2.add_widget(self.buttons[i],i)
+
+        # fix
+        self.fix()
+
+    def reminder(self):
+        self.msk_.crnotetxts = self.txtbx.value
+
+    def popcreatenote(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Are you sure about that?", ["Sure", "No"],self._ser_createnote))
+
+    def _ser_createnote(self,arg):
+        if arg == 0:
+            return_ = self.msk_.create_note(self.txtbx.value)
+            if return_ is not None:
+                self._scene.add_effect(PopUpDialog(self.screen,"Create note success :)", ["Ok"],on_close=self.return_))
+                self.msk_.crnotetxts = "Tab to change widget"
+                self.txtbx.value = self.msk_.crnotetxts
+            else:
+                self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
+
+    @staticmethod
+    def return_(*_):
+        raise NextScene("Main")
+
 def wrap(screen, scene):
-    scenes = [Scene([NoteView(screen, msk)], -1, name="Main"), Scene([ConfigMenu(screen, msk)], -1, name="Configration")]
+    scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
+              Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
+              Scene([CreateNote(screen,msk)], -1, name="CreateNote")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 msk = MkAPIs()
