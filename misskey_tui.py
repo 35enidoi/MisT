@@ -33,7 +33,7 @@ class MkAPIs():
             if self.i is not None:
                 self.mk.i()
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError, exceptions.MisskeyAuthorizeFailedException):
             self.mk = bef_mk
             return False
     
@@ -58,13 +58,19 @@ class MkAPIs():
     
     def note_update(self):
         noteid = self.notes[self.nowpoint]["id"]
-        try:
-            new_note = self.mk.notes_show(noteid)
+        new_note = self.noteshow(noteid)
+        if new_note is not None:
             self.notes[self.nowpoint] = new_note
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        else:
             return False
-    
+
+    def noteshow(self,noteid):
+        try:
+            return self.mk.notes_show(noteid)
+        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+            return None
+
     def get_instance_icon(self):
         try:
             iconurl = self.mk.meta()["iconUrl"]
@@ -77,9 +83,9 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
             return "Error"
 
-    def create_note(self, text):
+    def create_note(self, text, renoteid=None):
         try:
-            return self.mk.notes_create(text)
+            return self.mk.notes_create(text,renote_id=renoteid)
         except exceptions.MisskeyAPIException:
             return None
 
@@ -148,6 +154,7 @@ class NoteView(Frame):
         is_ok = self.msk_.note_update()
         if is_ok:
             self._note_reload()
+            self._scene.add_effect(PopUpDialog(self.screen,"success", ["ok"]))
         else:
             self._scene.add_effect(PopUpDialog(self.screen,"something occured", ["ok"]))
 
@@ -216,11 +223,41 @@ class NoteView(Frame):
 
     def _ser_more(self,arg):
         if arg == 0:
+            # Create Note
             raise NextScene("CreateNote")
         elif arg == 1:
-            self._scene.add_effect(PopUpDialog(self.screen,"this is not working :(", ["Ok"]))
+            # Renote
+            if len(self.msk_.notes) == 0:
+                self._scene.add_effect(PopUpDialog(self.screen,"Please Note Get", ["Ok"]))
+            else:
+                if self.msk_.notes[self.msk_.nowpoint].get("renote"):
+                    noteval = self.msk_.notes[self.msk_.nowpoint]["renote"]
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+                else:
+                    noteval = self.msk_.notes[self.msk_.nowpoint]
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+                if len(noteval["text"]) <= 15:
+                    text = noteval["text"]
+                else:
+                    text = noteval["text"][0:16]+"..."
+                self._scene.add_effect(PopUpDialog(self.screen,f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote))
         elif arg == 2:
+            #Reaction
             self._scene.add_effect(PopUpDialog(self.screen,"this is not working :(", ["Ok"]))
+
+    def _ser_renote(self, arg):
+        if arg == 0:
+            if self.msk_.notes[self.msk_.nowpoint].get("renote"):
+                noteid = self.msk_.notes[self.msk_.nowpoint]["renote"]["id"]
+            else:
+                noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
+            createnote = self.msk_.create_note(None,noteid)
+            if createnote is not None:
+                self._scene.add_effect(PopUpDialog(self.screen,'Create success! :)', ["Ok"]))
+            else:
+                self._scene.add_effect(PopUpDialog(self.screen,"Create fail :(", ["Ok"]))
 
     @staticmethod
     def _ser_quit(arg):
@@ -317,21 +354,25 @@ M       M  I  SSS  T """
 
     def _ser_tl(self,arg):
         if arg == 0:
+            # HTL
             if self.msk_.i is not None:
                 self.msk_.tl = "HTL"
                 self._txtbxput("change TL:HomeTL")
             else:
                 self._txtbxput("HTL is TOKEN required")
         elif arg == 1:
+            # LTL
             self.msk_.tl = "LTL"
             self._txtbxput("change TL:LocalTL")
         elif arg == 2:
+            # STL
             if self.msk_.i is not None:
                 self.msk_.tl = "STL"
                 self._txtbxput("change TL:SocialTL")
             else:
                 self._txtbxput("STL is TOKEN required")
         elif arg == 3:
+            # GTL
             self.msk_.tl = "GTL"
             self._txtbxput("change TL:GlobalTL")
 
@@ -350,8 +391,11 @@ M       M  I  SSS  T """
 
     def _ser_token(self,arg):
         if arg == 0:
+            # MiAuth
             self._txtbxput("this is not working sorry :(")
         elif arg == 1:
+            # TOKEN
+            self._txtbxput("write your TOKEN")
             self._ok_value="TOKEN"
             self.txt.disabled = False
             for i in self.buttons:
@@ -359,14 +403,21 @@ M       M  I  SSS  T """
             self.buttons[-1].disabled = False
             self.switch_focus(self.layout,2,len(self.buttons))
 
-    def instance_(self):
-        self._ok_value = "INSTANCE"
-        self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
-        self.txt.disabled = False
-        for i in self.buttons:
-            i.disabled = True
-        self.buttons[-1].disabled = False
-        self.switch_focus(self.layout,2,len(self.buttons))
+    def instance_(self, select=-1):
+        if select == -1:
+            if self.msk_.i is not None:
+                self._scene.add_effect(PopUpDialog(self.screen,"TOKEN detect!\nchange instance will delete TOKEN.\nOk?", ["Ok","No"],on_close=self.instance_))
+            else:
+                self._ok_value = "INSTANCE"
+                self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
+                self.txt.disabled = False
+                for i in self.buttons:
+                    i.disabled = True
+                self.buttons[-1].disabled = False
+                self.switch_focus(self.layout,2,len(self.buttons))
+        if select == 0:
+            self.msk_.i = None
+            self.instance_()
 
     def ok_(self):
         if self._ok_value == "TOKEN":
@@ -379,6 +430,7 @@ M       M  I  SSS  T """
                     self._txtbxput("fail to get your info :(")
                 else:
                     self._txtbxput(f"Hello {i['name']}!")
+                self.refresh_()
             else:
                 self._txtbxput("TOKEN check fail :(")
         elif self._ok_value == "INSTANCE":
@@ -397,6 +449,7 @@ M       M  I  SSS  T """
                 self.msk_.instance = before_instance
                 self._txtbxput("instance connect fail :(")
             self._txtbxput(f"current instance:{self.msk_.instance}","")
+            self.refresh_()
         self._ok_value = ""
         self.txt.value = ""
         self.txt.disabled = True
@@ -457,12 +510,14 @@ class CreateNote(Frame):
         if arg == 0:
             return_ = self.msk_.create_note(self.txtbx.value)
             if return_ is not None:
-                self._scene.add_effect(PopUpDialog(self.screen,"Create note success :(", ["Ok"]))
+                self._scene.add_effect(PopUpDialog(self.screen,"Create note success :)", ["Ok"],on_close=self.return_))
+                self.msk_.crnotetxts = "Tab to change widget"
+                self.txtbx.value = self.msk_.crnotetxts
             else:
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
 
     @staticmethod
-    def return_():
+    def return_(*_):
         raise NextScene("Main")
 
 def wrap(screen, scene):
