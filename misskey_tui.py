@@ -3,17 +3,27 @@ from asciimatics.screen import Screen
 from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
-import requests
-import io
 from pyfiglet import figlet_format
 from misskey import Misskey, exceptions
+import requests
+import json
 from random import randint
 import sys
+import io
+import os
 
 class MkAPIs():
     def __init__(self) -> None:
+        # mistconfig load
+        if os.path.isfile("mistconfig.conf"):
+            with open("mistconfig.conf", "r") as f:
+                self.mistconfig = json.loads(f.read())
+            self.theme = self.mistconfig["theme"]
+        else:
+            self.theme = "default"
+            self.mistconfig = {"theme":self.theme}
+            self.mistconfig_put()
         # MisT settings
-        self.theme = "default"
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
         # Misskey py settings
@@ -25,6 +35,10 @@ class MkAPIs():
         self.nowpoint = 0
         self.notes = []
         self.reload()
+
+    def mistconfig_put(self):
+        with open("mistconfig.conf", "w") as f:
+            f.write(json.dumps(self.mistconfig))
 
     def reload(self):
         bef_mk = self.mk
@@ -384,6 +398,8 @@ M       M  I  SSS  T """
             self.msk_.theme = "bright"
         elif arg == 4:
             return
+        self.msk_.mistconfig["theme"] = self.msk_.theme
+        self.msk_.mistconfig_put()
         raise ResizeScreenError("self error")
 
     def _ser_token(self,arg):
