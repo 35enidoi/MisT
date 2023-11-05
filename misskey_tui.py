@@ -100,9 +100,11 @@ class NoteView(Frame):
 
         # button create
         buttonnames = ("Quit", "Move L", "Move R",
-                       "Noteupdate","Note Get", "Create Note", "Config")
-        on_click = (self._quit, self.move_l, self.move_r,
-                    self.noteupdate,self.get_note, self.createnote, self.config)
+                       "Noteupdate", "Note Get", "More",
+                       "Config")
+        on_click = (self.pop_quit, self.move_l, self.move_r,
+                    self.noteupdate, self.get_note, self.pop_more,
+                    self.config)
         self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
 
         # layout create
@@ -160,7 +162,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput("something occured while noteget or welcome to MisT!")
+            self._noteput("something occured while noteget.","or welcome to MisT!")
             self.buttons[3].disabled = True
         else:
             self.buttons[3].disabled = False
@@ -198,27 +200,33 @@ class NoteView(Frame):
             self._noteput(f'{len(note["files"])} files')
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
                         "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()))
-        
 
     def _noteput(self,*arg):
         for i in arg:
             self.note.value += str(i)+"\n"
 
-    def _quit(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._quit_yes))
+    def pop_more(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"?", ["Create Note", "Renote", "Reaction", "return"],on_close=self._ser_more))
+
+    def pop_quit(self):
+        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._ser_quit))
+
+    def _ser_more(self,arg):
+        if arg == 0:
+            raise NextScene("CreateNote")
+        elif arg == 1:
+            self._scene.add_effect(PopUpDialog(self.screen,"this is not working :(", ["Ok"]))
+        elif arg == 2:
+            self._scene.add_effect(PopUpDialog(self.screen,"this is not working :(", ["Ok"]))
 
     @staticmethod
-    def _quit_yes(arg):
+    def _ser_quit(arg):
         if arg == 0:
             raise StopApplication("UserQuit")
 
     @staticmethod
     def config():
         raise NextScene("Configration")
-
-    @staticmethod
-    def createnote():
-        raise NextScene("CreateNote")
 
 class ConfigMenu(Frame):
     def __init__(self, screen, msk):
