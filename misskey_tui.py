@@ -43,27 +43,24 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
             return None
 
-    def get_note(self):
+    def get_note(self,noteid=None):
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False)
+                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False,until_id=noteid)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False)
+                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False,until_id=noteid)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False)
+                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False,until_id=noteid)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False)
+                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=noteid)
+            return True
         except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
             self.notes = []
+            return False
     
     def note_update(self):
-        noteid = self.notes[self.nowpoint]["id"]
-        new_note = self.noteshow(noteid)
-        if new_note is not None:
-            self.notes[self.nowpoint] = new_note
-            return True
-        else:
-            return False
+        noteid = self.notes[0]["id"]
+        return self.get_note(noteid[0:8]+"zz")
 
     def noteshow(self,noteid):
         try:
