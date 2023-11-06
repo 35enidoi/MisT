@@ -82,16 +82,23 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
             return None
 
+    def get_instance_meta(self):
+        try:
+            self.meta = self.mk.meta()
+            return True
+        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
+            return False
+
     def get_instance_icon(self):
         try:
-            iconurl = self.mk.meta()["iconUrl"]
+            iconurl = self.meta["iconUrl"]
             returns = requests.get(iconurl)
             if returns.status_code == 200:
                 icon = io.BytesIO(returns.content)
                 return icon
             else:
-                raise exceptions.MisskeyAPIException
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
+                return "Error"
+        except requests.exceptions.ConnectTimeout:
             return "Error"
 
     def create_note(self, text, renoteid=None):
@@ -342,7 +349,7 @@ M       M  I    S  T
 M       M  I  SSS  T """
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
-        version = "v0.1.0"
+        version = "v0.1.5"
         self._txtbxput(mist_figs+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
@@ -452,12 +459,16 @@ M       M  I  SSS  T """
             is_ok = self.msk_.reload()
             if is_ok:
                 self._txtbxput("instance connected! :)")
-                icon_bytes = self.msk_.get_instance_icon()
-                if icon_bytes == "Error":
-                    self._txtbxput("error occured while get icon :(")
+                is_ok = self.msk_.get_instance_meta()
+                if is_ok:
+                    icon_bytes = self.msk_.get_instance_icon()
+                    if icon_bytes == "Error":
+                        self._txtbxput("error occured while get icon :(")
+                    else:
+                        icon = ImageFile(icon_bytes,self.screen.height//2)
+                        self._txtbxput(icon)
                 else:
-                    icon = ImageFile(icon_bytes,self.screen.height//2)
-                    self._txtbxput(icon)
+                    self._txtbxput("error occured while get meta :(")
             else:
                 self.msk_.instance = before_instance
                 self._txtbxput("instance connect fail :(")
