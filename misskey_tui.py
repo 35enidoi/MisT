@@ -53,17 +53,16 @@ class MkAPIs():
             self.mk = bef_mk
             return False
 
-    def miauth_load(self,session=None):
+    def miauth_load(self):
         permissions = ["read:account","read:messaging","write:messaging",
                        "read:reactions","write:reactions"]
-        self.mia = MiAuth(self.instance,session,"MisT",permission=permissions,)
+        self.mia = MiAuth(self.instance,name="MisT",permission=permissions,)
 
     def miauth_check(self):
         try:
             self.i = self.mia.check()
             return True
         except exceptions.MisskeyAuthorizeFailedException:
-            self.i = ""
             return False
 
     def get_i(self):
@@ -349,6 +348,7 @@ class ConfigMenu(Frame):
         self.fix()
 
     def version_(self):
+        version = "v0.1.7"
         fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
         randomint = randint(0,len(fonts)+1)
         if randomint == len(fonts):
@@ -364,7 +364,6 @@ M       M  I    S  T
 M       M  I  SSS  T """
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
-        version = "v0.1.5"
         self._txtbxput(mist_figs+version,"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
@@ -451,11 +450,12 @@ M       M  I  SSS  T """
     
     def _ser_token_search(self,arg):
         token = self.msk_.mistconfig["tokens"]
+        button = ["L","R","Select", "Delete"]
         if arg == -1:
             self.msk_.tmp.append(0)
             mes = f'<1/{len(token)}>\n\nSelect\nname:{token[0]["name"]}\ninstance:{token[0]["instance"]}\ntoken:{token[0]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, ["L","R","Select"],self._ser_token_search))
-        if arg == 0:
+            self._scene.add_effect(PopUpDialog(self.screen,mes, button, self._ser_token_search))
+        elif arg == 0:
             num = self.msk_.tmp.pop()
             if num == 0:
                 self.msk_.tmp.append(0)
@@ -465,8 +465,8 @@ M       M  I  SSS  T """
                 self.msk_.tmp.append(num)
                 headmes = "Select\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, ["L","R","Select"],self._ser_token_search))
-        if arg == 1:
+            self._scene.add_effect(PopUpDialog(self.screen,mes, button,self._ser_token_search))
+        elif arg == 1:
             num = self.msk_.tmp.pop()
             if num+1 == len(token):
                 self.msk_.tmp.append(num)
@@ -476,8 +476,8 @@ M       M  I  SSS  T """
                 self.msk_.tmp.append(num)
                 headmes = "Select\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, ["L","R","Select"],self._ser_token_search))
-        if arg == 2:
+            self._scene.add_effect(PopUpDialog(self.screen,mes, button,self._ser_token_search))
+        elif arg == 2:
             num = self.msk_.tmp.pop()
             userinfo = token[num]
             self._txtbxput(f'select user:{userinfo["name"]}',f'current instance:{userinfo["instance"]}',"")
@@ -490,7 +490,20 @@ M       M  I  SSS  T """
             else:
                 self.msk_.i = ""
                 self._txtbxput("connect fail :(","")
+        elif arg == 3:
+            num = self.msk_.tmp[-1]
+            headmes = "Delete this?\n"
+            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+            self._scene.add_effect(PopUpDialog(self.screen,mes, ["Yes","No"],self._ser_token_delete))
 
+    def _ser_token_delete(self,arg):
+        num = self.msk_.tmp.pop()
+        if arg == 0:
+            self.msk_.mistconfig["tokens"].pop(num)
+            self.msk_.mistconfig_put()
+            if len(self.msk_.mistconfig["tokens"]) == 0:
+                return
+        self._ser_token_search(-1)
 
     def instance_(self, select=-1):
         if select == -1:
