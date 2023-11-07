@@ -157,21 +157,23 @@ class NoteView(Frame):
             layout2.add_widget(self.buttons[i],i)
 
         # define selfs
-        self._move_l = self.buttons[1]
-        self._move_r = self.buttons[2]
+        self._move_l = self.buttons[buttonnames.index("Move L")]
+        self._move_r = self.buttons[buttonnames.index("Move R")]
         self.layout = layout
         self.layout2 = layout2
 
         # disable
         self.note.disabled = True
+        moreind = buttonnames.index("More")
+        noteupind = buttonnames.index("Noteupdate")
         if self.msk_.i is None:
-            self.buttons[-2].disabled = True
+            self.buttons[moreind].disabled = True
         else:
-            self.buttons[-2].disabled = False
+            self.buttons[moreind].disabled = False
         if len(self.msk_.notes) == 0:
-            self.buttons[3].disabled = True
+            self.buttons[noteupind].disabled = True
         else:
-            self.buttons[3].disabled = False
+            self.buttons[noteupind].disabled = False
 
         # fix
         self._note_reload()
@@ -236,7 +238,7 @@ class NoteView(Frame):
             if len(note["files"]) == 0:
                 return
         if note["cw"] is not None:
-            self._noteput("CW detect!","~"*(self.screen.width-8),note["cw"])
+            self._noteput("CW detect!",note["cw"],"~"*(self.screen.width-8))
         self._noteput(note["text"],"")
         if len(note["files"]) != 0:
             self._noteput(f'{len(note["files"])} files')
