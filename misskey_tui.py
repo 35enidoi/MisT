@@ -21,9 +21,10 @@ class MkAPIs():
             self.theme = self.mistconfig["theme"]
         else:
             self.theme = "default"
-            self.mistconfig = {"theme":self.theme}
+            self.mistconfig = {"theme":self.theme,"tokens":[]}
             self.mistconfig_put()
         # MisT settings
+        self.tmp = []
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
         # Misskey py settings
@@ -47,13 +48,23 @@ class MkAPIs():
             if self.i is not None:
                 self.mk.i()
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError, exceptions.MisskeyAuthorizeFailedException):
+        except (exceptions.MisskeyAPIException, exceptions.MisskeyAuthorizeFailedException,
+                requests.exceptions.ConnectionError,requests.exceptions.ReadTimeout):
             self.mk = bef_mk
             return False
 
     def miauth_load(self,session=None):
-        permissions = ["read:account","read:messaging",]
-        self.mia = MiAuth(self.instance,session,"MisT")
+        permissions = ["read:account","read:messaging","write:messaging",
+                       "read:reactions","write:reactions"]
+        self.mia = MiAuth(self.instance,session,"MisT",permission=permissions,)
+
+    def miauth_check(self):
+        try:
+            self.i = self.mia.check()
+            return True
+        except exceptions.MisskeyAuthorizeFailedException:
+            self.i = ""
+            return False
 
     def get_i(self):
         try:
@@ -372,7 +383,7 @@ M       M  I  SSS  T """
         self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme))
 
     def poptoken(self):
-        self._scene.add_effect(PopUpDialog(self.screen,f"How to?\ncurrent instance\n{self.msk_.instance}", ["MiAuth", "TOKEN", "return"],self._ser_token))
+        self._scene.add_effect(PopUpDialog(self.screen,f"How to?\ncurrent instance:{self.msk_.instance}", ["Create", "Select", "return"],self._ser_token))
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -415,8 +426,19 @@ M       M  I  SSS  T """
 
     def _ser_token(self,arg):
         if arg == 0:
+            # Create
+            self._scene.add_effect(PopUpDialog(self.screen,f"MiAuth or write TOKEN?",["MiAuth", "TOKEN", "return"],self._ser_token_create))
+        elif arg == 1:
+            # Select
+            if len(self.msk_.mistconfig["tokens"]) == 0:
+                self._scene.add_effect(PopUpDialog(self.screen,f"Create TOKEN please.", ["ok"]))
+            else:
+                self._ser_token_search(-1)
+    
+    def _ser_token_create(self,arg):
+        if arg == 0:
             # MiAuth
-            self._scene.add_effect(PopUpDialog(self.screen,f"create? select?", ["Create", "Select", "return"],self._ser_miauth))
+            self._scene.add_effect(PopUpDialog(self.screen,f"not work :(", ["return"]))
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
@@ -426,13 +448,49 @@ M       M  I  SSS  T """
                 i.disabled = True
             self.buttons[-1].disabled = False
             self.switch_focus(self.layout,2,len(self.buttons))
-
-    def _ser_miauth(self,arg):
+    
+    def _ser_token_search(self,arg):
+        token = self.msk_.mistconfig["tokens"]
+        if arg == -1:
+            self.msk_.tmp.append(0)
+            mes = f'<1/{len(token)}>\n\nSelect\nname:{token[0]["name"]}\ninstance:{token[0]["instance"]}\ntoken:{token[0]["token"][0:8]}...'
+            self._scene.add_effect(PopUpDialog(self.screen,mes, ["L","R","Select"],self._ser_token_search))
         if arg == 0:
-            self._scene.add_effect(PopUpDialog(self.screen,f"not work :(", ["return"]))
-            # self._ok_value == "MiAuthCre"
+            num = self.msk_.tmp.pop()
+            if num == 0:
+                self.msk_.tmp.append(0)
+                headmes = "Too Left.\n"
+            else:
+                num -= 1
+                self.msk_.tmp.append(num)
+                headmes = "Select\n"
+            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+            self._scene.add_effect(PopUpDialog(self.screen,mes, ["L","R","Select"],self._ser_token_search))
         if arg == 1:
-            self._scene.add_effect(PopUpDialog(self.screen,f"not work :(", ["return"]))
+            num = self.msk_.tmp.pop()
+            if num+1 == len(token):
+                self.msk_.tmp.append(num)
+                headmes = "Too Right.\n"
+            else:
+                num += 1
+                self.msk_.tmp.append(num)
+                headmes = "Select\n"
+            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+            self._scene.add_effect(PopUpDialog(self.screen,mes, ["L","R","Select"],self._ser_token_search))
+        if arg == 2:
+            num = self.msk_.tmp.pop()
+            userinfo = token[num]
+            self._txtbxput(f'select user:{userinfo["name"]}',f'current instance:{userinfo["instance"]}',"")
+            self.msk_.i = userinfo["token"]
+            self.msk_.instance = userinfo["instance"]
+            is_ok = self.msk_.reload()
+            if is_ok:
+                self._txtbxput("connect ok!","")
+                self.refresh_()
+            else:
+                self.msk_.i = ""
+                self._txtbxput("connect fail :(","")
+
 
     def instance_(self, select=-1):
         if select == -1:
@@ -458,11 +516,18 @@ M       M  I  SSS  T """
                 self._txtbxput("TOKEN check OK :)")
                 i = self.msk_.get_i()
                 if i is None:
+                    name = "get fail"
                     self._txtbxput("fail to get your info :(")
                 else:
-                    self._txtbxput(f"Hello {i['name']}!")
+                    name = i["name"]
+                    self._txtbxput(f"Hello {name}!")
+                self.msk_.mistconfig["tokens"].append({"name":name,
+                                                       "instance":self.msk_.instance,
+                                                       "token":self.msk_.i})
+                self.msk_.mistconfig_put()
                 self.refresh_()
             else:
+                self.msk_.i = ""
                 self._txtbxput("TOKEN check fail :(")
         elif self._ok_value == "INSTANCE":
             before_instance = self.msk_.instance
