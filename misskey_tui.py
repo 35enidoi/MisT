@@ -4,7 +4,7 @@ from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from pyfiglet import figlet_format
-from misskey import Misskey, exceptions
+from misskey import Misskey, exceptions, MiAuth
 import requests
 import json
 from random import randint
@@ -50,7 +50,11 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError, exceptions.MisskeyAuthorizeFailedException):
             self.mk = bef_mk
             return False
-    
+
+    def miauth_load(self,session=None):
+        permissions = ["read:account","read:messaging",]
+        self.mia = MiAuth(self.instance,session,"MisT")
+
     def get_i(self):
         try:
             return self.mk.i()
@@ -368,7 +372,7 @@ M       M  I  SSS  T """
         self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme))
 
     def poptoken(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"How to?", ["MiAuth", "TOKEN", "return"],self._ser_token))
+        self._scene.add_effect(PopUpDialog(self.screen,f"How to?\ncurrent instance\n{self.msk_.instance}", ["MiAuth", "TOKEN", "return"],self._ser_token))
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -412,7 +416,7 @@ M       M  I  SSS  T """
     def _ser_token(self,arg):
         if arg == 0:
             # MiAuth
-            self._txtbxput("this is not working sorry :(")
+            self._scene.add_effect(PopUpDialog(self.screen,f"create? select?", ["Create", "Select", "return"],self._ser_miauth))
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
@@ -422,6 +426,13 @@ M       M  I  SSS  T """
                 i.disabled = True
             self.buttons[-1].disabled = False
             self.switch_focus(self.layout,2,len(self.buttons))
+
+    def _ser_miauth(self,arg):
+        if arg == 0:
+            self._scene.add_effect(PopUpDialog(self.screen,f"not work :(", ["return"]))
+            # self._ok_value == "MiAuthCre"
+        if arg == 1:
+            self._scene.add_effect(PopUpDialog(self.screen,f"not work :(", ["return"]))
 
     def instance_(self, select=-1):
         if select == -1:
