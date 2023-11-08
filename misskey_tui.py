@@ -14,14 +14,18 @@ import os
 
 class MkAPIs():
     def __init__(self) -> None:
+        self.version = 0.27
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
             with open("mistconfig.conf", "r") as f:
                 self.mistconfig = json.loads(f.read())
             self.theme = self.mistconfig["theme"]
+            if self.mistconfig["version"] < self.version:
+                self.mistconfig["version"] = self.version
+                self.mistconfig_put()
         else:
             self.theme = "default"
-            self.mistconfig = {"theme":self.theme,"tokens":[]}
+            self.mistconfig = {"version":self.version,"theme":self.theme,"tokens":[]}
             self.mistconfig_put()
         # MisT settings
         self.tmp = []
@@ -350,7 +354,6 @@ class ConfigMenu(Frame):
         self.fix()
 
     def version_(self):
-        version = "v0.1.7"
         fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
         randomint = randint(0,len(fonts)+1)
         if randomint == len(fonts):
@@ -366,7 +369,7 @@ M       M  I    S  T
 M       M  I  SSS  T """
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
-        self._txtbxput(mist_figs+version,"","write by 35enidoi","@iodine53@misskey.io","")
+        self._txtbxput(mist_figs+str(self.msk_.version),"","write by 35enidoi","@iodine53@misskey.io","")
 
     def clear_(self):
         self.txtbx.value = ""
