@@ -28,6 +28,8 @@ class MkAPIs():
             self.mistconfig_put()
         # MisT settings
         self.tmp = []
+        self.notes = []
+        self.nowpoint = 0
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
         # Misskey py settings
@@ -36,8 +38,6 @@ class MkAPIs():
         self.mk = None
         self.tl = "LTL"
         self.tl_len = 10
-        self.nowpoint = 0
-        self.notes = []
         self.reload()
 
     def mistconfig_put(self):
@@ -57,15 +57,15 @@ class MkAPIs():
             return False
 
     def miauth_load(self):
-        permissions = ["read:account","read:messaging","write:messaging",
-                       "read:reactions","write:reactions"]
-        self.mia = MiAuth(self.instance,name="MisT",permission=permissions,)
+        permissions = ["read:account","write:account","read:messaging","write:messaging","read:notifications",
+                       "write:notifications","read:reactions","write:reactions","write:notes"]
+        return MiAuth(self.instance,name="MisT",permission=permissions)
 
-    def miauth_check(self):
+    def miauth_check(self,mia):
         try:
-            self.i = self.mia.check()
+            self.i = mia.check()
             return True
-        except exceptions.MisskeyAuthorizeFailedException:
+        except exceptions.MisskeyMiAuthFailedException:
             return False
 
     def get_i(self):
@@ -440,7 +440,14 @@ M       M  I  SSS  T """
     def _ser_token_create(self,arg):
         if arg == 0:
             # MiAuth
-            self._scene.add_effect(PopUpDialog(self.screen,f"not work :(", ["return"]))
+            self.msk_.tmp.append(self.msk_.miauth_load())
+            url = self.msk_.tmp[-1].generate_url()
+            lonelong = self.screen.width//2
+            lines = len(url)//lonelong
+            space = "      \n      "
+            url_short = space.split("\n")[0]+space.join([url[i*lonelong:(i+1)*lonelong] for i in range(lines)])
+            url_short += space+url[lines*lonelong:]
+            self._scene.add_effect(PopUpDialog(self.screen,f"miauth url\n\n{url_short}\n", ["check ok"],self.miauth_get))
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
@@ -489,7 +496,7 @@ M       M  I  SSS  T """
             is_ok = self.msk_.reload()
             if is_ok:
                 self._txtbxput("connect ok!","")
-                self.refresh_()
+                self.refresh_(True)
             else:
                 self.msk_.i = ""
                 self._txtbxput("connect fail :(","")
@@ -507,6 +514,31 @@ M       M  I  SSS  T """
             if len(self.msk_.mistconfig["tokens"]) == 0:
                 return
         self._ser_token_search(-1)
+
+    def miauth_get(self,arg):
+        if arg == 0:
+            is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
+            if is_ok:
+                text = "MiAuth check Success!\n"
+                self.msk_.reload()
+                userinfo = self.msk_.get_i()
+                if userinfo is not None:
+                    name = userinfo["name"]
+                    text += f'Hello {name}'
+                else:
+                    text += "fail to get userinfo :("
+                    name = "fail to get"
+                userdict = {"name":name,"instance":self.msk_.instance,"token":self.msk_.i}
+                self.msk_.mistconfig["tokens"].append(userdict)
+                self.msk_.mistconfig_put()
+                self.msk_.notes = []
+                self._scene.add_effect(PopUpDialog(self.screen, text, ["Ok"], on_close=self.refresh_))
+                self.msk_.tmp.pop()
+            else:
+                text = "MiAuth check Fail :(\ntry again?"
+                self._scene.add_effect(PopUpDialog(self.screen, text, ["again", "return"], self.miauth_get))
+        else:
+            self.msk_.tmp.pop()
 
     def instance_(self, select=-1):
         if select == -1:
@@ -542,7 +574,7 @@ M       M  I  SSS  T """
                                                        "instance":self.msk_.instance,
                                                        "token":self.msk_.i})
                 self.msk_.mistconfig_put()
-                self.refresh_()
+                self.refresh_(True)
             else:
                 self.msk_.i = ""
                 self._txtbxput("TOKEN check fail :(")
@@ -574,7 +606,9 @@ M       M  I  SSS  T """
         self.buttons[-1].disabled = True
         self.switch_focus(self.layout,2,0)
 
-    def refresh_(self):
+    def refresh_(self, notedel=False):
+        if notedel:
+            self.msk_.notes = []
         raise ResizeScreenError("self error", self._scene)
 
     @staticmethod
