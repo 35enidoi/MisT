@@ -8,7 +8,6 @@ from misskey import Misskey, exceptions, MiAuth
 import requests
 import json
 from random import randint
-import sys
 import io
 import os
 
@@ -316,7 +315,6 @@ class ConfigMenu(Frame):
                                        can_scroll=False)
         # initialize
         self.msk_ = msk
-        self._ok_value = ""
 
         # txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
@@ -446,7 +444,7 @@ M       M  I  SSS  T """
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
-            self._ok_value="TOKEN"
+            self.msk_.tmp.append("TOKEN")
             self.txt.disabled = False
             for i in self.buttons:
                 i.disabled = True
@@ -515,7 +513,7 @@ M       M  I  SSS  T """
             if self.msk_.i is not None:
                 self._scene.add_effect(PopUpDialog(self.screen,"TOKEN detect!\nchange instance will delete TOKEN.\nOk?", ["Ok","No"],on_close=self.instance_))
             else:
-                self._ok_value = "INSTANCE"
+                self.msk_.tmp.append("INSTANCE")
                 self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
                 self.txt.disabled = False
                 for i in self.buttons:
@@ -527,7 +525,8 @@ M       M  I  SSS  T """
             self.instance_()
 
     def ok_(self):
-        if self._ok_value == "TOKEN":
+        ok_value = self.msk_.tmp.pop()
+        if ok_value == "TOKEN":
             self.msk_.i = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
@@ -547,7 +546,7 @@ M       M  I  SSS  T """
             else:
                 self.msk_.i = ""
                 self._txtbxput("TOKEN check fail :(")
-        elif self._ok_value == "INSTANCE":
+        elif ok_value == "INSTANCE":
             before_instance = self.msk_.instance
             self.msk_.instance = self.txt.value
             is_ok = self.msk_.reload()
@@ -568,7 +567,6 @@ M       M  I  SSS  T """
                 self._txtbxput("instance connect fail :(")
             self._txtbxput(f"current instance:{self.msk_.instance}","")
             self.refresh_()
-        self._ok_value = ""
         self.txt.value = ""
         self.txt.disabled = True
         for i in self.buttons:
@@ -649,6 +647,6 @@ last_scene = None
 while True:
     try:
         Screen.wrapper(wrap, catch_interrupt=True, arguments=[last_scene])
-        sys.exit(0)
+        os._exit(0)
     except ResizeScreenError as e:
         last_scene = e.scene
