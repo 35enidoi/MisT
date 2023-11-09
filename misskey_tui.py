@@ -242,7 +242,10 @@ class NoteView(Frame):
                 return
         if note["cw"] is not None:
             self._noteput("CW detect!",note["cw"],"~"*(self.screen.width-8))
-        self._noteput(note["text"],"")
+        if note["user"]["isCat"]:
+            self._noteput(note["text"].replace("な","にゃ").replace("ナ","ニャ"),"")
+        else:
+            self._noteput(note["text"],"")
         if len(note["files"]) != 0:
             self._noteput(f'{len(note["files"])} files')
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
