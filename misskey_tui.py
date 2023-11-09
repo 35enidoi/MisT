@@ -245,7 +245,7 @@ class NoteView(Frame):
         if (a := self.msk_.tmp.pop()) != "":
             self._noteput(a)
         if len(note["user"]["badgeRoles"]) != 0:
-            self._noteput("badgeRoles:["+",".join([i["name"] for i in note["user"]["badgeRoles"]])+"]")
+            self._noteput("badgeRoles:["+",".join(i["name"] for i in note["user"]["badgeRoles"])+"]")
         self._noteput("-"*(self.screen.width-4))
         if note["text"] is None:
             if len(note["files"]) == 0:
@@ -259,7 +259,7 @@ class NoteView(Frame):
         if len(note["files"]) != 0:
             self._noteput(f'{len(note["files"])} files')
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
-                        "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()))
+                        "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()), "")
 
     def _noteput(self,*arg):
         for i in arg:
@@ -281,9 +281,14 @@ class NoteView(Frame):
                 self._scene.add_effect(PopUpDialog(self.screen,"Please Note Get", ["Ok"]))
             else:
                 if self.msk_.notes[self.msk_.nowpoint].get("renote"):
-                    noteval = self.msk_.notes[self.msk_.nowpoint]["renote"]
-                    username = noteval["user"]["name"]
-                    noteid = noteval["id"]
+                    if self.msk_.notes[self.msk_.nowpoint]["text"] is None:
+                        noteval = self.msk_.notes[self.msk_.nowpoint]["renote"]
+                        username = noteval["user"]["name"]
+                        noteid = noteval["id"]
+                    else:
+                        noteval = self.msk_.notes[self.msk_.nowpoint]
+                        username = noteval["user"]["name"]
+                        noteid = noteval["id"]
                 else:
                     noteval = self.msk_.notes[self.msk_.nowpoint]
                     username = noteval["user"]["name"]
