@@ -234,14 +234,24 @@ class NoteView(Frame):
         else:
             name = note["user"]["name"]
         if note["renoteId"] is not None:
-            self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}", "-"*(self.screen.width-8))
+            self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}")
         else:
-            self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}", "-"*(self.screen.width-8))
+            self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}")
+        self.msk_.tmp.append("")
+        if note["user"]["isBot"]:
+            self.msk_.tmp[-1] += "isBot:True "
+        if note["user"]["isCat"]:
+            self.msk_.tmp[-1] += "isCat:True"
+        if (a := self.msk_.tmp.pop()) != "":
+            self._noteput(a)
+        if len(note["user"]["badgeRoles"]) != 0:
+            self._noteput("badgeRoles:["+",".join([i["name"] for i in note["user"]["badgeRoles"]])+"]")
+        self._noteput("-"*(self.screen.width-4))
         if note["text"] is None:
             if len(note["files"]) == 0:
                 return
         if note["cw"] is not None:
-            self._noteput("CW detect!",note["cw"],"~"*(self.screen.width-8))
+            self._noteput("CW detect!",note["cw"],"~"*(self.screen.width-4))
         if note["user"]["isCat"]:
             self._noteput(note["text"].replace("な","にゃ").replace("ナ","ニャ"),"")
         else:
