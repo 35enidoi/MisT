@@ -342,11 +342,11 @@ class ConfigMenu(Frame):
 
         # buttons create
         buttonnames = ("Return", "Change TL", "Change Theme",
-                       "TOKEN", "Instance", "Version", "Clear",
-                       "Refresh", "OK")
+                       "TOKEN", "Instance", "Current","Version",
+                       "Clear","Refresh", "OK")
         onclicks = (self.return_, self.poptl, self.poptheme,
-                    self.poptoken, self.instance_, self.version_, self.clear_,
-                    self.refresh_,self.ok_)
+                    self.poptoken, self.instance_, self.current, self.version_,
+                    self.clear_, self.refresh_,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -388,7 +388,18 @@ M       M  I    S  T
 M       M  I  SSS  T """
         else:
             mist_figs = figlet_format("MisT",fonts[randomint])
-        self._txtbxput(mist_figs+str(self.msk_.version),"","write by 35enidoi","@iodine53@misskey.io","")
+        self._txtbxput(mist_figs+"v"+str(self.msk_.version),"","write by @iodine53@misskey.io","")
+
+    def current(self):
+        self._txtbxput(f"Instance:{self.msk_.instance}")
+        if self.msk_.i is None:
+            self._txtbxput("TOKEN:None","")
+        else:
+            user = self.msk_.get_i()
+            if user is not None:
+                self._txtbxput("TOKEN:Available",f' name:{user["name"]}',f' username:{user["username"]}',"")
+            else:
+                self._txtbxput("TOKEN:Available","fail to get userinfo :(","")
 
     def clear_(self):
         self.txtbx.value = ""
