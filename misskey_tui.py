@@ -3,12 +3,8 @@ from asciimatics.screen import Screen
 from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
-from pyfiglet import figlet_format
 from misskey import Misskey, exceptions, MiAuth
 import requests
-import json
-from random import randint
-import io
 import os
 
 class MkAPIs():
@@ -16,8 +12,7 @@ class MkAPIs():
         self.version = 0.27
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
-            with open("mistconfig.conf", "r") as f:
-                self.mistconfig = json.loads(f.read())
+            self.mistconfig_put(True)
             self.theme = self.mistconfig["theme"]
             if self.mistconfig["version"] < self.version:
                 self.mistconfig["version"] = self.version
@@ -40,9 +35,14 @@ class MkAPIs():
         self.tl_len = 10
         self.reload()
 
-    def mistconfig_put(self):
-        with open("mistconfig.conf", "w") as f:
-            f.write(json.dumps(self.mistconfig))
+    def mistconfig_put(self,loadmode=False):
+        import json
+        if loadmode:
+            with open("mistconfig.conf", "r") as f:
+                self.mistconfig = json.loads(f.read())
+        else:
+            with open("mistconfig.conf", "w") as f:
+                f.write(json.dumps(self.mistconfig))
 
     def reload(self):
         bef_mk = self.mk
@@ -111,6 +111,7 @@ class MkAPIs():
             iconurl = self.meta["iconUrl"]
             returns = requests.get(iconurl)
             if returns.status_code == 200:
+                import io
                 icon = io.BytesIO(returns.content)
                 return icon
             else:
@@ -370,6 +371,8 @@ class ConfigMenu(Frame):
         self.fix()
 
     def version_(self):
+        from pyfiglet import figlet_format
+        from random import randint
         fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
         randomint = randint(0,len(fonts)+1)
         if randomint == len(fonts):
