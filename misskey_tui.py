@@ -411,13 +411,13 @@ M       M  I  SSS  T """
         self.msk_.cfgtxts = self.txtbx.value
 
     def poptl(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl))
+        self.popup("Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl)
 
     def poptheme(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme))
+        self.popup("Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme)
 
     def poptoken(self):
-        self._scene.add_effect(PopUpDialog(self.screen,f"How to?\ncurrent instance:{self.msk_.instance}", ["Create", "Select", "return"],self._ser_token))
+        self.popup(f"How to?\ncurrent instance:{self.msk_.instance}", ["Create", "Select", "return"],self._ser_token)
 
     def _ser_tl(self,arg):
         if arg == 0:
@@ -461,11 +461,11 @@ M       M  I  SSS  T """
     def _ser_token(self,arg):
         if arg == 0:
             # Create
-            self._scene.add_effect(PopUpDialog(self.screen,f"MiAuth or write TOKEN?",["MiAuth", "TOKEN", "return"],self._ser_token_create))
+            self.popup(f"MiAuth or write TOKEN?",["MiAuth", "TOKEN", "return"],self._ser_token_create)
         elif arg == 1:
             # Select
             if len(self.msk_.mistconfig["tokens"]) == 0:
-                self._scene.add_effect(PopUpDialog(self.screen,f"Create TOKEN please.", ["ok"]))
+                self.popup(f"Create TOKEN please.", ["ok"])
             else:
                 self._ser_token_search(-1)
     
@@ -477,7 +477,7 @@ M       M  I  SSS  T """
             url = self.msk_.tmp[-1].generate_url()
             urls = makeqr(url,self.screen.width,self.screen.height)
             webshow(url)
-            self._scene.add_effect(PopUpDialog(self.screen,f"miauth url\n\n{urls}\n", ["check ok"],self.miauth_get))
+            self.popup(f"miauth url\n\n{urls}\n", ["check ok"],self.miauth_get)
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
@@ -494,7 +494,7 @@ M       M  I  SSS  T """
         if arg == -1:
             self.msk_.tmp.append(0)
             mes = f'<1/{len(token)}>\n\nSelect\nname:{token[0]["name"]}\ninstance:{token[0]["instance"]}\ntoken:{token[0]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, button, self._ser_token_search))
+            self.popup(mes, button, self._ser_token_search)
         elif arg == 0:
             num = self.msk_.tmp.pop()
             if num == 0:
@@ -505,7 +505,7 @@ M       M  I  SSS  T """
                 self.msk_.tmp.append(num)
                 headmes = "Select\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, button,self._ser_token_search))
+            self.popup(mes, button,self._ser_token_search)
         elif arg == 1:
             num = self.msk_.tmp.pop()
             if num+1 == len(token):
@@ -516,7 +516,7 @@ M       M  I  SSS  T """
                 self.msk_.tmp.append(num)
                 headmes = "Select\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, button,self._ser_token_search))
+            self.popup(mes, button,self._ser_token_search)
         elif arg == 2:
             num = self.msk_.tmp.pop()
             userinfo = token[num]
@@ -534,7 +534,7 @@ M       M  I  SSS  T """
             num = self.msk_.tmp[-1]
             headmes = "Delete this?\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self._scene.add_effect(PopUpDialog(self.screen,mes, ["Yes","No"],self._ser_token_delete))
+            self.popup(mes, ["Yes","No"],self._ser_token_delete)
 
     def _ser_token_delete(self,arg):
         num = self.msk_.tmp.pop()
@@ -562,18 +562,18 @@ M       M  I  SSS  T """
                 self.msk_.mistconfig["tokens"].append(userdict)
                 self.msk_.mistconfig_put()
                 self.msk_.notes = []
-                self._scene.add_effect(PopUpDialog(self.screen, text, ["Ok"], on_close=self.refresh_))
+                self.popup( text, ["Ok"], on_close=self.refresh_)
                 self.msk_.tmp.pop()
             else:
                 text = "MiAuth check Fail :(\ntry again?"
-                self._scene.add_effect(PopUpDialog(self.screen, text, ["again", "return"], self.miauth_get))
+                self.popup( text, ["again", "return"], self.miauth_get)
         else:
             self.msk_.tmp.pop()
 
     def instance_(self, select=-1):
         if select == -1:
             if self.msk_.i is not None:
-                self._scene.add_effect(PopUpDialog(self.screen,"TOKEN detect!\nchange instance will delete TOKEN.\nOk?", ["Ok","No"],on_close=self.instance_))
+                self.popup("TOKEN detect!\nchange instance will delete TOKEN.\nOk?", ["Ok","No"],on_close=self.instance_)
             else:
                 self.msk_.tmp.append("INSTANCE")
                 self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
@@ -640,6 +640,9 @@ M       M  I  SSS  T """
         if notedel:
             self.msk_.notes = []
         raise ResizeScreenError("self error", self._scene)
+
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
 
     @staticmethod
     def return_():
