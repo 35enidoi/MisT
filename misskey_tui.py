@@ -471,15 +471,13 @@ M       M  I  SSS  T """
     
     def _ser_token_create(self,arg):
         if arg == 0:
+            from util import makeqr, webshow
             # MiAuth
             self.msk_.tmp.append(self.msk_.miauth_load())
             url = self.msk_.tmp[-1].generate_url()
-            lonelong = self.screen.width//2
-            lines = len(url)//lonelong
-            space = "      \n      "
-            url_short = space.split("\n")[0]+space.join([url[i*lonelong:(i+1)*lonelong] for i in range(lines)])
-            url_short += space+url[lines*lonelong:]
-            self._scene.add_effect(PopUpDialog(self.screen,f"miauth url\n\n{url_short}\n", ["check ok"],self.miauth_get))
+            urls = makeqr(url,self.screen.width,self.screen.height)
+            webshow(url)
+            self._scene.add_effect(PopUpDialog(self.screen,f"miauth url\n\n{urls}\n", ["check ok"],self.miauth_get))
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
