@@ -772,6 +772,7 @@ class Notification(Frame):
         ntfys = self.msk_.get_ntfy()
         if ntfys is None:
             self.txtbx.value = "Fail to get notifications"
+            self._scene.add_effect(PopUpDialog(self.screen,"Fail to get ntfy", ["Ok"]))
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
             for i in ntfys:
@@ -819,6 +820,7 @@ class Notification(Frame):
                         elif nttype == "reaction":
                             txt.append(f'{username} was reaction [{i["reaction"]}]')
                     self._txtbxput(headtext,*txt,"\n")
+            self._scene.add_effect(PopUpDialog(self.screen,"Success", ["Ok"]))
 
     def _txtbxput(self,*arg):
         for i in arg:
