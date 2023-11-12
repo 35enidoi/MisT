@@ -192,9 +192,9 @@ class NoteView(Frame):
         is_ok = self.msk_.note_update()
         if is_ok:
             self._note_reload()
-            self._scene.add_effect(PopUpDialog(self.screen,"success", ["ok"]))
+            self.popup("success", ["ok"])
         else:
-            self._scene.add_effect(PopUpDialog(self.screen,"something occured", ["ok"]))
+            self.popup("something occured", ["ok"])
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -267,10 +267,10 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"?", ["Create Note", "Renote", "Reaction", "return"],on_close=self._ser_more))
+        self.popup("?", ["Create Note", "Renote", "Reaction", "return"],self._ser_more)
 
     def pop_quit(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Quit?", ["yes", "no"],on_close=self._ser_quit))
+        self.popup("Quit?", ["yes", "no"],self._ser_quit)
 
     def _ser_more(self,arg):
         if arg == 0:
@@ -279,7 +279,7 @@ class NoteView(Frame):
         elif arg == 1:
             # Renote
             if len(self.msk_.notes) == 0:
-                self._scene.add_effect(PopUpDialog(self.screen,"Please Note Get", ["Ok"]))
+                self.popup("Please Note Get", ["Ok"])
             else:
                 if self.msk_.notes[self.msk_.nowpoint].get("renote"):
                     if self.msk_.notes[self.msk_.nowpoint]["text"] is None:
@@ -298,10 +298,10 @@ class NoteView(Frame):
                     text = noteval["text"]
                 else:
                     text = noteval["text"][0:16]+"..."
-                self._scene.add_effect(PopUpDialog(self.screen,f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote))
+                self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
         elif arg == 2:
             #Reaction
-            self._scene.add_effect(PopUpDialog(self.screen,"this is not working :(", ["Ok"]))
+            self.popup("this is not working :(", ["Ok"])
 
     def _ser_renote(self, arg):
         if arg == 0:
@@ -311,9 +311,12 @@ class NoteView(Frame):
                 noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
             createnote = self.msk_.create_note(None,noteid)
             if createnote is not None:
-                self._scene.add_effect(PopUpDialog(self.screen,'Create success! :)', ["Ok"]))
+                self.popup('Create success! :)', ["Ok"])
             else:
-                self._scene.add_effect(PopUpDialog(self.screen,"Create fail :(", ["Ok"]))
+                self.popup("Create fail :(", ["Ok"])
+
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
 
     @staticmethod
     def _ser_quit(arg):
@@ -411,10 +414,10 @@ M       M  I  SSS  T """
         self.msk_.cfgtxts = self.txtbx.value
 
     def poptl(self):
-        self.popup("Change TL", ["HTL", "LTL", "STL", "GTL"],on_close=self._ser_tl)
+        self.popup("Change TL", ["HTL", "LTL", "STL", "GTL"],self._ser_tl)
 
     def poptheme(self):
-        self.popup("Change Theme", ["default", "monochrome", "green", "bright", "return"],on_close=self._ser_theme)
+        self.popup("Change Theme", ["default", "monochrome", "green", "bright", "return"],self._ser_theme)
 
     def poptoken(self):
         self.popup(f"How to?\ncurrent instance:{self.msk_.instance}", ["Create", "Select", "return"],self._ser_token)
@@ -562,11 +565,11 @@ M       M  I  SSS  T """
                 self.msk_.mistconfig["tokens"].append(userdict)
                 self.msk_.mistconfig_put()
                 self.msk_.notes = []
-                self.popup( text, ["Ok"], on_close=self.refresh_)
+                self.popup(text, ["Ok"], self.refresh_)
                 self.msk_.tmp.pop()
             else:
                 text = "MiAuth check Fail :(\ntry again?"
-                self.popup( text, ["again", "return"], self.miauth_get)
+                self.popup(text, ["again", "return"], self.miauth_get)
         else:
             self.msk_.tmp.pop()
 
