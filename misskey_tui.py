@@ -9,7 +9,7 @@ import os
 
 class MkAPIs():
     def __init__(self) -> None:
-        self.version = 0.27
+        self.version = 0.3
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
             self.mistconfig_put(True)
