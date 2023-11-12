@@ -88,7 +88,13 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
             self.notes = []
             return False
-    
+
+    def get_ntfy(self):
+        try:
+            return self.mk.i_notifications(100)
+        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+            return None
+
     def note_update(self):
         noteid = self.notes[0]["id"]
         return self.get_note(noteid[0:8]+"zz")
@@ -285,7 +291,7 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self.popup("?", ["Create Note", "Renote", "Reaction", "return"],self._ser_more)
+        self.popup("?", ["Create Note", "Renote", "Reaction", "Notification", "return"],self._ser_more)
 
     def pop_quit(self):
         self.popup("Quit?", ["yes", "no"],self._ser_quit)
@@ -318,8 +324,11 @@ class NoteView(Frame):
                     text = noteval["text"][0:16]+"..."
                 self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
         elif arg == 2:
-            #Reaction
+            # Reaction
             self.popup("this is not working :(", ["Ok"])
+        elif arg == 3:
+            # Notification
+            raise NextScene("Notification")
 
     def _ser_renote(self, arg):
         if arg == 0:
@@ -355,6 +364,7 @@ class ConfigMenu(Frame):
                                        can_scroll=False)
         # initialize
         self.msk_ = msk
+        self.set_theme(self.msk_.theme)
 
         # txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
@@ -371,7 +381,6 @@ class ConfigMenu(Frame):
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # Layout create
-        self.set_theme(self.msk_.theme)
         layout = Layout([screen.width,2,20])
         self.add_layout(layout)
         self.layout = layout
@@ -724,10 +733,106 @@ class CreateNote(Frame):
     def return_(*_):
         raise NextScene("Main")
 
+class Notification(Frame):
+    def __init__(self, screen, msk):
+        super(Notification, self).__init__(screen,
+                                      screen.height,
+                                      screen.width,
+                                      title="Notification",
+                                      reduce_cpu=True,
+                                      can_scroll=False)
+        # initialize
+        self.msk_ = msk
+        self.set_theme(self.msk_.theme)
+
+        # txtbox create
+        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,readonly=True)
+        self.txtbx.value = "Tab to change widget"
+
+        # buttons create
+        buttonnames = ("Get ntfy", "return")
+        on_click = (self.get_ntfy, self.return_)
+        self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
+
+        # Layout create
+        layout = Layout([14,2,self.screen.width-16])
+        self.add_layout(layout)
+
+        # add widget
+        for i in range(len(self.buttons)):
+            layout.add_widget(self.buttons[i],0)
+        layout.add_widget(VerticalDivider(self.screen.height),1)
+        layout.add_widget(self.txtbx,2)
+
+        #fix
+        self.fix()
+    
+    def get_ntfy(self):
+        self.txtbx.value = ""
+        ntfys = self.msk_.get_ntfy()
+        if ntfys is None:
+            self.txtbx.value = "Fail to get notifications"
+        else:
+            checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
+            for i in ntfys:
+                if (ntfytype := i["type"]) == "follow":
+                    checkntfytype["follow"].append(i)
+                elif ntfytype == "mention":
+                    checkntfytype["mention"].append(i)
+                else:
+                    if not i.get("note"):
+                        continue
+                    if (ntfytype == "renote") or (ntfytype == "quote"):
+                        if i["note"]["renote"]["id"] not in checkntfytype["notes"]:
+                            checkntfytype["notes"][i["note"]["renote"]["id"]] = {"txt":i["note"]["renote"]["text"],"ntfy":[]}
+                        checkntfytype["notes"][i["note"]["renote"]["id"]]["ntfy"].append(i)
+                        continue
+                    if ntfytype == "reply":
+                        if i["note"]["reply"]["id"] not in checkntfytype["notes"]:
+                            checkntfytype["notes"][i["note"]["reply"]["id"]] = {"txt":i["note"]["reply"]["text"],"ntfy":[]}
+                        checkntfytype["notes"][i["note"]["reply"]["id"]]["ntfy"].append(i)
+                        continue
+                    if ntfytype == "reaction":
+                        if i["note"]["id"] not in checkntfytype["notes"]:
+                            checkntfytype["notes"][i["note"]["id"]] = {"txt":i["note"]["text"],"ntfy":[]}
+                        checkntfytype["notes"][i["note"]["id"]]["ntfy"].append(i)
+                    else:
+                        checkntfytype["else"].append(i)
+            if len(follower := checkntfytype["follow"]) != 0:
+                self._txtbxput("Follow comming!","\n".join(char["user"]["name"] for char in follower),"")
+            if len(mentions := checkntfytype["mention"]) != 0:
+                self._txtbxput("mention comming!","\n\n".join(char["user"]["name"]+"\n"+char["note"]["txt"] for char in mentions),"")
+            if len(notes := checkntfytype["notes"]) != 0:
+                for i in notes:
+                    headtext = f"noteid:{i}\n"+f'text:{str(notes[i]["txt"])}\n'
+                    txt = []
+                    for i in notes[i]["ntfy"]:
+                        username = i["user"]["name"]
+                        if (nttype := i["type"]) == "reply":
+                            txt.append(f"{username} was reply")
+                            txt.append(f'{i["note"]["text"]}')
+                        elif nttype == "quote":
+                            txt.append(f"{username} was quoted")
+                            txt.append(f'{i["note"]["text"]}')
+                        elif nttype == "renote":
+                            txt.append(f"{username} was renoted")
+                        elif nttype == "reaction":
+                            txt.append(f'{username} was reaction [{i["reaction"]}]')
+                    self._txtbxput(headtext,*txt,"\n")
+
+    def _txtbxput(self,*arg):
+        for i in arg:
+            self.txtbx.value += str(i)+"\n"
+    
+    @staticmethod
+    def return_():
+        raise NextScene("Main")
+
 def wrap(screen, scene):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
               Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
-              Scene([CreateNote(screen,msk)], -1, name="CreateNote")]
+              Scene([CreateNote(screen,msk)], -1, name="CreateNote"),
+              Scene([Notification(screen,msk)], -1, name="Notification")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 msk = MkAPIs()
