@@ -1,15 +1,20 @@
 # MisT
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2F35enidoi%2FMisT.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2F35enidoi%2FMisT?ref=badge_shield)
 
-Misskey in TUI Program  
-**Mis** skey in **T** UI  
-MisT  
+TUIのMisskeyクライアント、MisT。  
 ## 説明  
-テキストベースのMisskeyクライアントです  
-作った理由は  
-- CUIのクライアントがないから
-- CUIより操作が簡単で、GUIのような操作感のあるものを作りたい
+テキストユーザーインターフェース(TUI)を持ったMisskeyクライアントです  
+まだ開発中なので機能は少ないしバグもあるかもしれません。  
+### なぜTUI？  
+**かっこいいから**です。  
+## 作った理由  
+- ターミナルで動くクライアントが無いから(調べたらあったけどまぁ...)
 - 学習のため
+## 特徴
+- 軽い
+- デスクトップがなくても使える
+- CUIみたいでかっこいい
+- GUIのような直感的な操作
 - **かっこいい**
 ## 問題  
 ASCIIMATICSの仕様上windowsでは表示が崩れる可能性が高いです。  
