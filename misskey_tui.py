@@ -746,7 +746,8 @@ class Notification(Frame):
         self.set_theme(self.msk_.theme)
 
         # txtbox create
-        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,readonly=True)
+        self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
+        self.txtbx.auto_scroll = False
         self.txtbx.value = "Tab to change widget"
 
         # buttons create
