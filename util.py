@@ -1,4 +1,10 @@
 def makeqr(url,width,height):
+    """
+    QRコードを作る関数
+
+    optionalのqrcodeがあればQRコードを作る
+
+    ただしスクリーンのサイズが小さいとそのまま"""
     try:
         import qrcode
         qr = qrcode.QRCode(
@@ -30,5 +36,9 @@ def makeqr(url,width,height):
         return space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
 
 def webshow(url):
+    """
+    WEBを開く関数
+    
+    デスクトップ環境がない場合動作しないことを確認済み(Raspberry Pi OS Lite(Bullseye) : Raspberrypi Zero 2 W)(SSH接続)"""
     import webbrowser
     webbrowser.open(url)
