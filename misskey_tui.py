@@ -74,16 +74,16 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
             return None
 
-    def get_note(self,noteid=None):
+    def get_note(self,untilid=None,sinceid=None):
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False,until_id=noteid)
+                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False,until_id=noteid)
+                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False,until_id=noteid)
+                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=noteid)
+                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
             return True
         except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
             self.notes = []
@@ -183,8 +183,26 @@ class NoteView(Frame):
         self._note_reload()
         self.fix()
 
-    def get_note(self):
-        self.msk_.get_note()
+    def get_note(self,arg=-1):
+        if arg == -1:
+            self.popup("note get from",["latest","until","since","return"],self.get_note)
+            return
+        elif arg == 0:
+            untilid = None
+            sinceid = None
+        elif arg == 3:
+            return
+        else:
+            if len(self.msk_.notes) == 0:
+                self.popup("get note please(latest)",["Ok"])
+                return
+            elif arg == 1:
+                untilid = self.msk_.notes[self.msk_.nowpoint]["id"]
+                sinceid = None
+            elif arg == 2:
+                untilid = None
+                sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
+        self.msk_.get_note(untilid,sinceid)
         self.msk_.nowpoint=0
         self._note_reload()
     
