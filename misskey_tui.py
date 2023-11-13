@@ -695,8 +695,8 @@ class CreateNote(Frame):
         self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
-        buttonnames = ("Note Create", "return")
-        on_click = (self.popcreatenote, self.return_)
+        buttonnames = ("Note Create", "hug punch", "return")
+        on_click = (self.popcreatenote, self.hug_punch, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -715,6 +715,12 @@ class CreateNote(Frame):
 
     def reminder(self):
         self.msk_.crnotetxts = self.txtbx.value
+    
+    def hug_punch(self):
+        from random import randint
+        hugpunchs = ["(Δ・x・Δ)","v('ω')v","(=^・・^=)","✌️(´･_･`)✌️",
+                     "( ‘ω’ و(و “","ԅ( ˘ω˘ ԅ)ﾓﾐﾓﾐ","🐡( '-' 🐡 )ﾌｸﾞﾊﾟﾝﾁ!!!!","(｡>﹏<｡)"]
+        self.txtbx.value += hugpunchs[randint(0,len(hugpunchs)-1)]
 
     def popcreatenote(self):
         self._scene.add_effect(PopUpDialog(self.screen,"Are you sure about that?", ["Sure", "No"],self._ser_createnote))
