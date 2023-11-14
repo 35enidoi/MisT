@@ -4,7 +4,7 @@ from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
-import requests
+from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL
 import os
 
 class MkAPIs():
@@ -52,7 +52,7 @@ class MkAPIs():
                 self.mk.i()
             return True
         except (exceptions.MisskeyAPIException, exceptions.MisskeyAuthorizeFailedException,
-                requests.exceptions.ConnectionError,requests.exceptions.ReadTimeout):
+                ConnectionError, ReadTimeout, InvalidURL):
             self.mk = bef_mk
             return False
 
@@ -71,7 +71,7 @@ class MkAPIs():
     def get_i(self):
         try:
             return self.mk.i()
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
+        except (exceptions.MisskeyAPIException, ConnectionError):
             return None
 
     def get_note(self,untilid=None,sinceid=None):
@@ -85,14 +85,14 @@ class MkAPIs():
             elif self.tl == "GTL":
                 self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        except (exceptions.MisskeyAPIException, ReadTimeout):
             self.notes = []
             return False
 
     def get_ntfy(self):
         try:
             return self.mk.i_notifications(100)
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
     def note_update(self):
@@ -102,17 +102,18 @@ class MkAPIs():
     def noteshow(self,noteid):
         try:
             return self.mk.notes_show(noteid)
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
     def get_instance_meta(self):
         try:
             self.meta = self.mk.meta()
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
+        except (exceptions.MisskeyAPIException, ConnectTimeout):
             return False
 
     def get_instance_icon(self):
+        import requests
         try:
             iconurl = self.meta["iconUrl"]
             returns = requests.get(iconurl)
@@ -122,7 +123,7 @@ class MkAPIs():
                 return icon
             else:
                 return "Error"
-        except requests.exceptions.ConnectTimeout:
+        except ConnectTimeout:
             return "Error"
 
     def create_note(self, text, renoteid=None):
