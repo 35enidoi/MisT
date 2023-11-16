@@ -27,6 +27,8 @@ class MkAPIs():
         self.nowpoint = 0
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
+        self.crnoteconf = {"CW":None}
+        self.constcrnoteconf = self.crnoteconf[:]
         # Misskey py settings
         self.instance="misskey.io"
         self.i = None
@@ -126,9 +128,15 @@ class MkAPIs():
         except ConnectTimeout:
             return "Error"
 
-    def create_note(self, text, renoteid=None):
+    def create_note(self, text):
         try:
-            return self.mk.notes_create(text,renote_id=renoteid)
+            return self.mk.notes_create(text, cw=self.crnoteconf["CW"])
+        except exceptions.MisskeyAPIException:
+            return None
+
+    def create_renote(self, renoteid):
+        try:
+            return self.mk.notes_create(renote_id=renoteid)
         except exceptions.MisskeyAPIException:
             return None
 
@@ -337,7 +345,7 @@ class NoteView(Frame):
                 noteid = self.msk_.notes[self.msk_.nowpoint]["renote"]["id"]
             else:
                 noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
-            createnote = self.msk_.create_note(None,noteid)
+            createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
                 self.popup('Create success! :)', ["Ok"])
             else:
@@ -696,8 +704,8 @@ class CreateNote(Frame):
         self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
-        buttonnames = ("Note Create", "hug punch", "return")
-        on_click = (self.popcreatenote, self.hug_punch, self.return_)
+        buttonnames = ("Note Create", "hug punch", "return", "MoreConf")
+        on_click = (self.popcreatenote, self.hug_punch, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -733,12 +741,90 @@ class CreateNote(Frame):
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note success :)", ["Ok"],on_close=self.return_))
                 self.msk_.crnotetxts = "Tab to change widget"
                 self.txtbx.value = self.msk_.crnotetxts
+                self.msk_.crnoteconf = self.msk_.constcrnoteconf[:]
             else:
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
 
     @staticmethod
+    def conf_():
+        raise NextScene("CreNoteConf")
+
+    @staticmethod
     def return_(*_):
         raise NextScene("Main")
+
+class CreateNoteConfig(Frame):
+    def __init__(self, screen, msk):
+        super(CreateNoteConfig, self).__init__(screen,
+                                    screen.height,
+                                    screen.width,
+                                    title="CreateNoteCfg",
+                                    reduce_cpu=True,
+                                    can_scroll=False)
+        # initialize
+        self.msk_ = msk
+        self.set_theme(self.msk_.theme)
+
+        # txt create
+        self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
+        self.txt = Text()
+
+        # buttons
+        buttonnames = ("return","CW","OK")
+        onclicks = (self.return_,self.cw,self.ok_)
+        self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
+
+        # layout
+        self.layout = Layout([screen.width,2,20])
+        self.add_layout(self.layout)
+
+        # add widget
+        self.layout.add_widget(self.txtbx,0)
+        self.layout.add_widget(VerticalDivider(screen.height),1)
+        for i in self.buttons:
+            self.layout.add_widget(i,2)
+        self.layout.add_widget(self.txt,2)
+
+        # disables
+        self.txtbx.disabled = True
+        self.txt.disabled = True
+        self.buttons[-1].disabled = True
+
+        # fix
+        self.nowconf()
+        self.fix()
+    
+    def cw(self):
+        self.msk_.tmp.append("cw")
+        self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
+        self._disables()
+
+    def ok_(self):
+        if (ok_value := self.msk_.tmp.pop()) == "cw":
+            self.msk_.crnoteconf["CW"] = None if self.txt.value == "" else self.txt.value
+        self.nowconf()
+        self._disables(True)
+
+    def _disables(self,rev=False):
+        if rev:
+            self.txt.value = ""
+        self.txt.disabled = rev
+        for i in self.buttons:
+            i.disabled = (not rev)
+        self.buttons[-1].disabled = rev
+        if rev:
+            self.switch_focus(self.layout,2,0)
+        else:
+            self.switch_focus(self.layout,2,len(self.buttons))
+
+    def nowconf(self):
+        self.txtbx.value = ""
+        for i in self.msk_.crnoteconf.keys():
+            self.txtbx.value += f"{i}:{self.msk_.crnoteconf[i]}\n"
+
+    @staticmethod
+    def return_():
+        raise NextScene("CreateNote")
 
 class Notification(Frame):
     def __init__(self, screen, msk):
@@ -842,7 +928,8 @@ def wrap(screen, scene):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
               Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
               Scene([CreateNote(screen,msk)], -1, name="CreateNote"),
-              Scene([Notification(screen,msk)], -1, name="Notification")]
+              Scene([Notification(screen,msk)], -1, name="Notification"),
+              Scene([CreateNoteConfig(screen,msk)], -1, name="CreNoteConf")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 msk = MkAPIs()
