@@ -28,7 +28,7 @@ class MkAPIs():
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
         self.crnoteconf = {"CW":None}
-        self.constcrnoteconf = self.crnoteconf[:]
+        self.constcrnoteconf = self.crnoteconf.copy()
         # Misskey py settings
         self.instance="misskey.io"
         self.i = None
@@ -521,11 +521,7 @@ M       M  I  SSS  T """
             # TOKEN
             self._txtbxput("write your TOKEN")
             self.msk_.tmp.append("TOKEN")
-            self.txt.disabled = False
-            for i in self.buttons:
-                i.disabled = True
-            self.buttons[-1].disabled = False
-            self.switch_focus(self.layout,2,len(self.buttons))
+            self._disables()
     
     def _ser_token_search(self,arg):
         token = self.msk_.mistconfig["tokens"]
@@ -616,12 +612,8 @@ M       M  I  SSS  T """
             else:
                 self.msk_.tmp.append("INSTANCE")
                 self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
-                self.txt.disabled = False
-                for i in self.buttons:
-                    i.disabled = True
-                self.buttons[-1].disabled = False
-                self.switch_focus(self.layout,2,len(self.buttons))
-        if select == 0:
+                self._disables()
+        elif select == 0:
             self.msk_.i = None
             self.instance_()
 
@@ -668,12 +660,19 @@ M       M  I  SSS  T """
                 self._txtbxput("instance connect fail :(")
             self._txtbxput(f"current instance:{self.msk_.instance}","")
             self.refresh_()
-        self.txt.value = ""
-        self.txt.disabled = True
+        self._disables(True)
+
+    def _disables(self,rev=False):
+        if rev:
+            self.txt.value = ""
+        self.txt.disabled = rev
         for i in self.buttons:
-            i.disabled = False
-        self.buttons[-1].disabled = True
-        self.switch_focus(self.layout,2,0)
+            i.disabled = (not rev)
+        self.buttons[-1].disabled = rev
+        if rev:
+            self.switch_focus(self.layout,2,0)
+        else:
+            self.switch_focus(self.layout,2,len(self.buttons))
 
     def refresh_(self, notedel=False):
         if notedel:
@@ -741,7 +740,7 @@ class CreateNote(Frame):
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note success :)", ["Ok"],on_close=self.return_))
                 self.msk_.crnotetxts = "Tab to change widget"
                 self.txtbx.value = self.msk_.crnotetxts
-                self.msk_.crnoteconf = self.msk_.constcrnoteconf[:]
+                self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
 
@@ -760,7 +759,8 @@ class CreateNoteConfig(Frame):
                                     screen.width,
                                     title="CreateNoteCfg",
                                     reduce_cpu=True,
-                                    can_scroll=False)
+                                    can_scroll=False,
+                                    on_load=self.nowconf)
         # initialize
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
