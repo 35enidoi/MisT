@@ -4,7 +4,7 @@ from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
-import requests
+from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL
 import os
 
 class MkAPIs():
@@ -27,6 +27,8 @@ class MkAPIs():
         self.nowpoint = 0
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
+        self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
+        self.constcrnoteconf = self.crnoteconf.copy()
         # Misskey py settings
         self.instance="misskey.io"
         self.i = None
@@ -52,7 +54,7 @@ class MkAPIs():
                 self.mk.i()
             return True
         except (exceptions.MisskeyAPIException, exceptions.MisskeyAuthorizeFailedException,
-                requests.exceptions.ConnectionError,requests.exceptions.ReadTimeout):
+                ConnectionError, ReadTimeout, InvalidURL):
             self.mk = bef_mk
             return False
 
@@ -71,7 +73,7 @@ class MkAPIs():
     def get_i(self):
         try:
             return self.mk.i()
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectionError):
+        except (exceptions.MisskeyAPIException, ConnectionError):
             return None
 
     def get_note(self,untilid=None,sinceid=None):
@@ -85,14 +87,14 @@ class MkAPIs():
             elif self.tl == "GTL":
                 self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        except (exceptions.MisskeyAPIException, ReadTimeout):
             self.notes = []
             return False
 
     def get_ntfy(self):
         try:
             return self.mk.i_notifications(100)
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
     def note_update(self):
@@ -102,17 +104,18 @@ class MkAPIs():
     def noteshow(self,noteid):
         try:
             return self.mk.notes_show(noteid)
-        except (exceptions.MisskeyAPIException, requests.exceptions.ReadTimeout):
+        except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
     def get_instance_meta(self):
         try:
             self.meta = self.mk.meta()
             return True
-        except (exceptions.MisskeyAPIException, requests.exceptions.ConnectTimeout):
+        except (exceptions.MisskeyAPIException, ConnectTimeout):
             return False
 
     def get_instance_icon(self):
+        import requests
         try:
             iconurl = self.meta["iconUrl"]
             returns = requests.get(iconurl)
@@ -122,12 +125,20 @@ class MkAPIs():
                 return icon
             else:
                 return "Error"
-        except requests.exceptions.ConnectTimeout:
+        except ConnectTimeout:
             return "Error"
 
-    def create_note(self, text, renoteid=None):
+    def create_note(self, text):
         try:
-            return self.mk.notes_create(text,renote_id=renoteid)
+            return self.mk.notes_create(text, self.crnoteconf["CW"],
+                                        renote_id=self.crnoteconf["renoteId"],
+                                        reply_id=self.crnoteconf["replyId"])
+        except exceptions.MisskeyAPIException:
+            return None
+
+    def create_renote(self, renoteid):
+        try:
+            return self.mk.notes_create(renote_id=renoteid)
         except exceptions.MisskeyAPIException:
             return None
 
@@ -291,7 +302,7 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self.popup("?", ["Create Note", "Renote", "Reaction", "Notification", "return"],self._ser_more)
+        self.popup("?", ["Create Note", "Renote", "Reply", "Reaction", "Notification", "return"],self._ser_more)
 
     def pop_quit(self):
         self.popup("Quit?", ["yes", "no"],self._ser_quit)
@@ -301,34 +312,62 @@ class NoteView(Frame):
             # Create Note
             raise NextScene("CreateNote")
         elif arg == 1:
-            # Renote
+            # Renote or Quote
             if len(self.msk_.notes) == 0:
                 self.popup("Please Note Get", ["Ok"])
             else:
-                if self.msk_.notes[self.msk_.nowpoint].get("renote"):
-                    if self.msk_.notes[self.msk_.nowpoint]["text"] is None:
-                        noteval = self.msk_.notes[self.msk_.nowpoint]["renote"]
-                        username = noteval["user"]["name"]
-                        noteid = noteval["id"]
-                    else:
-                        noteval = self.msk_.notes[self.msk_.nowpoint]
-                        username = noteval["user"]["name"]
-                        noteid = noteval["id"]
-                else:
-                    noteval = self.msk_.notes[self.msk_.nowpoint]
-                    username = noteval["user"]["name"]
-                    noteid = noteval["id"]
-                if len(noteval["text"]) <= 15:
-                    text = noteval["text"]
-                else:
-                    text = noteval["text"][0:16]+"..."
-                self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
+                self.popup(f'Renote or Quote?', ["Renote", "Quote", "Return"],self._ser_rn)
         elif arg == 2:
+            # Reply
+            if len(self.msk_.notes) == 0:
+                self.popup("Please Note Get", ["Ok"])
+            else:
+                if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                    if noteval["text"] is None:
+                        noteid = noteval["renote"]["id"]
+                    else:
+                        noteid = noteval["id"]
+                else:
+                    noteid = noteval["id"]
+                self.msk_.crnoteconf["replyId"] = noteid
+                raise NextScene("CreateNote")
+        elif arg == 3:
             # Reaction
             self.popup("this is not working :(", ["Ok"])
-        elif arg == 3:
+        elif arg == 4:
             # Notification
             raise NextScene("Notification")
+    
+    def _ser_rn(self, arg):
+        if arg == 0:
+            # Renote
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteval = noteval["renote"]
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+                else:
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+            else:
+                username = noteval["user"]["name"]
+                noteid = noteval["id"]
+            if len(noteval["text"]) <= 15:
+                text = noteval["text"]
+            else:
+                text = noteval["text"][0:16]+"..."
+            self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
+        if arg == 1:
+            # Quote
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
+            else:
+                noteid = noteval["id"]
+            self.msk_.crnoteconf["renoteId"] = noteid
+            raise NextScene("CreateNote")
 
     def _ser_renote(self, arg):
         if arg == 0:
@@ -336,7 +375,7 @@ class NoteView(Frame):
                 noteid = self.msk_.notes[self.msk_.nowpoint]["renote"]["id"]
             else:
                 noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
-            createnote = self.msk_.create_note(None,noteid)
+            createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
                 self.popup('Create success! :)', ["Ok"])
             else:
@@ -501,22 +540,19 @@ M       M  I  SSS  T """
     
     def _ser_token_create(self,arg):
         if arg == 0:
-            from util import makeqr, webshow
+            from util import shorter, pypcopy, webshow
             # MiAuth
             self.msk_.tmp.append(self.msk_.miauth_load())
             url = self.msk_.tmp[-1].generate_url()
-            urls = makeqr(url,self.screen.width,self.screen.height)
+            copysuccess = pypcopy(url)
+            url = shorter(url,self.screen.width)
             webshow(url)
-            self.popup(f"miauth url\n\n{urls}\n", ["check ok"],self.miauth_get)
+            self.popup(f"miauth url\n\n{url}\n\n"+"cliped!" if copysuccess else "", ["check ok"],self.miauth_get)
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
             self.msk_.tmp.append("TOKEN")
-            self.txt.disabled = False
-            for i in self.buttons:
-                i.disabled = True
-            self.buttons[-1].disabled = False
-            self.switch_focus(self.layout,2,len(self.buttons))
+            self._disables()
     
     def _ser_token_search(self,arg):
         token = self.msk_.mistconfig["tokens"]
@@ -607,12 +643,8 @@ M       M  I  SSS  T """
             else:
                 self.msk_.tmp.append("INSTANCE")
                 self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
-                self.txt.disabled = False
-                for i in self.buttons:
-                    i.disabled = True
-                self.buttons[-1].disabled = False
-                self.switch_focus(self.layout,2,len(self.buttons))
-        if select == 0:
+                self._disables()
+        elif select == 0:
             self.msk_.i = None
             self.instance_()
 
@@ -659,12 +691,19 @@ M       M  I  SSS  T """
                 self._txtbxput("instance connect fail :(")
             self._txtbxput(f"current instance:{self.msk_.instance}","")
             self.refresh_()
-        self.txt.value = ""
-        self.txt.disabled = True
+        self._disables(True)
+
+    def _disables(self,rev=False):
+        if rev:
+            self.txt.value = ""
+        self.txt.disabled = rev
         for i in self.buttons:
-            i.disabled = False
-        self.buttons[-1].disabled = True
-        self.switch_focus(self.layout,2,0)
+            i.disabled = (not rev)
+        self.buttons[-1].disabled = rev
+        if rev:
+            self.switch_focus(self.layout,2,0)
+        else:
+            self.switch_focus(self.layout,2,len(self.buttons))
 
     def refresh_(self, notedel=False):
         if notedel:
@@ -695,8 +734,8 @@ class CreateNote(Frame):
         self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
-        buttonnames = ("Note Create", "hug punch", "return")
-        on_click = (self.popcreatenote, self.hug_punch, self.return_)
+        buttonnames = ("Note Create", "hug punch", "return", "MoreConf")
+        on_click = (self.popcreatenote, self.hug_punch, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -732,12 +771,139 @@ class CreateNote(Frame):
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note success :)", ["Ok"],on_close=self.return_))
                 self.msk_.crnotetxts = "Tab to change widget"
                 self.txtbx.value = self.msk_.crnotetxts
+                self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
 
+    def _ser_ret(self,arg):
+        if arg == 0:
+            self.msk_.crnoteconf["renoteId"] = None
+            self.msk_.crnoteconf["replyId"] = None
+            self.return_()
+
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
+
+    def return_(self,*_):
+        if (n := self.msk_.crnoteconf)["renoteId"] is not None:
+            self.popup("renoteId detect!\nif return, it will delete\n are you sure about that?",["sure","no"],self._ser_ret)
+        elif n["replyId"] is not None:
+            self.popup("replyId detect!\nif return, it will delete\n are you sure about that?",["sure","no"],self._ser_ret)
+        else:
+            raise NextScene("Main")
+
     @staticmethod
-    def return_(*_):
-        raise NextScene("Main")
+    def conf_():
+        raise NextScene("CreNoteConf")
+
+class CreateNoteConfig(Frame):
+    def __init__(self, screen, msk):
+        super(CreateNoteConfig, self).__init__(screen,
+                                    screen.height,
+                                    screen.width,
+                                    title="CreateNoteCfg",
+                                    reduce_cpu=True,
+                                    can_scroll=False,
+                                    on_load=self.nowconf)
+        # initialize
+        self.msk_ = msk
+        self.set_theme(self.msk_.theme)
+
+        # txt create
+        self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
+        self.txt = Text()
+
+        # buttons
+        buttonnames = ("return","CW","renoteId","replyId","OK")
+        onclicks = (self.return_,self.cw,self.renoteid,self.replyid,self.ok_)
+        self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
+
+        # layout
+        self.layout = Layout([screen.width,2,20])
+        self.add_layout(self.layout)
+
+        # add widget
+        self.layout.add_widget(self.txtbx,0)
+        self.layout.add_widget(VerticalDivider(screen.height),1)
+        for i in self.buttons:
+            self.layout.add_widget(i,2)
+        self.layout.add_widget(self.txt,2)
+
+        # disables
+        self.txtbx.disabled = True
+        self.txt.disabled = True
+        self.buttons[-1].disabled = True
+
+        # fix
+        self.nowconf()
+        self.fix()
+    
+    def cw(self):
+        self.msk_.tmp.append("cw")
+        self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
+        self._disables()
+    
+    def renoteid(self):
+        self.msk_.tmp.append("renote")
+        self.txt.value = "" if self.msk_.crnoteconf["renoteId"] is None else self.msk_.crnoteconf["renoteId"]
+        self._disables()
+
+    def replyid(self):
+        self.msk_.tmp.append("reply")
+        self.txt.value = "" if self.msk_.crnoteconf["replyId"] is None else self.msk_.crnoteconf["replyId"]
+        self._disables()
+
+    def ok_(self):
+        if (ok_value := self.msk_.tmp.pop()) == "cw":
+            self.msk_.crnoteconf["CW"] = None if self.txt.value == "" else self.txt.value
+        elif ok_value == "renote":
+            if self.txt.value == "":
+                self.msk_.crnoteconf["renoteId"] = None
+            else:
+                note = self.msk_.noteshow(self.txt.value)
+                if note is not None:
+                    self.popup(f'user:{note["user"]["name"]}\ntext:{note["text"]}',["ok"])
+                    self.msk_.crnoteconf["renoteId"] = self.txt.value
+                else:
+                    self.popup("note show fail :(\nmaybe this noteId is unavailable",["ok"])
+                    self.msk_.crnoteconf["renoteId"] = None
+        elif ok_value == "reply":
+            if self.txt.value == "":
+                self.msk_.crnoteconf["replyId"] = None
+            else:
+                note = self.msk_.noteshow(self.txt.value)
+                if note is not None:
+                    self.popup(f'user:{note["user"]["name"]}\ntext:{note["text"]}',["ok"])
+                    self.msk_.crnoteconf["replyId"] = self.txt.value
+                else:
+                    self.popup("note show fail :(\nmaybe this noteId is unavailable",["ok"])
+                    self.msk_.crnoteconf["replyId"] = None
+        self.nowconf()
+        self._disables(True)
+
+    def _disables(self,rev=False):
+        if rev:
+            self.txt.value = ""
+        self.txt.disabled = rev
+        for i in self.buttons:
+            i.disabled = (not rev)
+        self.buttons[-1].disabled = rev
+        if rev:
+            self.switch_focus(self.layout,2,0)
+        else:
+            self.switch_focus(self.layout,2,len(self.buttons))
+
+    def nowconf(self):
+        self.txtbx.value = ""
+        for i in self.msk_.crnoteconf.keys():
+            self.txtbx.value += f"{i}:{self.msk_.crnoteconf[i]}\n"
+
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
+
+    @staticmethod
+    def return_():
+        raise NextScene("CreateNote")
 
 class Notification(Frame):
     def __init__(self, screen, msk):
@@ -841,7 +1007,8 @@ def wrap(screen, scene):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
               Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
               Scene([CreateNote(screen,msk)], -1, name="CreateNote"),
-              Scene([Notification(screen,msk)], -1, name="Notification")]
+              Scene([Notification(screen,msk)], -1, name="Notification"),
+              Scene([CreateNoteConfig(screen,msk)], -1, name="CreNoteConf")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 msk = MkAPIs()
