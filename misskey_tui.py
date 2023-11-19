@@ -27,7 +27,7 @@ class MkAPIs():
         self.nowpoint = 0
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
-        self.crnoteconf = {"CW":None}
+        self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
         self.constcrnoteconf = self.crnoteconf.copy()
         # Misskey py settings
         self.instance="misskey.io"
@@ -130,7 +130,9 @@ class MkAPIs():
 
     def create_note(self, text):
         try:
-            return self.mk.notes_create(text, cw=self.crnoteconf["CW"])
+            return self.mk.notes_create(text, self.crnoteconf["CW"],
+                                        renote_id=self.crnoteconf["renoteId"],
+                                        reply_id=self.crnoteconf["replyId"])
         except exceptions.MisskeyAPIException:
             return None
 
@@ -300,7 +302,7 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self.popup("?", ["Create Note", "Renote", "Reaction", "Notification", "return"],self._ser_more)
+        self.popup("?", ["Create Note", "Renote", "Reply", "Reaction", "Notification", "return"],self._ser_more)
 
     def pop_quit(self):
         self.popup("Quit?", ["yes", "no"],self._ser_quit)
@@ -310,34 +312,62 @@ class NoteView(Frame):
             # Create Note
             raise NextScene("CreateNote")
         elif arg == 1:
-            # Renote
+            # Renote or Quote
             if len(self.msk_.notes) == 0:
                 self.popup("Please Note Get", ["Ok"])
             else:
-                if self.msk_.notes[self.msk_.nowpoint].get("renote"):
-                    if self.msk_.notes[self.msk_.nowpoint]["text"] is None:
-                        noteval = self.msk_.notes[self.msk_.nowpoint]["renote"]
-                        username = noteval["user"]["name"]
-                        noteid = noteval["id"]
-                    else:
-                        noteval = self.msk_.notes[self.msk_.nowpoint]
-                        username = noteval["user"]["name"]
-                        noteid = noteval["id"]
-                else:
-                    noteval = self.msk_.notes[self.msk_.nowpoint]
-                    username = noteval["user"]["name"]
-                    noteid = noteval["id"]
-                if len(noteval["text"]) <= 15:
-                    text = noteval["text"]
-                else:
-                    text = noteval["text"][0:16]+"..."
-                self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
+                self.popup(f'Renote or Quote?', ["Renote", "Quote", "Return"],self._ser_rn)
         elif arg == 2:
+            # Reply
+            if len(self.msk_.notes) == 0:
+                self.popup("Please Note Get", ["Ok"])
+            else:
+                if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                    if noteval["text"] is None:
+                        noteid = noteval["renote"]["id"]
+                    else:
+                        noteid = noteval["id"]
+                else:
+                    noteid = noteval["id"]
+                self.msk_.crnoteconf["replyId"] = noteid
+                raise NextScene("CreateNote")
+        elif arg == 3:
             # Reaction
             self.popup("this is not working :(", ["Ok"])
-        elif arg == 3:
+        elif arg == 4:
             # Notification
             raise NextScene("Notification")
+    
+    def _ser_rn(self, arg):
+        if arg == 0:
+            # Renote
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteval = noteval["renote"]
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+                else:
+                    username = noteval["user"]["name"]
+                    noteid = noteval["id"]
+            else:
+                username = noteval["user"]["name"]
+                noteid = noteval["id"]
+            if len(noteval["text"]) <= 15:
+                text = noteval["text"]
+            else:
+                text = noteval["text"][0:16]+"..."
+            self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
+        if arg == 1:
+            # Quote
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
+            else:
+                noteid = noteval["id"]
+            self.msk_.crnoteconf["renoteId"] = noteid
+            raise NextScene("CreateNote")
 
     def _ser_renote(self, arg):
         if arg == 0:
@@ -744,13 +774,26 @@ class CreateNote(Frame):
             else:
                 self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
 
+    def _ser_ret(self,arg):
+        if arg == 0:
+            self.msk_.crnoteconf["renoteId"] = None
+            self.msk_.crnoteconf["replyId"] = None
+            self.return_()
+
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
+
+    def return_(self,*_):
+        if (n := self.msk_.crnoteconf)["renoteId"] is not None:
+            self.popup("renoteId detect!\nif return, it will delete\n are you sure about that?",["sure","no"],self._ser_ret)
+        elif n["replyId"] is not None:
+            self.popup("replyId detect!\nif return, it will delete\n are you sure about that?",["sure","no"],self._ser_ret)
+        else:
+            raise NextScene("Main")
+
     @staticmethod
     def conf_():
         raise NextScene("CreNoteConf")
-
-    @staticmethod
-    def return_(*_):
-        raise NextScene("Main")
 
 class CreateNoteConfig(Frame):
     def __init__(self, screen, msk):
@@ -770,8 +813,8 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ("return","CW","OK")
-        onclicks = (self.return_,self.cw,self.ok_)
+        buttonnames = ("return","CW","renoteId","replyId","OK")
+        onclicks = (self.return_,self.cw,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # layout
@@ -798,10 +841,42 @@ class CreateNoteConfig(Frame):
         self.msk_.tmp.append("cw")
         self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
         self._disables()
+    
+    def renoteid(self):
+        self.msk_.tmp.append("renote")
+        self.txt.value = "" if self.msk_.crnoteconf["renoteId"] is None else self.msk_.crnoteconf["renoteId"]
+        self._disables()
+
+    def replyid(self):
+        self.msk_.tmp.append("reply")
+        self.txt.value = "" if self.msk_.crnoteconf["replyId"] is None else self.msk_.crnoteconf["replyId"]
+        self._disables()
 
     def ok_(self):
         if (ok_value := self.msk_.tmp.pop()) == "cw":
             self.msk_.crnoteconf["CW"] = None if self.txt.value == "" else self.txt.value
+        elif ok_value == "renote":
+            if self.txt.value == "":
+                self.msk_.crnoteconf["renoteId"] = None
+            else:
+                note = self.msk_.noteshow(self.txt.value)
+                if note is not None:
+                    self.popup(f'user:{note["user"]["name"]}\ntext:{note["text"]}',["ok"])
+                    self.msk_.crnoteconf["renoteId"] = self.txt.value
+                else:
+                    self.popup("note show fail :(\nmaybe this noteId is unavailable",["ok"])
+                    self.msk_.crnoteconf["renoteId"] = None
+        elif ok_value == "reply":
+            if self.txt.value == "":
+                self.msk_.crnoteconf["replyId"] = None
+            else:
+                note = self.msk_.noteshow(self.txt.value)
+                if note is not None:
+                    self.popup(f'user:{note["user"]["name"]}\ntext:{note["text"]}',["ok"])
+                    self.msk_.crnoteconf["replyId"] = self.txt.value
+                else:
+                    self.popup("note show fail :(\nmaybe this noteId is unavailable",["ok"])
+                    self.msk_.crnoteconf["replyId"] = None
         self.nowconf()
         self._disables(True)
 
@@ -821,6 +896,9 @@ class CreateNoteConfig(Frame):
         self.txtbx.value = ""
         for i in self.msk_.crnoteconf.keys():
             self.txtbx.value += f"{i}:{self.msk_.crnoteconf[i]}\n"
+
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
 
     @staticmethod
     def return_():
