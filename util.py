@@ -1,39 +1,19 @@
-def makeqr(url,width,height):
+def shorter(url,width):
+    """画面に合わせて改行を入れるもの"""
+    space = "      \n      "
+    lens = width//2
+    lines = len(url)//lens
+    return space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
+
+def pypcopy(url):
     """
-    QRコードを作る関数
-
-    optionalのqrcodeがあればQRコードを作る
-
-    ただしスクリーンのサイズが小さいとそのまま"""
+    copyする奴"""
     try:
-        import qrcode
-        qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=1,
-        border=3,
-    )
-        qr.add_data(url)
-        qr.make()
-        image = qr.make_image(fill_color="black", back_color="white")
-        image.show()
-        if (size := image.size[0]) > (width if width > height else height)//4:
-            raise ImportError
-        else:
-            rttxt = ""
-            for i in range(size):
-                for r in range(size):
-                    if image.getpixel((i,r)) == 255:
-                        rttxt += "■"
-                    else:
-                        rttxt += "□"
-                rttxt += "\n"
-            return rttxt
+        import pyperclip
+        pyperclip.copy(url)
+        return True
     except ImportError:
-        space = "      \n      "
-        lens = width//2
-        lines = len(url)//lens
-        return space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
+        return False
 
 def webshow(url):
     """

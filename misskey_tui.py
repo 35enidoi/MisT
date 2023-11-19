@@ -540,13 +540,14 @@ M       M  I  SSS  T """
     
     def _ser_token_create(self,arg):
         if arg == 0:
-            from util import makeqr, webshow
+            from util import shorter, pypcopy, webshow
             # MiAuth
             self.msk_.tmp.append(self.msk_.miauth_load())
             url = self.msk_.tmp[-1].generate_url()
-            urls = makeqr(url,self.screen.width,self.screen.height)
+            copysuccess = pypcopy(url)
+            url = shorter(url,self.screen.width)
             webshow(url)
-            self.popup(f"miauth url\n\n{urls}\n", ["check ok"],self.miauth_get)
+            self.popup(f"miauth url\n\n{url}\n\n"+"cliped!" if copysuccess else "", ["check ok"],self.miauth_get)
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
