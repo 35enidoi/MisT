@@ -9,17 +9,22 @@ import os
 
 class MkAPIs():
     def __init__(self) -> None:
-        self.version = 0.3
+        # version
+        # syoumi tekitouni ageteru noha naisyo
+        self.version = 0.35
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
             self.mistconfig_put(True)
-            self.theme = self.mistconfig["theme"]
             if self.mistconfig["version"] < self.version:
                 self.mistconfig["version"] = self.version
+                if not self.mistconfig.get("default"):
+                    self.mistconfig["default"] = {"theme":"default","defaulttoken":None}
                 self.mistconfig_put()
+            else:
+                self.theme = self.mistconfig["default"]["theme"]
         else:
             self.theme = "default"
-            self.mistconfig = {"version":self.version,"theme":self.theme,"tokens":[]}
+            self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"defaulttoken":None},"tokens":[]}
             self.mistconfig_put()
         # MisT settings
         self.tmp = []
@@ -30,8 +35,16 @@ class MkAPIs():
         self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
         self.constcrnoteconf = self.crnoteconf.copy()
         # Misskey py settings
-        self.instance="misskey.io"
-        self.i = None
+        if (num := self.mistconfig["default"]).get("defaulttoken"):
+            if len(self.mistconfig["tokens"]) != 0 and len(self.mistconfig["tokens"]) > num["defaulttoken"]:
+                self.i = self.mistconfig["tokens"][num["defaulttoken"]]["token"]
+                self.instance = self.mistconfig["tokens"][num["defaulttoken"]]["instance"]
+            else:
+                self.i = None
+                self.instance = "misskey.io"
+        else:
+            self.i = None
+            self.instance = "misskey.io"
         self.mk = None
         self.tl = "LTL"
         self.tl_len = 10
@@ -523,7 +536,7 @@ M       M  I  SSS  T """
             self.msk_.theme = "bright"
         elif arg == 4:
             return
-        self.msk_.mistconfig["theme"] = self.msk_.theme
+        self.msk_.mistconfig["default"]["theme"] = self.msk_.theme
         self.msk_.mistconfig_put()
         raise ResizeScreenError("self error")
 
@@ -556,7 +569,7 @@ M       M  I  SSS  T """
     
     def _ser_token_search(self,arg):
         token = self.msk_.mistconfig["tokens"]
-        button = ["L","R","Select", "Delete"]
+        button = ["L", "R", "Select", "Delete", "Set def", "unset def"]
         if arg == -1:
             self.msk_.tmp.append(0)
             mes = f'<1/{len(token)}>\n\nSelect\nname:{token[0]["name"]}\ninstance:{token[0]["instance"]}\ntoken:{token[0]["token"][0:8]}...'
@@ -601,6 +614,30 @@ M       M  I  SSS  T """
             headmes = "Delete this?\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes, ["Yes","No"],self._ser_token_delete)
+        elif arg == 4:
+            num = self.msk_.tmp[-1]
+            headmes = "set to default?"
+            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+            self.popup(mes,["Yes","No"],self._ser_token_default)
+        elif arg == 5:
+            num = self.msk_.tmp[-1]
+            if self.msk_.mistconfig["default"]["defaulttoken"] is None:
+                headmes = "default token is none"
+            else:
+                self.msk_.mistconfig["default"]["defaulttoken"] = None
+                self.msk_.mistconfig_put()
+                headmes = "unset success!"
+            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+            self.popup(mes, button,self._ser_token_search)
+
+    def _ser_token_default(self,arg):
+        num = self.msk_.tmp[-1]
+        if arg == 0:
+            self.msk_.mistconfig["default"]["defaulttoken"] = num
+            self.msk_.mistconfig_put()
+            self._ser_token_search(2)
+        else:
+            self._ser_token_search(-1)
 
     def _ser_token_delete(self,arg):
         num = self.msk_.tmp.pop()
@@ -609,7 +646,8 @@ M       M  I  SSS  T """
             self.msk_.mistconfig_put()
             if len(self.msk_.mistconfig["tokens"]) == 0:
                 return
-        self._ser_token_search(-1)
+        else:
+            self._ser_token_search(-1)
 
     def miauth_get(self,arg):
         if arg == 0:
