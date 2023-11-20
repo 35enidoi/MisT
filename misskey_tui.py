@@ -622,7 +622,7 @@ M       M  I  SSS  T """
         elif arg == 5:
             num = self.msk_.tmp[-1]
             if self.msk_.mistconfig["default"]["defaulttoken"] is None:
-                headmes = "default token is none"
+                headmes = "default token is none\n"
             else:
                 self.msk_.mistconfig["default"]["defaulttoken"] = None
                 self.msk_.mistconfig_put()
