@@ -453,24 +453,8 @@ class ConfigMenu(Frame):
         self.fix()
 
     def version_(self):
-        from pyfiglet import figlet_format
-        from random import randint
-        fonts = ["binary","chunky","contessa","cybermedium","hex","eftifont","italic","mini","morse","short"]
-        randomint = randint(0,len(fonts)+1)
-        if randomint == len(fonts):
-            mist_figs = "MisT\n"
-        elif randomint == len(fonts)+1:
-            mist_figs = """
-MM     MM     TTTTTTTTTTT
-M M   M M  I       T
-M  M M  M  I  SSS  T
-M   M   M     S    T
-M       M  I  SSS  T
-M       M  I    S  T
-M       M  I  SSS  T """
-        else:
-            mist_figs = figlet_format("MisT",fonts[randomint])
-        self._txtbxput(mist_figs+"v"+str(self.msk_.version),"","write by @iodine53@misskey.io","")
+        from util import mistfigleter
+        self._txtbxput(mistfigleter()+"v"+str(self.msk_.version),"","write by @iodine53@misskey.io","")
 
     def current(self):
         self._txtbxput(f"Instance:{self.msk_.instance}")
@@ -553,12 +537,15 @@ M       M  I  SSS  T """
     
     def _ser_token_create(self,arg):
         if arg == 0:
-            from util import shorter, pypcopy, webshow
+            from util import pypcopy, webshow
             # MiAuth
             self.msk_.tmp.append(self.msk_.miauth_load())
             url = self.msk_.tmp[-1].generate_url()
+            space = "      \n      "
+            lens = self.screen.width//2
+            lines = len(url)//lens
+            url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
             copysuccess = pypcopy(url)
-            url = shorter(url,self.screen.width)
             webshow(url)
             self.popup(f"miauth url\n\n{url}\n\n"+"cliped!" if copysuccess else "", ["check ok"],self.miauth_get)
         elif arg == 1:
