@@ -1,7 +1,7 @@
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.renderers import ImageFile
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL
@@ -30,6 +30,7 @@ class MkAPIs():
         self.tmp = []
         self.notes = []
         self.nowpoint = 0
+        self.reacdb = None
         self.cfgtxts = ""
         self.crnotetxts = "Tab to change widget"
         self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
@@ -110,9 +111,30 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
+    def get_reactiondb(self):
+        import requests
+        try:
+            ret = requests.get(f'https://{self.instance}/api/emojis')
+            if ret.status_code == 200:
+                import json
+                self.reacdb = {}
+                for i in json.loads(ret.text)["emojis"]:
+                    self.reacdb[i["name"]] = i["aliases"]
+                    self.reacdb[i["name"]].append(i["name"])
+            else:
+                self.reacdb = None
+        except ConnectTimeout:
+            self.reacdb = None
+
     def note_update(self):
+        beforenotes = self.notes.copy()
         noteid = self.notes[0]["id"]
-        return self.get_note(noteid[0:8]+"zz")
+        is_ok = self.get_note(noteid[0:8]+"zz")
+        if is_ok:
+            return True
+        else:
+            self.notes = beforenotes
+            return False
 
     def noteshow(self,noteid):
         try:
@@ -152,6 +174,12 @@ class MkAPIs():
     def create_renote(self, renoteid):
         try:
             return self.mk.notes_create(renote_id=renoteid)
+        except exceptions.MisskeyAPIException:
+            return None
+
+    def create_reaction(self, noteid, reaction):
+        try:
+            return self.mk.notes_reactions_create(noteid, reaction)
         except exceptions.MisskeyAPIException:
             return None
 
@@ -293,8 +321,9 @@ class NoteView(Frame):
             self.msk_.tmp[-1] += "isCat:True"
         if (a := self.msk_.tmp.pop()) != "":
             self._noteput(a)
-        if len(note["user"]["badgeRoles"]) != 0:
-            self._noteput("badgeRoles:["+",".join(i["name"] for i in note["user"]["badgeRoles"])+"]")
+        if note["user"].get("badgeRoles"):
+            if len(note["user"]["badgeRoles"]) != 0:
+                self._noteput("badgeRoles:["+",".join(i["name"] for i in note["user"]["badgeRoles"])+"]")
         self._noteput("-"*(self.screen.width-4))
         if note["text"] is None:
             if len(note["files"]) == 0:
@@ -346,11 +375,23 @@ class NoteView(Frame):
                 raise NextScene("CreateNote")
         elif arg == 3:
             # Reaction
-            self.popup("this is not working :(", ["Ok"])
+            if len(self.msk_.notes) == 0:
+                self.popup("Please Note Get", ["Ok"])
+            else:
+                self.popup("from deck or search?", ["deck", "search", "return"], self._ser_reac)
         elif arg == 4:
             # Notification
             raise NextScene("Notification")
-    
+
+    def _ser_reac(self, arg):
+        if arg == 0:
+            # deck
+            self.popup("this is not working :(", ["Ok"])
+        elif arg == 1:
+            # search
+            self.msk_.tmp.append("searchmode")
+            raise NextScene("SelReaction")
+
     def _ser_rn(self, arg):
         if arg == 0:
             # Renote
@@ -930,6 +971,105 @@ class CreateNoteConfig(Frame):
     def return_():
         raise NextScene("CreateNote")
 
+class SelectReaction(Frame):
+    def __init__(self, screen, msk):
+        super(SelectReaction, self).__init__(screen,
+                                      screen.height,
+                                      screen.width,
+                                      title="SelectReaction",
+                                      reduce_cpu=True,
+                                      can_scroll=False,
+                                      on_load=self.load)
+        # initialize
+        self.msk_ = msk
+        self.set_theme(self.msk_.theme)
+
+        # txtbox create
+        self.txtbx = Text(on_change=self.search)
+
+        # listbox create
+        self.lstbx = ListBox(self.screen.height-3, [], name="emojilist", on_select=self.select)
+
+        # buttons create
+        buttonnames = ("GetDB","return")
+        on_click = (self.getdb,self.return_)
+        self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
+
+        # Layout create
+        layout = Layout([100])
+        layout2 = Layout([1 for _ in range(len(self.buttons)+1)])
+        self.add_layout(layout)
+        self.add_layout(layout2)
+
+        # add widget
+        layout.add_widget(self.lstbx)
+        layout2.add_widget(self.txtbx)
+        for i in range(len(self.buttons)):
+            layout2.add_widget(self.buttons[i],i+1)
+
+        # fix
+        self.fix()
+
+    def load(self):
+        if len(self.msk_.tmp) != 0:
+            if self.msk_.tmp[-1] == "searchmode":
+                self.msk_.tmp.pop()
+                self.issearch = True
+            else:
+                self.issearch = False
+        else:
+            self.issearch = False
+
+    def search(self):
+        if self.msk_.reacdb is None:
+            self.lstbx.options = [("DB is None, Please GetDB.",0)]
+            self.txtbx.disabled = True
+        else:
+            self.lstbx.options = []
+            self.txtbx.disabled = False
+            n = 0
+            for i in (reacdb := self.msk_.reacdb).keys():
+                if any(self.txtbx.value in r for r in reacdb[i]):
+                    self.lstbx.options.append((i, len(self.lstbx.options)))
+                    n += 1
+                if n >= self.screen.height-3:
+                    break
+
+    def select(self):
+        self.save()
+        index = self.data["emojilist"]
+        if (reaction := self.lstbx.options[index][0]) == "DB is None, Please GetDB.":
+            pass
+        else:
+            if self.issearch:
+                if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                    if noteval["text"] is None:
+                        noteid = noteval["renote"]["id"]
+                    else:
+                        noteid = noteval["id"]
+                else:
+                    noteid = noteval["id"]
+                is_create_seccess = self.msk_.create_reaction(noteid,f":{reaction}:")
+                if is_create_seccess:
+                    self.popup('Create success! :)', ["Ok"], self.return_)
+                else:
+                    self.popup("Create fail :(", ["Ok"], self.return_)
+
+    def getdb(self):
+        self.msk_.get_reactiondb()
+        if self.msk_.reacdb is None:
+            self.popup("GetDB fail :(",["Ok"])
+        else:
+            self.popup("GetDB success!",["Ok"])
+            self.search()
+    
+    def popup(self,txt,button,on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
+
+    def return_(self,*_):
+        self.txtbx.value = ""
+        raise NextScene("Main")
+
 class Notification(Frame):
     def __init__(self, screen, msk):
         super(Notification, self).__init__(screen,
@@ -1031,9 +1171,10 @@ class Notification(Frame):
 def wrap(screen, scene):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
               Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
-              Scene([CreateNote(screen,msk)], -1, name="CreateNote"),
-              Scene([Notification(screen,msk)], -1, name="Notification"),
-              Scene([CreateNoteConfig(screen,msk)], -1, name="CreNoteConf")]
+              Scene([CreateNote(screen, msk)], -1, name="CreateNote"),
+              Scene([Notification(screen, msk)], -1, name="Notification"),
+              Scene([CreateNoteConfig(screen, msk)], -1, name="CreNoteConf"),
+              Scene([SelectReaction(screen, msk)], -1, name="SelReaction")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 msk = MkAPIs()
