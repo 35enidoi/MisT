@@ -1123,36 +1123,42 @@ class Notification(Frame):
                         continue
                     if (ntfytype == "renote") or (ntfytype == "quote"):
                         if i["note"]["renote"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["renote"]["id"]] = {"txt":i["note"]["renote"]["text"],"ntfy":[]}
+                            checkntfytype["notes"][i["note"]["renote"]["id"]] = {"value":i["note"]["renote"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["renote"]["id"]]["ntfy"].append(i)
                         continue
                     if ntfytype == "reply":
                         if i["note"]["reply"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["reply"]["id"]] = {"txt":i["note"]["reply"]["text"],"ntfy":[]}
+                            checkntfytype["notes"][i["note"]["reply"]["id"]] = {"value":i["note"]["reply"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["reply"]["id"]]["ntfy"].append(i)
                         continue
                     if ntfytype == "reaction":
                         if i["note"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["id"]] = {"txt":i["note"]["text"],"ntfy":[]}
+                            checkntfytype["notes"][i["note"]["id"]] = {"value":i["note"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["id"]]["ntfy"].append(i)
                     else:
                         checkntfytype["else"].append(i)
             if len(follower := checkntfytype["follow"]) != 0:
                 self._txtbxput("Follow comming!","\n".join(char["user"]["name"] for char in follower),"")
             if len(mentions := checkntfytype["mention"]) != 0:
-                self._txtbxput("mention comming!","\n\n".join(char["user"]["name"]+"\n"+char["note"]["txt"] for char in mentions),"")
+                self._txtbxput("mention comming!",
+                               "\n\n".join(char["user"]["name"]+"\n"+char["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if char["user"]["isCat"] else char["note"]["text"] for char in mentions),
+                               "")
             if len(notes := checkntfytype["notes"]) != 0:
                 for i in notes:
-                    headtext = f"noteid:{i}\n"+f'text:{str(notes[i]["txt"])}\n'
+                    headtext = f"noteid:{i}\n"+f'text:{str(notes[i]["value"]["text"].replace("な","にゃ").replace("ナ","ニャ") if notes[i]["value"]["user"]["isCat"] else notes[i]["value"]["text"])}\n'
                     txt = []
                     for i in notes[i]["ntfy"]:
-                        username = i["user"]["name"]
+                        if i.get("user"):
+                            username = i["user"]["name"]
+                        else:
+                            username = "Deleted user?"
+                            i["user"] = {"isCat":False}
                         if (nttype := i["type"]) == "reply":
                             txt.append(f"{username} was reply")
-                            txt.append(f'{i["note"]["text"]}')
+                            txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
                         elif nttype == "quote":
                             txt.append(f"{username} was quoted")
-                            txt.append(f'{i["note"]["text"]}')
+                            txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
                         elif nttype == "renote":
                             txt.append(f"{username} was renoted")
                         elif nttype == "reaction":
