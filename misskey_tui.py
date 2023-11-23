@@ -599,10 +599,12 @@ class ConfigMenu(Frame):
         token = self.msk_.mistconfig["tokens"]
         button = ["L", "R", "Select", "Delete", "Set def", "unset def"]
         if arg == -1:
+            # initialize
             self.msk_.tmp.append(0)
             mes = f'<1/{len(token)}>\n\nSelect\nname:{token[0]["name"]}\ninstance:{token[0]["instance"]}\ntoken:{token[0]["token"][0:8]}...'
             self.popup(mes, button, self._ser_token_search)
         elif arg == 0:
+            # L
             num = self.msk_.tmp.pop()
             if num == 0:
                 self.msk_.tmp.append(0)
@@ -614,6 +616,7 @@ class ConfigMenu(Frame):
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes, button,self._ser_token_search)
         elif arg == 1:
+            # R
             num = self.msk_.tmp.pop()
             if num+1 == len(token):
                 self.msk_.tmp.append(num)
@@ -625,6 +628,7 @@ class ConfigMenu(Frame):
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes, button,self._ser_token_search)
         elif arg == 2:
+            # Select
             num = self.msk_.tmp.pop()
             userinfo = token[num]
             self._txtbxput(f'select user:{userinfo["name"]}',f'current instance:{userinfo["instance"]}',"")
@@ -638,16 +642,19 @@ class ConfigMenu(Frame):
                 self.msk_.i = ""
                 self._txtbxput("connect fail :(","")
         elif arg == 3:
+            # Delete
             num = self.msk_.tmp[-1]
             headmes = "Delete this?\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes, ["Yes","No"],self._ser_token_delete)
         elif arg == 4:
+            # Set
             num = self.msk_.tmp[-1]
             headmes = "set to default?"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes,["Yes","No"],self._ser_token_default)
         elif arg == 5:
+            # Unset
             num = self.msk_.tmp[-1]
             if self.msk_.mistconfig["default"]["defaulttoken"] is None:
                 headmes = "default token is none\n"
@@ -670,12 +677,16 @@ class ConfigMenu(Frame):
     def _ser_token_delete(self,arg):
         num = self.msk_.tmp.pop()
         if arg == 0:
+            if (deftkindex := self.msk_.mistconfig["default"]["defaulttoken"]) is not None:
+                if num < deftkindex:
+                    self.msk_.mistconfig["default"]["defaulttoken"] -= 1
+                elif num == deftkindex:
+                    self.msk_.mistconfig["default"]["defaulttoken"] = None
             self.msk_.mistconfig["tokens"].pop(num)
             self.msk_.mistconfig_put()
             if len(self.msk_.mistconfig["tokens"]) == 0:
                 return
-        else:
-            self._ser_token_search(-1)
+        self._ser_token_search(-1)
 
     def miauth_get(self,arg):
         if arg == 0:
