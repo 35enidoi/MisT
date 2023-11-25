@@ -5,7 +5,7 @@ def pypcopy(url):
         import pyperclip
         pyperclip.copy(url)
         return True
-    except ImportError:
+    except (ImportError, pyperclip.PyperclipException):
         return False
 
 def webshow(url):
