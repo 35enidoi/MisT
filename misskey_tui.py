@@ -588,7 +588,7 @@ class ConfigMenu(Frame):
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
             copysuccess = pypcopy(url)
             webshow(url)
-            self.popup(f"miauth url\n\n{url}\n\n"+"cliped!" if copysuccess else "", ["check ok"],self.miauth_get)
+            self.popup(f"miauth url\n\n{url}\n\n"+("cliped!" if copysuccess else ""), ["check ok"],self.miauth_get)
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
