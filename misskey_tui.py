@@ -1,7 +1,7 @@
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.renderers import ImageFile
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL
@@ -11,7 +11,7 @@ class MkAPIs():
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.35
+        self.version = 0.36
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
             self.mistconfig_put(True)
@@ -386,11 +386,38 @@ class NoteView(Frame):
     def _ser_reac(self, arg):
         if arg == 0:
             # deck
-            self.popup("this is not working :(", ["Ok"])
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
+                self._ser_reac_deck(-1)
+            else:
+                self.popup("Please create reaction deck", ["Ok"])
         elif arg == 1:
             # search
             self.msk_.tmp.append("searchmode")
             raise NextScene("SelReaction")
+
+    def _ser_reac_deck(self,arg):
+        tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+        reacdeck = self.msk_.mistconfig["tokens"][tokenindex]["reacdeck"]
+        if arg == -1:
+            # initialize
+            reacmenu = [(reacdeck[i], lambda x=i:self._ser_reac_deck(x)) for i in range(len(reacdeck))]
+            reacmenu.insert(0, ("Return", lambda: None))
+            self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
+        else:
+            # Create reaction
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
+            else:
+                noteid = noteval["id"]
+            is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
+            if is_create_seccess:
+                self.popup('Create success! :)', ["Ok"])
+            else:
+                self.popup("Create fail :(", ["Ok"])
 
     def _ser_rn(self, arg):
         if arg == 0:
@@ -438,9 +465,9 @@ class NoteView(Frame):
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
 
-    @staticmethod
-    def _ser_quit(arg):
+    def _ser_quit(self,arg):
         if arg == 0:
+            self.msk_.mistconfig_put()
             raise StopApplication("UserQuit")
 
     @staticmethod
@@ -465,10 +492,10 @@ class ConfigMenu(Frame):
         self.txtbx.value = self.msk_.cfgtxts
 
         # buttons create
-        buttonnames = ("Return", "Change TL", "Change Theme",
+        buttonnames = ("Return", "Change TL", "Change Theme", "Reaction deck",
                        "TOKEN", "Instance", "Current","Version",
                        "Clear","Refresh", "OK")
-        onclicks = (self.return_, self.poptl, self.poptheme,
+        onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
                     self.poptoken, self.instance_, self.current, self.version_,
                     self.clear_, self.refresh_,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
@@ -516,6 +543,48 @@ class ConfigMenu(Frame):
         for i in arg:
             self.txtbx.value += str(i)+"\n"
         self.msk_.cfgtxts = self.txtbx.value
+
+    def reactiondeck(self, arg = -1):
+        if arg == -1:
+            # initialize
+            if self.msk_.i is None:
+                self.popup("Please set TOKEN", ["OK"])
+            else:
+                self.popup("check deck or add deck?", ["check deck", "del deck", "add deck", "return"], self.reactiondeck)
+        elif arg == 0:
+            # check deck
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
+                self.popup("Please create reaction deck", ["Ok"])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen,[(char, lambda: None) for char in nowtoken["reacdeck"]], self.screen.width//3, 0))
+        elif arg == 1:
+            # del deck
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
+                self.popup("Please create reaction deck", ["Ok"])
+            else:
+                self.reactiondel(-1)
+        elif arg == 2:
+            # add deck
+            self.msk_.tmp.append("deck")
+            raise NextScene("SelReaction")
+    
+    def reactiondel(self, arg):
+        tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+        reacdeck = self.msk_.mistconfig["tokens"][tokenindex]["reacdeck"]
+        if arg == -1:
+            # initialize
+            reacmenu = [(reacdeck[i], lambda x=i:self.reactiondel(x)) for i in range(len(reacdeck))]
+            if len(reacmenu) == 0:
+                self.msk_.mistconfig_put()
+            else:
+                reacmenu.insert(0, ("Return", lambda: self.msk_.mistconfig_put()))
+                self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
+        else:
+            # del reaction
+            reacdeck.pop(arg)
+            self.reactiondel(-1)
 
     def poptl(self):
         self.popup("Change TL", ["HTL", "LTL", "STL", "GTL"],self._ser_tl)
@@ -588,7 +657,7 @@ class ConfigMenu(Frame):
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
             copysuccess = pypcopy(url)
             webshow(url)
-            self.popup(f"miauth url\n\n{url}\n\n"+"cliped!" if copysuccess else "", ["check ok"],self.miauth_get)
+            self.popup(f"miauth url\n\n{url}\n\n"+("cliped!" if copysuccess else ""), ["check ok"],self.miauth_get)
         elif arg == 1:
             # TOKEN
             self._txtbxput("write your TOKEN")
@@ -705,6 +774,7 @@ class ConfigMenu(Frame):
                 self.msk_.mistconfig["tokens"].append(userdict)
                 self.msk_.mistconfig_put()
                 self.msk_.notes = []
+                self.msk_.reacdb = None
                 self.popup(text, ["Ok"], self.refresh_)
                 self.msk_.tmp.pop()
             else:
@@ -739,9 +809,7 @@ class ConfigMenu(Frame):
                 else:
                     name = i["name"]
                     self._txtbxput(f"Hello {name}!")
-                self.msk_.mistconfig["tokens"].append({"name":name,
-                                                       "instance":self.msk_.instance,
-                                                       "token":self.msk_.i})
+                self.msk_.mistconfig["tokens"].append({"name":name, "instance":self.msk_.instance, "token":self.msk_.i})
                 self.msk_.mistconfig_put()
                 self.refresh_(True)
             else:
@@ -767,7 +835,7 @@ class ConfigMenu(Frame):
                 self.msk_.instance = before_instance
                 self._txtbxput("instance connect fail :(")
             self._txtbxput(f"current instance:{self.msk_.instance}","")
-            self.refresh_()
+            self.refresh_(True)
         self._disables(True)
 
     def _disables(self,rev=False):
@@ -784,6 +852,7 @@ class ConfigMenu(Frame):
 
     def refresh_(self, notedel=False):
         if notedel:
+            self.msk_.reacdb = None
             self.msk_.notes = []
         raise ResizeScreenError("self error", self._scene)
 
@@ -1023,13 +1092,16 @@ class SelectReaction(Frame):
 
     def load(self):
         if len(self.msk_.tmp) != 0:
-            if self.msk_.tmp[-1] == "searchmode":
+            if (tmpval := self.msk_.tmp[-1]) == "searchmode":
                 self.msk_.tmp.pop()
-                self.issearch = True
+                self.flag = "search"
+            elif tmpval == "deck":
+                self.msk_.tmp.pop()
+                self.flag = "deckadd"
             else:
-                self.issearch = False
+                self.flag = ""
         else:
-            self.issearch = False
+            self.flag = ""
 
     def search(self):
         if self.msk_.reacdb is None:
@@ -1052,7 +1124,7 @@ class SelectReaction(Frame):
         if (reaction := self.lstbx.options[index][0]) == "DB is None, Please GetDB.":
             pass
         else:
-            if self.issearch:
+            if self.flag == "search":
                 if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
                     if noteval["text"] is None:
                         noteid = noteval["renote"]["id"]
@@ -1065,6 +1137,15 @@ class SelectReaction(Frame):
                     self.popup('Create success! :)', ["Ok"], self.return_)
                 else:
                     self.popup("Create fail :(", ["Ok"], self.return_)
+            elif self.flag == "deckadd":
+                tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+                if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
+                    nowtoken["reacdeck"] = []
+                if reaction in nowtoken["reacdeck"]:
+                    self.popup("this reaction already in deck", ["Ok"])
+                else:
+                    nowtoken["reacdeck"].append(reaction)
+                    self.popup(f"reaction added\nname:{reaction}",["Ok"])
 
     def getdb(self):
         self.msk_.get_reactiondb()
@@ -1078,6 +1159,7 @@ class SelectReaction(Frame):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
 
     def return_(self,*_):
+        self.flag = ""
         self.txtbx.value = ""
         raise NextScene("Main")
 
