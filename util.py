@@ -19,7 +19,10 @@ def webshow(url):
     
     デスクトップ環境がない場合動作しないことを確認済み(Raspberry Pi OS Lite(Bullseye) : Raspberrypi Zero 2 W)(SSH接続)"""
     import webbrowser
-    webbrowser.open(url)
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
 
 def mistfigleter():
     """
