@@ -1247,7 +1247,10 @@ class Notification(Frame):
                     txt = []
                     for i in notes[i]["ntfy"]:
                         if i.get("user"):
-                            username = i["user"]["name"]
+                            if i["user"]["name"] is None:
+                                username = i["user"]["username"]
+                            else:
+                                username = i["user"]["name"]
                         else:
                             username = "Deleted user?"
                             i["user"] = {"isCat":False}
