@@ -457,10 +457,13 @@ class NoteView(Frame):
 
     def _ser_renote(self, arg):
         if arg == 0:
-            if self.msk_.notes[self.msk_.nowpoint].get("renote"):
-                noteid = self.msk_.notes[self.msk_.nowpoint]["renote"]["id"]
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
             else:
-                noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
+                noteid = noteval["id"]
             createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
                 self.popup('Create success! :)', ["Ok"])
