@@ -724,7 +724,7 @@ class ConfigMenu(Frame):
         elif arg == 4:
             # Set
             num = self.msk_.tmp[-1]
-            headmes = "set to default?"
+            headmes = "set to default?\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes,["Yes","No"],self._ser_token_default)
         elif arg == 5:
@@ -735,7 +735,7 @@ class ConfigMenu(Frame):
             else:
                 self.msk_.mistconfig["default"]["defaulttoken"] = None
                 self.msk_.mistconfig_put()
-                headmes = "unset success!"
+                headmes = "unset success!\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes, button,self._ser_token_search)
 
