@@ -4,7 +4,7 @@ from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
-from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL
+from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
 import os
 
 class MkAPIs():
@@ -49,7 +49,9 @@ class MkAPIs():
         self.mk = None
         self.tl = "LTL"
         self.tl_len = 10
-        self.reload()
+        is_ok = self.reload()
+        if not is_ok:
+            self.i = None
 
     def mistconfig_put(self,loadmode=False):
         import json
@@ -81,7 +83,7 @@ class MkAPIs():
         try:
             self.i = mia.check()
             return True
-        except exceptions.MisskeyMiAuthFailedException:
+        except (exceptions.MisskeyMiAuthFailedException, HTTPError):
             return False
 
     def get_i(self):
@@ -243,6 +245,9 @@ class NoteView(Frame):
 
     def get_note(self,arg=-1):
         if arg == -1:
+            if self.msk_.mk is None:
+                self.popup("connect failed.\nPlease Instance recreate.", ["Ok"])
+                return
             self.popup("note get from",["latest","until","since","return"],self.get_note)
             return
         elif arg == 0:
@@ -708,7 +713,7 @@ class ConfigMenu(Frame):
                 self._txtbxput("connect ok!","")
                 self.refresh_(True)
             else:
-                self.msk_.i = ""
+                self.msk_.i = None
                 self._txtbxput("connect fail :(","")
         elif arg == 3:
             # Delete
