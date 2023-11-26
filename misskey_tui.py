@@ -36,10 +36,10 @@ class MkAPIs():
         self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
         self.constcrnoteconf = self.crnoteconf.copy()
         # Misskey py settings
-        if (num := self.mistconfig["default"]).get("defaulttoken"):
-            if len(self.mistconfig["tokens"]) != 0 and len(self.mistconfig["tokens"]) > num["defaulttoken"]:
-                self.i = self.mistconfig["tokens"][num["defaulttoken"]]["token"]
-                self.instance = self.mistconfig["tokens"][num["defaulttoken"]]["instance"]
+        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
+            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
+                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
+                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
             else:
                 self.i = None
                 self.instance = "misskey.io"
