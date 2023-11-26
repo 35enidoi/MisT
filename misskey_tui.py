@@ -1236,7 +1236,7 @@ class Notification(Frame):
                     else:
                         checkntfytype["else"].append(i)
             if len(follower := checkntfytype["follow"]) != 0:
-                self._txtbxput("Follow comming!","\n".join(char["user"]["name"] for char in follower),"")
+                self._txtbxput("Follow comming!","\n".join(char["user"]["name"] if char["user"].get("name") else char["user"]["username"] for char in follower),"")
             if len(mentions := checkntfytype["mention"]) != 0:
                 self._txtbxput("mention comming!",
                                "\n\n".join(char["user"]["name"]+"\n"+char["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if char["user"]["isCat"] else char["note"]["text"] for char in mentions),
