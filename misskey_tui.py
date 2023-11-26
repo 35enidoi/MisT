@@ -19,6 +19,7 @@ class MkAPIs():
                 self.mistconfig["version"] = self.version
                 if not self.mistconfig.get("default"):
                     self.mistconfig["default"] = {"theme":"default","defaulttoken":None}
+                self.theme = self.mistconfig["default"]
                 self.mistconfig_put()
             else:
                 self.theme = self.mistconfig["default"]["theme"]
