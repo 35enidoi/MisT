@@ -4,14 +4,14 @@ from asciimatics.renderers import ImageFile
 from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
-from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL
+from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
 import os
 
 class MkAPIs():
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.36
+        self.version = 0.37
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
             self.mistconfig_put(True)
@@ -19,6 +19,7 @@ class MkAPIs():
                 self.mistconfig["version"] = self.version
                 if not self.mistconfig.get("default"):
                     self.mistconfig["default"] = {"theme":"default","defaulttoken":None}
+                self.theme = self.mistconfig["default"]["theme"]
                 self.mistconfig_put()
             else:
                 self.theme = self.mistconfig["default"]["theme"]
@@ -36,10 +37,10 @@ class MkAPIs():
         self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
         self.constcrnoteconf = self.crnoteconf.copy()
         # Misskey py settings
-        if (num := self.mistconfig["default"]).get("defaulttoken"):
-            if len(self.mistconfig["tokens"]) != 0 and len(self.mistconfig["tokens"]) > num["defaulttoken"]:
-                self.i = self.mistconfig["tokens"][num["defaulttoken"]]["token"]
-                self.instance = self.mistconfig["tokens"][num["defaulttoken"]]["instance"]
+        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
+            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
+                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
+                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
             else:
                 self.i = None
                 self.instance = "misskey.io"
@@ -49,7 +50,9 @@ class MkAPIs():
         self.mk = None
         self.tl = "LTL"
         self.tl_len = 10
-        self.reload()
+        is_ok = self.reload()
+        if not is_ok:
+            self.i = None
 
     def mistconfig_put(self,loadmode=False):
         import json
@@ -81,7 +84,7 @@ class MkAPIs():
         try:
             self.i = mia.check()
             return True
-        except exceptions.MisskeyMiAuthFailedException:
+        except (exceptions.MisskeyMiAuthFailedException, HTTPError):
             return False
 
     def get_i(self):
@@ -243,6 +246,9 @@ class NoteView(Frame):
 
     def get_note(self,arg=-1):
         if arg == -1:
+            if self.msk_.mk is None:
+                self.popup("connect failed.\nPlease Instance recreate.", ["Ok"])
+                return
             self.popup("note get from",["latest","until","since","return"],self.get_note)
             return
         elif arg == 0:
@@ -452,10 +458,13 @@ class NoteView(Frame):
 
     def _ser_renote(self, arg):
         if arg == 0:
-            if self.msk_.notes[self.msk_.nowpoint].get("renote"):
-                noteid = self.msk_.notes[self.msk_.nowpoint]["renote"]["id"]
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
             else:
-                noteid = self.msk_.notes[self.msk_.nowpoint]["id"]
+                noteid = noteval["id"]
             createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
                 self.popup('Create success! :)', ["Ok"])
@@ -708,7 +717,7 @@ class ConfigMenu(Frame):
                 self._txtbxput("connect ok!","")
                 self.refresh_(True)
             else:
-                self.msk_.i = ""
+                self.msk_.i = None
                 self._txtbxput("connect fail :(","")
         elif arg == 3:
             # Delete
@@ -719,7 +728,7 @@ class ConfigMenu(Frame):
         elif arg == 4:
             # Set
             num = self.msk_.tmp[-1]
-            headmes = "set to default?"
+            headmes = "set to default?\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes,["Yes","No"],self._ser_token_default)
         elif arg == 5:
@@ -730,7 +739,7 @@ class ConfigMenu(Frame):
             else:
                 self.msk_.mistconfig["default"]["defaulttoken"] = None
                 self.msk_.mistconfig_put()
-                headmes = "unset success!"
+                headmes = "unset success!\n"
             mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
             self.popup(mes, button,self._ser_token_search)
 
@@ -1231,7 +1240,7 @@ class Notification(Frame):
                     else:
                         checkntfytype["else"].append(i)
             if len(follower := checkntfytype["follow"]) != 0:
-                self._txtbxput("Follow comming!","\n".join(char["user"]["name"] for char in follower),"")
+                self._txtbxput("Follow comming!","\n".join(char["user"]["name"] if char["user"].get("name") else char["user"]["username"] for char in follower),"")
             if len(mentions := checkntfytype["mention"]) != 0:
                 self._txtbxput("mention comming!",
                                "\n\n".join(char["user"]["name"]+"\n"+char["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if char["user"]["isCat"] else char["note"]["text"] for char in mentions),
@@ -1242,7 +1251,10 @@ class Notification(Frame):
                     txt = []
                     for i in notes[i]["ntfy"]:
                         if i.get("user"):
-                            username = i["user"]["name"]
+                            if i["user"]["name"] is None:
+                                username = i["user"]["username"]
+                            else:
+                                username = i["user"]["name"]
                         else:
                             username = "Deleted user?"
                             i["user"] = {"isCat":False}

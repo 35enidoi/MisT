@@ -1,11 +1,16 @@
 def pypcopy(url):
     """
-    copyする奴"""
+    copyする奴
+    
+    optionalのpyperclipがあればcopyする"""
     try:
         import pyperclip
-        pyperclip.copy(url)
-        return True
-    except (ImportError, pyperclip.PyperclipException):
+        try:
+            pyperclip.copy(url)
+            return True
+        except pyperclip.PyperclipException:
+            return False
+    except (ImportError):
         return False
 
 def webshow(url):
