@@ -1,6 +1,8 @@
 def pypcopy(url):
     """
-    copyする奴"""
+    copyする奴
+    
+    optionalのpyperclipがあればcopyする"""
     try:
         import pyperclip
         pyperclip.copy(url)
