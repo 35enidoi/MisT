@@ -11,7 +11,7 @@ class MkAPIs():
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.37
+        self.version = 0.371
         # mistconfig load
         if os.path.isfile("mistconfig.conf"):
             self.mistconfig_put(True)
@@ -660,12 +660,12 @@ class ConfigMenu(Frame):
             # MiAuth
             self.msk_.tmp.append(self.msk_.miauth_load())
             url = self.msk_.tmp[-1].generate_url()
+            webshow(url)
             space = "      \n      "
             lens = self.screen.width//2
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
             copysuccess = pypcopy(url)
-            webshow(url)
             self.popup(f"miauth url\n\n{url}\n\n"+("cliped!" if copysuccess else ""), ["check ok"],self.miauth_get)
         elif arg == 1:
             # TOKEN
@@ -1288,11 +1288,16 @@ def wrap(screen, scene):
               Scene([SelectReaction(screen, msk)], -1, name="SelReaction")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
-msk = MkAPIs()
-last_scene = None
-while True:
-    try:
-        Screen.wrapper(wrap, catch_interrupt=True, arguments=[last_scene])
-        os._exit(0)
-    except ResizeScreenError as e:
-        last_scene = e.scene
+def main():
+    global msk
+    msk = MkAPIs()
+    last_scene = None
+    while True:
+        try:
+            Screen.wrapper(wrap, arguments=[last_scene])
+            os._exit(0)
+        except ResizeScreenError as e:
+            last_scene = e.scene
+
+if __name__ == "__main__":
+    main()
