@@ -1288,11 +1288,16 @@ def wrap(screen, scene):
               Scene([SelectReaction(screen, msk)], -1, name="SelReaction")]
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
-msk = MkAPIs()
-last_scene = None
-while True:
-    try:
-        Screen.wrapper(wrap, catch_interrupt=True, arguments=[last_scene])
-        os._exit(0)
-    except ResizeScreenError as e:
-        last_scene = e.scene
+def main():
+    global msk
+    msk = MkAPIs()
+    last_scene = None
+    while True:
+        try:
+            Screen.wrapper(wrap, arguments=[last_scene])
+            os._exit(0)
+        except ResizeScreenError as e:
+            last_scene = e.scene
+
+if __name__ == "__main__":
+    main()
