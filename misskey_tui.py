@@ -235,10 +235,6 @@ class NoteView(Frame):
             self.buttons[moreind].disabled = True
         else:
             self.buttons[moreind].disabled = False
-        if len(self.msk_.notes) == 0:
-            self.buttons[noteupind].disabled = True
-        else:
-            self.buttons[noteupind].disabled = False
 
         # fix
         self._note_reload()
