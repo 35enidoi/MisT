@@ -730,8 +730,8 @@ msgid "{} was renoted"
 msgstr "{}がリノートされました"
 
 #: misskey_tui.py:1270
-msgid "{} was reaction [{i[\"reaction\"]}]"
-msgstr "{}が[{i[\"reaction\"]}でリアクションしました]"
+msgid "{} was reaction [{}]"
+msgstr "{}が{}でリアクションしました"
 
 #: misskey_tui.py:1272
 msgid "Success"

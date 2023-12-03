@@ -1267,7 +1267,7 @@ class Notification(Frame):
                         elif nttype == "renote":
                             txt.append((_("{} was renoted")).format(username))
                         elif nttype == "reaction":
-                            txt.append((_('{} was reaction [{i["reaction"]}]')).format(username))
+                            txt.append((_('{} was reaction [{}]')).format(username, i["reaction"]))
                     self._txtbxput(headtext,*txt,"\n")
             self._scene.add_effect(PopUpDialog(self.screen,(_("Success")), [(_("Ok"))]))
 
