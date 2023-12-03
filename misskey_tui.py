@@ -202,9 +202,9 @@ class NoteView(Frame):
         self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
 
         # button create
-        buttonnames = ("Quit", "Move L", "Move R",
-                       "Noteupdate", "Note Get", "More",
-                       "Config")
+        buttonnames = (_("Quit"), _("Move L"), _("Move R"),
+                       _("Noteupdate"), _("Note Get"), _("More"),
+                       _("Config"))
         on_click = (self.pop_quit, self.move_l, self.move_r,
                     self.noteupdate, self.get_note, self.pop_more,
                     self.config)
@@ -222,15 +222,15 @@ class NoteView(Frame):
             layout2.add_widget(self.buttons[i],i)
 
         # define selfs
-        self._move_l = self.buttons[buttonnames.index("Move L")]
-        self._move_r = self.buttons[buttonnames.index("Move R")]
+        self._move_l = self.buttons[buttonnames.index(_("Move L"))]
+        self._move_r = self.buttons[buttonnames.index(_("Move R"))]
         self.layout = layout
         self.layout2 = layout2
 
         # disable
         self.note.disabled = True
-        moreind = buttonnames.index("More")
-        noteupind = buttonnames.index("Noteupdate")
+        moreind = buttonnames.index(_("More"))
+        noteupind = buttonnames.index(_("Noteupdate"))
         if self.msk_.i is None:
             self.buttons[moreind].disabled = True
         else:
@@ -247,9 +247,9 @@ class NoteView(Frame):
     def get_note(self,arg=-1):
         if arg == -1:
             if self.msk_.mk is None:
-                self.popup("connect failed.\nPlease Instance recreate.", ["Ok"])
+                self.popup((_("connect failed.\nPlease Instance recreate.")), [(_("Ok"))])
                 return
-            self.popup("note get from",["latest","until","since","return"],self.get_note)
+            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note)
             return
         elif arg == 0:
             untilid = None
@@ -258,7 +258,7 @@ class NoteView(Frame):
             return
         else:
             if len(self.msk_.notes) == 0:
-                self.popup("get note please(latest)",["Ok"])
+                self.popup((_("get note please(latest)")),[(_("Ok"))])
                 return
             elif arg == 1:
                 untilid = self.msk_.notes[self.msk_.nowpoint]["id"]
@@ -274,9 +274,9 @@ class NoteView(Frame):
         is_ok = self.msk_.note_update()
         if is_ok:
             self._note_reload()
-            self.popup("success", ["ok"])
+            self.popup((_("success")), ["ok"])
         else:
-            self.popup("something occured", ["ok"])
+            self.popup((_("something occured")), ["ok"])
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -289,7 +289,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput("something occured while noteget.","or welcome to MisT!")
+            self._noteput((_("something occured while noteget.")),(_("or welcome to MisT!")))
             self.buttons[3].disabled = True
         else:
             self.buttons[3].disabled = False
@@ -350,10 +350,10 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self.popup("?", ["Create Note", "Renote", "Reply", "Reaction", "Notification", "return"],self._ser_more)
+        self.popup((_("?")), [(_("Create Note")), (_("Renote")), (_("Reply")), (_("Reaction")), (_("Notification")), (_("return"))],self._ser_more)
 
     def pop_quit(self):
-        self.popup("Quit?", ["yes", "no"],self._ser_quit)
+        self.popup((_("Quit?")), [(_("yes")), (_("no"))],self._ser_quit)
 
     def _ser_more(self,arg):
         if arg == 0:
@@ -362,13 +362,13 @@ class NoteView(Frame):
         elif arg == 1:
             # Renote or Quote
             if len(self.msk_.notes) == 0:
-                self.popup("Please Note Get", ["Ok"])
+                self.popup((_("Please Note Get")), [(_("Ok"))])
             else:
-                self.popup(f'Renote or Quote?', ["Renote", "Quote", "Return"],self._ser_rn)
+                self.popup((_('Renote or Quote?')).format(), [(_("Renote")), (_("Quote")), (_("Return"))],self._ser_rn)
         elif arg == 2:
             # Reply
             if len(self.msk_.notes) == 0:
-                self.popup("Please Note Get", ["Ok"])
+                self.popup((_("Please Note Get")), [(_("Ok"))])
             else:
                 if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
                     if noteval["text"] is None:
@@ -382,9 +382,9 @@ class NoteView(Frame):
         elif arg == 3:
             # Reaction
             if len(self.msk_.notes) == 0:
-                self.popup("Please Note Get", ["Ok"])
+                self.popup((_("Please Note Get")), [(_("Ok"))])
             else:
-                self.popup("from deck or search?", ["deck", "search", "return"], self._ser_reac)
+                self.popup((_("from deck or search?")), [(_("deck")), (_("search")), (_("return"))], self._ser_reac)
         elif arg == 4:
             # Notification
             raise NextScene("Notification")
@@ -396,7 +396,7 @@ class NoteView(Frame):
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1)
             else:
-                self.popup("Please create reaction deck", ["Ok"])
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
         elif arg == 1:
             # search
             self.msk_.tmp.append("searchmode")
@@ -421,9 +421,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
             if is_create_seccess:
-                self.popup('Create success! :)', ["Ok"])
+                self.popup((_('Create success! :)')), [(_("Ok"))])
             else:
-                self.popup("Create fail :(", ["Ok"])
+                self.popup((_("Create fail :(")), [(_("Ok"))])
 
     def _ser_rn(self, arg):
         if arg == 0:
@@ -443,7 +443,7 @@ class NoteView(Frame):
                 text = noteval["text"]
             else:
                 text = noteval["text"][0:16]+"..."
-            self.popup(f'Renote this?\nnoteId:{noteid}\nname:{username}\ntext:{text}', ["Ok","No"],on_close=self._ser_renote)
+            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(noteid,username,text), [(_("Ok")),(_("No"))],on_close=self._ser_renote)
         if arg == 1:
             # Quote
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -467,9 +467,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
-                self.popup('Create success! :)', ["Ok"])
+                self.popup((_('Create success! :)')), [(_("Ok"))])
             else:
-                self.popup("Create fail :(", ["Ok"])
+                self.popup((_("Create fail :(")), [(_("Ok"))])
 
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
@@ -501,9 +501,9 @@ class ConfigMenu(Frame):
         self.txtbx.value = self.msk_.cfgtxts
 
         # buttons create
-        buttonnames = ("Return", "Change TL", "Change Theme", "Reaction deck",
-                       "TOKEN", "Instance", "Current","Version",
-                       "Clear","Refresh", "OK")
+        buttonnames = ((_("Return")), (_("Change TL")), (_("Change Theme")), (_("Reaction deck")),
+                       (_("TOKEN")), (_("Instance")), (_("Current")), (_("Version")),
+                       (_("Clear")), (_("Refresh")), (_("OK")))
         onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
                     self.poptoken, self.instance_, self.current, self.version_,
                     self.clear_, self.refresh_,self.ok_)
@@ -531,18 +531,18 @@ class ConfigMenu(Frame):
 
     def version_(self):
         from util import mistfigleter
-        self._txtbxput(mistfigleter()+"v"+str(self.msk_.version),"","write by @iodine53@misskey.io","")
+        self._txtbxput(mistfigleter()+"v"+str(self.msk_.version),"",(_("write by @iodine53@misskey.io")),"")
 
     def current(self):
-        self._txtbxput(f"Instance:{self.msk_.instance}")
+        self._txtbxput((_("Instance:{}")).format(self.msk_.instance))
         if self.msk_.i is None:
-            self._txtbxput("TOKEN:None","")
+            self._txtbxput((_("TOKEN:None")),"")
         else:
             user = self.msk_.get_i()
             if user is not None:
-                self._txtbxput("TOKEN:Available",f' name:{user["name"]}',f' username:{user["username"]}',"")
+                self._txtbxput((_("TOKEN:Available")),(_(' name:{}')).format(user["name"]),(_(' username:{}')).format(user["username"]),"")
             else:
-                self._txtbxput("TOKEN:Available","fail to get userinfo :(","")
+                self._txtbxput((_("TOKEN:Available")),(_("fail to get userinfo :(")),"")
 
     def clear_(self):
         self.txtbx.value = ""
@@ -557,21 +557,21 @@ class ConfigMenu(Frame):
         if arg == -1:
             # initialize
             if self.msk_.i is None:
-                self.popup("Please set TOKEN", ["OK"])
+                self.popup((_("Please set TOKEN")), [(_("OK"))])
             else:
-                self.popup("check deck or add deck?", ["check deck", "del deck", "add deck", "return"], self.reactiondeck)
+                self.popup((_("check deck or add deck?")), [(_("check deck")), (_("del deck")), (_("add deck")), (_("return"))], self.reactiondeck)
         elif arg == 0:
             # check deck
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
-                self.popup("Please create reaction deck", ["Ok"])
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
             else:
                 self._scene.add_effect(PopupMenu(self.screen,[(char, lambda: None) for char in nowtoken["reacdeck"]], self.screen.width//3, 0))
         elif arg == 1:
             # del deck
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
-                self.popup("Please create reaction deck", ["Ok"])
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
             else:
                 self.reactiondel(-1)
         elif arg == 2:
@@ -596,37 +596,37 @@ class ConfigMenu(Frame):
             self.reactiondel(-1)
 
     def poptl(self):
-        self.popup("Change TL", ["HTL", "LTL", "STL", "GTL"],self._ser_tl)
+        self.popup((_("Change TL")), [(_("HTL")), (_("LTL")), (_("STL")), (_("GTL"))],self._ser_tl)
 
     def poptheme(self):
-        self.popup("Change Theme", ["default", "monochrome", "green", "bright", "return"],self._ser_theme)
+        self.popup((_("Change Theme")), ["default", "monochrome", "green", "bright", "return"],self._ser_theme)
 
     def poptoken(self):
-        self.popup(f"How to?\ncurrent instance:{self.msk_.instance}", ["Create", "Select", "return"],self._ser_token)
+        self.popup((_("How to?\ncurrent instance:{}")).format(self.msk_.instance), [(_("Create")), (_("Select")), (_("return"))],self._ser_token)
 
     def _ser_tl(self,arg):
         if arg == 0:
             # HTL
             if self.msk_.i is not None:
                 self.msk_.tl = "HTL"
-                self._txtbxput("change TL:HomeTL")
+                self._txtbxput((_("change TL:HomeTL")))
             else:
-                self._txtbxput("HTL is TOKEN required")
+                self._txtbxput((_("HTL is TOKEN required")))
         elif arg == 1:
             # LTL
             self.msk_.tl = "LTL"
-            self._txtbxput("change TL:LocalTL")
+            self._txtbxput((_("change TL:LocalTL")))
         elif arg == 2:
             # STL
             if self.msk_.i is not None:
                 self.msk_.tl = "STL"
-                self._txtbxput("change TL:SocialTL")
+                self._txtbxput((_("change TL:SocialTL")))
             else:
-                self._txtbxput("STL is TOKEN required")
+                self._txtbxput((_("STL is TOKEN required")))
         elif arg == 3:
             # GTL
             self.msk_.tl = "GTL"
-            self._txtbxput("change TL:GlobalTL")
+            self._txtbxput((_("change TL:GlobalTL")))
 
     def _ser_theme(self,arg):
         if arg == 0:
@@ -641,16 +641,16 @@ class ConfigMenu(Frame):
             return
         self.msk_.mistconfig["default"]["theme"] = self.msk_.theme
         self.msk_.mistconfig_put()
-        raise ResizeScreenError("self error")
+        raise ResizeScreenError((_("self error")))
 
     def _ser_token(self,arg):
         if arg == 0:
             # Create
-            self.popup(f"MiAuth or write TOKEN?",["MiAuth", "TOKEN", "return"],self._ser_token_create)
+            self.popup((_("MiAuth or write TOKEN?")).format(),["MiAuth", (_("TOKEN")), (_("return"))],self._ser_token_create)
         elif arg == 1:
             # Select
             if len(self.msk_.mistconfig["tokens"]) == 0:
-                self.popup(f"Create TOKEN please.", ["ok"])
+                self.popup((_("Create TOKEN please.")).format(), [(_("ok"))])
             else:
                 self._ser_token_search(-1)
     
@@ -666,81 +666,81 @@ class ConfigMenu(Frame):
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
             copysuccess = pypcopy(url)
-            self.popup(f"miauth url\n\n{url}\n\n"+("cliped!" if copysuccess else ""), ["check ok"],self.miauth_get)
+            self.popup((_("miauth url\n\n{}\n\n")).format(url)+((_("cliped!")) if copysuccess else ""), [(_("check ok"))],self.miauth_get)
         elif arg == 1:
             # TOKEN
-            self._txtbxput("write your TOKEN")
-            self.msk_.tmp.append("TOKEN")
+            self._txtbxput((_("write your TOKEN")))
+            self.msk_.tmp.append((_("TOKEN")))
             self._disables()
     
     def _ser_token_search(self,arg):
         token = self.msk_.mistconfig["tokens"]
-        button = ["L", "R", "Select", "Delete", "Set def", "unset def"]
+        button = [(_("L")), (_("R")), (_("Select")), (_("Delete")), (_("Set def")), (_("unset def"))]
         if arg == -1:
             # initialize
             self.msk_.tmp.append(0)
-            mes = f'<1/{len(token)}>\n\nSelect\nname:{token[0]["name"]}\ninstance:{token[0]["instance"]}\ntoken:{token[0]["token"][0:8]}...'
+            mes = (_('<1/{}>\n\nSelect\nname:{}\ninstance:{}\ntoken:{}...').format(len(token),token[0]["name"],token[0]["instance"],token[0]["token"][0:8]))
             self.popup(mes, button, self._ser_token_search)
         elif arg == 0:
             # L
             num = self.msk_.tmp.pop()
             if num == 0:
                 self.msk_.tmp.append(0)
-                headmes = "Too Left.\n"
+                headmes = (_("Too Left.\n"))
             else:
                 num -= 1
                 self.msk_.tmp.append(num)
-                headmes = "Select\n"
-            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+                headmes = (_("Select\n"))
+            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
             self.popup(mes, button,self._ser_token_search)
         elif arg == 1:
             # R
             num = self.msk_.tmp.pop()
             if num+1 == len(token):
                 self.msk_.tmp.append(num)
-                headmes = "Too Right.\n"
+                headmes = (_("Too Right.\n"))
             else:
                 num += 1
                 self.msk_.tmp.append(num)
-                headmes = "Select\n"
-            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+                headmes = (_("Select\n"))
+            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
             self.popup(mes, button,self._ser_token_search)
         elif arg == 2:
             # Select
             num = self.msk_.tmp.pop()
             userinfo = token[num]
-            self._txtbxput(f'select user:{userinfo["name"]}',f'current instance:{userinfo["instance"]}',"")
+            self._txtbxput((_('select user:{}')).format(userinfo["name"]),(_('current instance:{}')).format(userinfo["instance"]),"")
             self.msk_.i = userinfo["token"]
             self.msk_.instance = userinfo["instance"]
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput("connect ok!","")
+                self._txtbxput((_("connect ok!")),"")
                 self.refresh_(True)
             else:
                 self.msk_.i = None
-                self._txtbxput("connect fail :(","")
+                self._txtbxput((_("connect fail :(")),"")
         elif arg == 3:
             # Delete
             num = self.msk_.tmp[-1]
-            headmes = "Delete this?\n"
-            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self.popup(mes, ["Yes","No"],self._ser_token_delete)
+            headmes = (_("Delete this?\n"))
+            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
+            self.popup(mes, [(_("Yes")),(_("No"))],self._ser_token_delete)
         elif arg == 4:
             # Set
             num = self.msk_.tmp[-1]
             headmes = "set to default?\n"
-            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
-            self.popup(mes,["Yes","No"],self._ser_token_default)
+            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
+            self.popup(mes,[(_("Yes")),(_("No"))],self._ser_token_default)
         elif arg == 5:
             # Unset
             num = self.msk_.tmp[-1]
             if self.msk_.mistconfig["default"]["defaulttoken"] is None:
-                headmes = "default token is none\n"
+                headmes = (_("default token is none\n"))
             else:
                 self.msk_.mistconfig["default"]["defaulttoken"] = None
                 self.msk_.mistconfig_put()
-                headmes = "unset success!\n"
-            mes = f'<{num+1}/{len(token)}>\n\n{headmes}name:{token[num]["name"]}\ninstance:{token[num]["instance"]}\ntoken:{token[num]["token"][0:8]}...'
+                headmes = (_("unset success!\n"))
+            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
             self.popup(mes, button,self._ser_token_search)
 
     def _ser_token_default(self,arg):
@@ -770,35 +770,35 @@ class ConfigMenu(Frame):
         if arg == 0:
             is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
             if is_ok:
-                text = "MiAuth check Success!\n"
+                text = (_("MiAuth check Success!\n"))
                 self.msk_.reload()
                 userinfo = self.msk_.get_i()
                 if userinfo is not None:
                     name = userinfo["name"]
-                    text += f'Hello {name}'
+                    text += (_('Hello {}')).format(name)
                 else:
-                    text += "fail to get userinfo :("
-                    name = "fail to get"
+                    text += (_("fail to get userinfo :("))
+                    name = (_("fail to get"))
                 userdict = {"name":name,"instance":self.msk_.instance,"token":self.msk_.i}
                 self.msk_.mistconfig["tokens"].append(userdict)
                 self.msk_.mistconfig_put()
                 self.msk_.notes = []
                 self.msk_.reacdb = None
-                self.popup(text, ["Ok"], self.refresh_)
+                self.popup(text, [(_("Ok"))], self.refresh_)
                 self.msk_.tmp.pop()
             else:
-                text = "MiAuth check Fail :(\ntry again?"
-                self.popup(text, ["again", "return"], self.miauth_get)
+                text = (_("MiAuth check Fail :(\ntry again?"))
+                self.popup(text, [(_("again")), (_("return"))], self.miauth_get)
         else:
             self.msk_.tmp.pop()
 
     def instance_(self, select=-1):
         if select == -1:
             if self.msk_.i is not None:
-                self.popup("TOKEN detect!\nchange instance will delete TOKEN.\nOk?", ["Ok","No"],on_close=self.instance_)
+                self.popup((_("TOKEN detect!\nchange instance will delete TOKEN.\nOk?")), [(_("Ok")),(_("No"))],on_close=self.instance_)
             else:
-                self.msk_.tmp.append("INSTANCE")
-                self._txtbxput("input instance such as 'misskey.io' 'misskey.backspace.fm'", f"current instance:{self.msk_.instance}","")
+                self.msk_.tmp.append((_("INSTANCE")))
+                self._txtbxput((_("input instance such as 'misskey.io' 'misskey.backspace.fm'")), (_("current instance:{}")).format(self.msk_.instance),"")
                 self._disables()
         elif select == 0:
             self.msk_.i = None
@@ -810,40 +810,40 @@ class ConfigMenu(Frame):
             self.msk_.i = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput("TOKEN check OK :)")
+                self._txtbxput((_("TOKEN check OK :)")))
                 i = self.msk_.get_i()
                 if i is None:
-                    name = "get fail"
-                    self._txtbxput("fail to get your info :(")
+                    name = (_("get fail"))
+                    self._txtbxput((_("fail to get your info :(")))
                 else:
                     name = i["name"]
-                    self._txtbxput(f"Hello {name}!")
+                    self._txtbxput((_("Hello {}!")).format(name))
                 self.msk_.mistconfig["tokens"].append({"name":name, "instance":self.msk_.instance, "token":self.msk_.i})
                 self.msk_.mistconfig_put()
                 self.refresh_(True)
             else:
                 self.msk_.i = ""
-                self._txtbxput("TOKEN check fail :(")
+                self._txtbxput((_("TOKEN check fail :(")))
         elif ok_value == "INSTANCE":
             before_instance = self.msk_.instance
             self.msk_.instance = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput("instance connected! :)")
+                self._txtbxput((_("instance connected! :)")))
                 is_ok = self.msk_.get_instance_meta()
                 if is_ok:
                     icon_bytes = self.msk_.get_instance_icon()
                     if icon_bytes == "Error":
-                        self._txtbxput("error occured while get icon :(")
+                        self._txtbxput((_("error occured while get icon :(")))
                     else:
                         icon = ImageFile(icon_bytes,self.screen.height//2)
                         self._txtbxput(icon)
                 else:
-                    self._txtbxput("error occured while get meta :(")
+                    self._txtbxput((_("error occured while get meta :(")))
             else:
                 self.msk_.instance = before_instance
-                self._txtbxput("instance connect fail :(")
-            self._txtbxput(f"current instance:{self.msk_.instance}","")
+                self._txtbxput((_("instance connect fail :(")))
+            self._txtbxput((_("current instance:{}")).format(self.msk_.instance),"")
             self.refresh_(True)
         self._disables(True)
 
@@ -863,7 +863,7 @@ class ConfigMenu(Frame):
         if notedel:
             self.msk_.reacdb = None
             self.msk_.notes = []
-        raise ResizeScreenError("self error", self._scene)
+        raise ResizeScreenError((_("self error")), self._scene)
 
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
@@ -889,7 +889,7 @@ class CreateNote(Frame):
         self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
-        buttonnames = ("Note Create", "hug punch", "return", "MoreConf")
+        buttonnames = ((_("Note Create")), (_("hug punch")), (_("return")), (_("MoreConf")))
         on_click = (self.popcreatenote, self.hug_punch, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -917,18 +917,18 @@ class CreateNote(Frame):
         self.txtbx.value += hugpunchs[randint(0,len(hugpunchs)-1)]
 
     def popcreatenote(self):
-        self._scene.add_effect(PopUpDialog(self.screen,"Are you sure about that?", ["Sure", "No"],self._ser_createnote))
+        self._scene.add_effect(PopUpDialog(self.screen,(_("Are you sure about that?")), [(_("Sure")), (_("No"))],self._ser_createnote))
 
     def _ser_createnote(self,arg):
         if arg == 0:
             return_ = self.msk_.create_note(self.txtbx.value)
             if return_ is not None:
-                self._scene.add_effect(PopUpDialog(self.screen,"Create note success :)", ["Ok"],on_close=self.return_))
-                self.msk_.crnotetxts = "Tab to change widget"
+                self._scene.add_effect(PopUpDialog(self.screen,(_("Create note success :)")), [(_("Ok"))],on_close=self.return_))
+                self.msk_.crnotetxts = (_("Tab to change widget"))
                 self.txtbx.value = self.msk_.crnotetxts
                 self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
-                self._scene.add_effect(PopUpDialog(self.screen,"Create note fail :(", ["Ok"]))
+                self._scene.add_effect(PopUpDialog(self.screen,(_("Create note fail :(")), [(_("Ok"))]))
 
     def _ser_ret(self,arg):
         if arg == 0:
@@ -941,9 +941,9 @@ class CreateNote(Frame):
 
     def return_(self,*_):
         if (n := self.msk_.crnoteconf)["renoteId"] is not None:
-            self.popup("renoteId detect!\nif return, it will delete\n are you sure about that?",["sure","no"],self._ser_ret)
+            self.popup((_("renoteId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
         elif n["replyId"] is not None:
-            self.popup("replyId detect!\nif return, it will delete\n are you sure about that?",["sure","no"],self._ser_ret)
+            self.popup((_("replyId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
         else:
             raise NextScene("Main")
 
@@ -969,7 +969,7 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ("return","CW","renoteId","replyId","OK")
+        buttonnames = ((_("return")),"CW",(_("renoteId")),(_("replyId")),(_("OK")))
         onclicks = (self.return_,self.cw,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
@@ -1017,10 +1017,10 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup(f'user:{note["user"]["name"]}\ntext:{note["text"]}',["ok"])
+                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("ok"))])
                     self.msk_.crnoteconf["renoteId"] = self.txt.value
                 else:
-                    self.popup("note show fail :(\nmaybe this noteId is unavailable",["ok"])
+                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("ok"))])
                     self.msk_.crnoteconf["renoteId"] = None
         elif ok_value == "reply":
             if self.txt.value == "":
@@ -1028,10 +1028,10 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup(f'user:{note["user"]["name"]}\ntext:{note["text"]}',["ok"])
+                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("ok"))])
                     self.msk_.crnoteconf["replyId"] = self.txt.value
                 else:
-                    self.popup("note show fail :(\nmaybe this noteId is unavailable",["ok"])
+                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("ok"))])
                     self.msk_.crnoteconf["replyId"] = None
         self.nowconf()
         self._disables(True)
@@ -1080,7 +1080,7 @@ class SelectReaction(Frame):
         self.lstbx = ListBox(self.screen.height-3, [], name="emojilist", on_select=self.select)
 
         # buttons create
-        buttonnames = ("GetDB","return")
+        buttonnames = ((_("GetDB")),(_("return")))
         on_click = (self.getdb,self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -1114,7 +1114,7 @@ class SelectReaction(Frame):
 
     def search(self):
         if self.msk_.reacdb is None:
-            self.lstbx.options = [("DB is None, Please GetDB.",0)]
+            self.lstbx.options = [((_("DB is None, Please GetDB.")),0)]
             self.txtbx.disabled = True
         else:
             self.lstbx.options = []
@@ -1130,7 +1130,7 @@ class SelectReaction(Frame):
     def select(self):
         self.save()
         index = self.data["emojilist"]
-        if (reaction := self.lstbx.options[index][0]) == "DB is None, Please GetDB.":
+        if (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
             pass
         else:
             if self.flag == "search":
@@ -1143,25 +1143,25 @@ class SelectReaction(Frame):
                     noteid = noteval["id"]
                 is_create_seccess = self.msk_.create_reaction(noteid,f":{reaction}:")
                 if is_create_seccess:
-                    self.popup('Create success! :)', ["Ok"], self.return_)
+                    self.popup((_('Create success! :)')), [(_("Ok"))], self.return_)
                 else:
-                    self.popup("Create fail :(", ["Ok"], self.return_)
+                    self.popup((_("Create fail :(")), [(_("Ok"))], self.return_)
             elif self.flag == "deckadd":
                 tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
                 if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
                     nowtoken["reacdeck"] = []
                 if reaction in nowtoken["reacdeck"]:
-                    self.popup("this reaction already in deck", ["Ok"])
+                    self.popup((_("this reaction already in deck")), [(_("Ok"))])
                 else:
                     nowtoken["reacdeck"].append(reaction)
-                    self.popup(f"reaction added\nname:{reaction}",["Ok"])
+                    self.popup((_("reaction added\nname:{}")).format(reaction),[(_("Ok"))])
 
     def getdb(self):
         self.msk_.get_reactiondb()
         if self.msk_.reacdb is None:
-            self.popup("GetDB fail :(",["Ok"])
+            self.popup((_("GetDB fail :(")),[(_("Ok"))])
         else:
-            self.popup("GetDB success!",["Ok"])
+            self.popup((_("GetDB success!")),[(_("Ok"))])
             self.search()
     
     def popup(self,txt,button,on_close=None):
@@ -1177,7 +1177,7 @@ class Notification(Frame):
         super(Notification, self).__init__(screen,
                                       screen.height,
                                       screen.width,
-                                      title="Notification",
+                                      title=(_("Notification")),
                                       reduce_cpu=True,
                                       can_scroll=False)
         # initialize
@@ -1187,10 +1187,10 @@ class Notification(Frame):
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
         self.txtbx.auto_scroll = False
-        self.txtbx.value = "Tab to change widget"
+        self.txtbx.value = (_("Tab to change widget"))
 
         # buttons create
-        buttonnames = ("Get ntfy", "return")
+        buttonnames = ((_("Get ntfy")), (_("return")))
         on_click = (self.get_ntfy, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -1211,8 +1211,8 @@ class Notification(Frame):
         self.txtbx.value = ""
         ntfys = self.msk_.get_ntfy()
         if ntfys is None:
-            self.txtbx.value = "Fail to get notifications"
-            self._scene.add_effect(PopUpDialog(self.screen,"Fail to get ntfy", ["Ok"]))
+            self.txtbx.value = (_("Fail to get notifications"))
+            self._scene.add_effect(PopUpDialog(self.screen,(_("Fail to get ntfy")), [(_("Ok"))]))
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
             for i in ntfys:
@@ -1240,9 +1240,9 @@ class Notification(Frame):
                     else:
                         checkntfytype["else"].append(i)
             if len(follower := checkntfytype["follow"]) != 0:
-                self._txtbxput("Follow comming!","\n".join(char["user"]["name"] if char["user"].get("name") else char["user"]["username"] for char in follower),"")
+                self._txtbxput((_("Follow comming!")),"\n".join(char["user"]["name"] if char["user"].get("name") else char["user"]["username"] for char in follower),"")
             if len(mentions := checkntfytype["mention"]) != 0:
-                self._txtbxput("mention comming!",
+                self._txtbxput((_("mention comming!")),
                                "\n\n".join(char["user"]["name"]+"\n"+char["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if char["user"]["isCat"] else char["note"]["text"] for char in mentions),
                                "")
             if len(notes := checkntfytype["notes"]) != 0:
@@ -1259,17 +1259,17 @@ class Notification(Frame):
                             username = "Deleted user?"
                             i["user"] = {"isCat":False}
                         if (nttype := i["type"]) == "reply":
-                            txt.append(f"{username} was reply")
+                            txt.append((_("{} was reply")).format(username))
                             txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
                         elif nttype == "quote":
-                            txt.append(f"{username} was quoted")
+                            txt.append((_("{} was quoted")).format(username))
                             txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
                         elif nttype == "renote":
-                            txt.append(f"{username} was renoted")
+                            txt.append((_("{} was renoted")).format(username))
                         elif nttype == "reaction":
-                            txt.append(f'{username} was reaction [{i["reaction"]}]')
+                            txt.append((_('{} was reaction [{i["reaction"]}]')).format(username))
                     self._txtbxput(headtext,*txt,"\n")
-            self._scene.add_effect(PopUpDialog(self.screen,"Success", ["Ok"]))
+            self._scene.add_effect(PopUpDialog(self.screen,(_("Success")), [(_("Ok"))]))
 
     def _txtbxput(self,*arg):
         for i in arg:
