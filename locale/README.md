@@ -32,3 +32,7 @@ python msgfmt.py /ja_JP/LC_MESSAGES/messages.po
 ```
 python bootstrap.py
 ```
+
+# 参考情報
+
+* [Qiita](https://qiita.com/Tadahiro_Yamamura/items/147daed0a6fcea32a481)
