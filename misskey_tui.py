@@ -670,7 +670,7 @@ class ConfigMenu(Frame):
         elif arg == 1:
             # TOKEN
             self._txtbxput((_("write your TOKEN")))
-            self.msk_.tmp.append((_("TOKEN")))
+            self.msk_.tmp.append("TOKEN")
             self._disables()
     
     def _ser_token_search(self,arg):
@@ -797,7 +797,7 @@ class ConfigMenu(Frame):
             if self.msk_.i is not None:
                 self.popup((_("TOKEN detect!\nchange instance will delete TOKEN.\nOk?")), [(_("Ok")),(_("No"))],on_close=self.instance_)
             else:
-                self.msk_.tmp.append((_("INSTANCE")))
+                self.msk_.tmp.append("INSTANCE")
                 self._txtbxput((_("input instance such as 'misskey.io' 'misskey.backspace.fm'")), (_("current instance:{}")).format(self.msk_.instance),"")
                 self._disables()
         elif select == 0:
