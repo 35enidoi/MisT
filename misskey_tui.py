@@ -7,6 +7,11 @@ from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
 import os
 
+# _を定義
+# プログラム的には意味はない
+# これがないとlinterが地獄になる(_の定義がないため)
+global _
+
 class MkAPIs():
     def __init__(self) -> None:
         # version
