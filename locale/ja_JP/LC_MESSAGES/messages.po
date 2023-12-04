@@ -489,17 +489,23 @@ msgstr ""
 msgid "Yes"
 msgstr "はい"
 
+#: misskey_tui.py:736
+msgid ""
+"set to default?\n"
+msgstr ""
+"デフォルトに設定しますか?\n"
+
 #: misskey_tui.py:738
 msgid ""
 "default token is none\n"
 msgstr ""
-"デフォルトのトークンがありません"
+"デフォルトのトークンがありません\n"
 
 #: misskey_tui.py:742
 msgid ""
 "unset success!\n"
 msgstr ""
-"解除成功!"
+"解除成功!\n"
 
 #: misskey_tui.py:773
 msgid ""

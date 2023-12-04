@@ -733,7 +733,7 @@ class ConfigMenu(Frame):
         elif arg == 4:
             # Set
             num = self.msk_.tmp[-1]
-            headmes = "set to default?\n"
+            headmes = (_("set to default?\n"))
             mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
             self.popup(mes,[(_("Yes")),(_("No"))],self._ser_token_default)
         elif arg == 5:
