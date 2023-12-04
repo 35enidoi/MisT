@@ -1306,6 +1306,7 @@ def main():
 
 def init_translation():
     import gettext
+    import locale
     # 翻訳ファイルを配置するディレクトリ
     path_to_locale_dir = os.path.abspath(
         os.path.join(
@@ -1314,11 +1315,14 @@ def init_translation():
         )
     )
 
+    # システムの言語の特定
+    lang = locale.getdefaultlocale()[0]
+
     # 翻訳用クラスの設定
     translater = gettext.translation(
         'messages',                   # domain: 辞書ファイルの名前
         localedir=path_to_locale_dir, # 辞書ファイル配置ディレクトリ
-        languages=['ja_JP'],          # 翻訳に使用する言語
+        languages=[lang],             # 翻訳に使用する言語 使いたい言語がある場合上のlangに入れること　例:lang = "ja_JP"
         fallback=True                 # .moファイルが見つからなかった時は未翻訳の文字列を出力
     )
 
