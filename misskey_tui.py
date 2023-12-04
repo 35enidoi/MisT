@@ -604,7 +604,7 @@ class ConfigMenu(Frame):
         self.popup((_("Change TL")), [(_("HTL")), (_("LTL")), (_("STL")), (_("GTL"))],self._ser_tl)
 
     def poptheme(self):
-        self.popup((_("Change Theme")), ["default", "monochrome", "green", "bright", "return"],self._ser_theme)
+        self.popup((_("Change Theme")), [(_("default")), (_("monochrome")), (_("green")), (_("bright")), (_("return"))],self._ser_theme)
 
     def poptoken(self):
         self.popup((_("How to?\ncurrent instance:{}")).format(self.msk_.instance), [(_("Create")), (_("Select")), (_("return"))],self._ser_token)
