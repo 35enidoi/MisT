@@ -1316,7 +1316,7 @@ def init_translation():
     )
 
     # システムの言語の特定
-    lang = locale.getdefaultlocale()[0]
+    lang = locale.getlocale()[0]
 
     # 翻訳用クラスの設定
     translater = gettext.translation(
