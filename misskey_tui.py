@@ -310,9 +310,9 @@ class NoteView(Frame):
         is_ok = self.msk_.note_update()
         if is_ok:
             self._note_reload()
-            self.popup((_("success")), ["ok"])
+            self.popup((_("success")), [_("Ok")])
         else:
-            self.popup((_("something occured")), ["ok"])
+            self.popup((_("something occured")), [_("Ok")])
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -899,7 +899,7 @@ class ConfigMenu(Frame):
         if notedel:
             self.msk_.reacdb = None
             self.msk_.notes = []
-        raise ResizeScreenError((_("self error")), self._scene)
+        raise ResizeScreenError("self error", self._scene)
 
     def language_(self,arg=-1):
         import glob
@@ -1077,7 +1077,7 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("ok"))])
+                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("Ok"))])
                     self.msk_.crnoteconf["renoteId"] = self.txt.value
                 else:
                     self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("ok"))])
@@ -1091,7 +1091,7 @@ class CreateNoteConfig(Frame):
                     self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("ok"))])
                     self.msk_.crnoteconf["replyId"] = self.txt.value
                 else:
-                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("ok"))])
+                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("Ok"))])
                     self.msk_.crnoteconf["replyId"] = None
         self.nowconf()
         self._disables(True)
