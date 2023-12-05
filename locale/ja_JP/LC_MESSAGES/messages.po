@@ -229,6 +229,10 @@ msgstr "トークン"
 msgid "Clear"
 msgstr "クリア"
 
+#: ../misskey_tui.py:542
+msgid "Language"
+msgstr "言語"
+
 #: misskey_tui.py:506
 msgid "Refresh"
 msgstr "更新"
@@ -594,6 +598,18 @@ msgstr "メタ情報取得中にエラー発生"
 #: misskey_tui.py:845
 msgid "instance connect fail :("
 msgstr "インスタンスの接続に失敗しました"
+
+#: ../misskey_tui.py:908
+msgid "there is no translation files."
+msgstr "翻訳用ファイルがありません"
+
+#: ../misskey_tui.py:912
+msgid "reset"
+msgstr "初期化"
+
+#: ../misskey_tui.py:914
+msgid "select language"
+msgstr "言語を選択"
 
 #: misskey_tui.py:892
 msgid "MoreConf"

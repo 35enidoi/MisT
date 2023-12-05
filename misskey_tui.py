@@ -905,7 +905,7 @@ class ConfigMenu(Frame):
         import glob
         langlst = glob.glob("./locale/*\\LC_MESSAGES")
         if len(langlst) == 0:
-            self.popup(_("there is no translation fails."),[_("Ok")])
+            self.popup(_("there is no translation files."),[_("Ok")])
         else:
             if arg == -1:
                 selects = [lang.split("\\")[1] for lang in langlst]

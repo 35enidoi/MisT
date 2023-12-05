@@ -559,7 +559,7 @@ msgid "instance connect fail :("
 msgstr ""
 
 #: ../misskey_tui.py:908
-msgid "there is no translation fails."
+msgid "there is no translation files."
 msgstr ""
 
 #: ../misskey_tui.py:912
