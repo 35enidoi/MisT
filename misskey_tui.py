@@ -677,7 +677,7 @@ class ConfigMenu(Frame):
             return
         self.msk_.mistconfig["default"]["theme"] = self.msk_.theme
         self.msk_.mistconfig_put()
-        raise ResizeScreenError((_("self error")))
+        raise ResizeScreenError("self error")
 
     def _ser_token(self,arg):
         if arg == 0:
