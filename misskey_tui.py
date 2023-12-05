@@ -23,14 +23,17 @@ class MkAPIs():
             if self.mistconfig["version"] < self.version:
                 self.mistconfig["version"] = self.version
                 if not self.mistconfig.get("default"):
-                    self.mistconfig["default"] = {"theme":"default","defaulttoken":None}
+                    self.mistconfig["default"] = {"theme":"default","lang":None,"defaulttoken":None}
+                self.lang = self.mistconfig["default"].get("lang")
                 self.theme = self.mistconfig["default"]["theme"]
                 self.mistconfig_put()
             else:
+                self.lang = self.mistconfig["default"].get("lang")
                 self.theme = self.mistconfig["default"]["theme"]
         else:
+            self.lang = None
             self.theme = "default"
-            self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"defaulttoken":None},"tokens":[]}
+            self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"lang":self.lang,"defaulttoken":None},"tokens":[]}
             self.mistconfig_put()
         # MisT settings
         self.tmp = []
@@ -41,6 +44,7 @@ class MkAPIs():
         self.crnotetxts = "Tab to change widget"
         self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
         self.constcrnoteconf = self.crnoteconf.copy()
+        self.init_translation()
         # Misskey py settings
         if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
             if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
@@ -67,6 +71,33 @@ class MkAPIs():
         else:
             with open("mistconfig.conf", "w") as f:
                 f.write(json.dumps(self.mistconfig))
+
+    def init_translation(self):
+        import gettext
+        # 翻訳ファイルを配置するディレクトリ
+        path_to_locale_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                './locale'
+            )
+        )
+
+        # もしself.langがNoneなら翻訳なしに
+        if self.lang is None:
+            lang = ""
+        else:
+            lang = self.lang
+
+        # 翻訳用クラスの設定
+        translater = gettext.translation(
+            'messages',                   # domain: 辞書ファイルの名前
+            localedir=path_to_locale_dir, # 辞書ファイル配置ディレクトリ
+            languages=[lang],        # 翻訳に使用する言語
+            fallback=True                 # .moファイルが見つからなかった時は未翻訳の文字列を出力
+        )
+
+        # Pythonの組み込みグローバル領域に_という関数を束縛する
+        translater.install()
 
     def reload(self):
         bef_mk = self.mk
@@ -508,10 +539,10 @@ class ConfigMenu(Frame):
         # buttons create
         buttonnames = ((_("Return")), (_("Change TL")), (_("Change Theme")), (_("Reaction deck")),
                        (_("TOKEN")), (_("Instance")), (_("Current")), (_("Version")),
-                       (_("Clear")), (_("Refresh")), (_("OK")))
+                       (_("Language")), (_("Clear")), (_("Refresh")), (_("OK")))
         onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
                     self.poptoken, self.instance_, self.current, self.version_,
-                    self.clear_, self.refresh_,self.ok_)
+                    self.language_, self.clear_, self.refresh_,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -869,6 +900,30 @@ class ConfigMenu(Frame):
             self.msk_.reacdb = None
             self.msk_.notes = []
         raise ResizeScreenError((_("self error")), self._scene)
+
+    def language_(self,arg=-1):
+        import glob
+        langlst = glob.glob("./locale/*\\LC_MESSAGES")
+        if len(langlst) == 0:
+            self.popup(_("there is no translation fails."),[_("Ok")])
+        else:
+            if arg == -1:
+                selects = [lang.split("\\")[1] for lang in langlst]
+                selects.append(_("reset"))
+                selects.append(_("return"))
+                self.popup(_("select language"), selects,self.language_)
+            else:
+                if arg == len(langlst)+1:
+                    return
+                else:
+                    if arg == len(langlst):
+                        self.msk_.lang = None
+                    else:
+                        self.msk_.lang = langlst[arg].split("\\")[1]
+                    self.msk_.init_translation()
+                    self.msk_.mistconfig["default"]["lang"] = self.msk_.lang
+                    self.msk_.mistconfig_put()
+                    self.refresh_()
 
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
@@ -1304,31 +1359,5 @@ def main():
         except ResizeScreenError as e:
             last_scene = e.scene
 
-def init_translation():
-    import gettext
-    import locale
-    # 翻訳ファイルを配置するディレクトリ
-    path_to_locale_dir = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            './locale'
-        )
-    )
-
-    # システムの言語の特定
-    lang = locale.getlocale()[0]
-
-    # 翻訳用クラスの設定
-    translater = gettext.translation(
-        'messages',                   # domain: 辞書ファイルの名前
-        localedir=path_to_locale_dir, # 辞書ファイル配置ディレクトリ
-        languages=[lang],             # 翻訳に使用する言語 使いたい言語がある場合上のlangに入れること　例:lang = "ja_JP"
-        fallback=True                 # .moファイルが見つからなかった時は未翻訳の文字列を出力
-    )
-
-    # Pythonの組み込みグローバル領域に_という関数を束縛する
-    translater.install()
-
 if __name__ == "__main__":
-    init_translation()
     main()
