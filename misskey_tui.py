@@ -999,7 +999,7 @@ class CreateNote(Frame):
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
 
-    def return_(self,*_):
+    def return_(self,*char):
         if (n := self.msk_.crnoteconf)["renoteId"] is not None:
             self.popup((_("renoteId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
         elif n["replyId"] is not None:
