@@ -27,12 +27,6 @@ cp messages.pot ja_JP/LC_MESSAGES/messages.po
 python msgfmt.py ./ja_JP/LC_MESSAGES/messages.po
 ```
 
-* プログラムの起動はすべてbootstrap.pyから行う。
-
-```
-python bootstrap.py
-```
-
 # 参考情報
 
 * [Qiita](https://qiita.com/Tadahiro_Yamamura/items/147daed0a6fcea32a481)
