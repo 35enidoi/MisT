@@ -92,7 +92,7 @@ class MkAPIs():
         translater = gettext.translation(
             'messages',                   # domain: 辞書ファイルの名前
             localedir=path_to_locale_dir, # 辞書ファイル配置ディレクトリ
-            languages=[lang],        # 翻訳に使用する言語
+            languages=[lang],             # 翻訳に使用する言語
             fallback=True                 # .moファイルが見つからなかった時は未翻訳の文字列を出力
         )
 
