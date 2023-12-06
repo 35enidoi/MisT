@@ -903,15 +903,17 @@ class ConfigMenu(Frame):
 
     def language_(self,arg=-1):
         import glob
-        langlst = glob.glob("./locale/*\\LC_MESSAGES")
+        import pathlib
+
+        langlst = glob.glob("./locale/*/LC_MESSAGES")
         if len(langlst) == 0:
             self.popup(_("there is no translation files."),[_("Ok")])
         else:
+            selects = [pathlib.PurePath(lang).parts[1] for lang in langlst]
             if arg == -1:
-                selects = [lang.split("\\")[1] for lang in langlst]
                 selects.append(_("reset"))
                 selects.append(_("return"))
-                self.popup(_("select language"), selects,self.language_)
+                self.popup(_("select language"), selects, self.language_)
             else:
                 if arg == len(langlst)+1:
                     return
@@ -919,7 +921,7 @@ class ConfigMenu(Frame):
                     if arg == len(langlst):
                         self.msk_.lang = None
                     else:
-                        self.msk_.lang = langlst[arg].split("\\")[1]
+                        self.msk_.lang = selects[arg]
                     self.msk_.init_translation()
                     self.msk_.mistconfig["default"]["lang"] = self.msk_.lang
                     self.msk_.mistconfig_put()
