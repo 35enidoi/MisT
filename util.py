@@ -70,4 +70,4 @@ if __name__ == "__main__":
 &&@9##hA
 #GHG#hs
 GHhH3A""")
-    print("\nThis is hexagon-wrench.\n実行するファイル間違えてない?")
+    print("\nThis is hexagon-wrench.\n実行するファイル間違えてるよ!")
