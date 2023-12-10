@@ -18,7 +18,7 @@ class MkAPIs():
         # syoumi tekitouni ageteru noha naisyo
         self.version = 0.381
         # mistconfig load
-        if os.path.isfile("mistconfig.conf"):
+        if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
             self.mistconfig_put(True)
             if self.mistconfig["version"] < self.version:
                 self.mistconfig["version"] = self.version
@@ -65,11 +65,12 @@ class MkAPIs():
 
     def mistconfig_put(self,loadmode=False):
         import json
+        filepath = os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))
         if loadmode:
-            with open("mistconfig.conf", "r") as f:
+            with open(filepath, "r") as f:
                 self.mistconfig = json.loads(f.read())
         else:
-            with open("mistconfig.conf", "w") as f:
+            with open(filepath, "w") as f:
                 f.write(json.dumps(self.mistconfig))
 
     def init_translation(self):
