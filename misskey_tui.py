@@ -416,23 +416,56 @@ class NoteView(Frame):
             if len(self.msk_.notes) == 0:
                 self.popup((_("Please Note Get")), [(_("Ok"))])
             else:
-                self.popup((_("from deck or search?")), [(_("deck")), (_("search")), (_("return"))], self._ser_reac)
+                self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], self._ser_reac)
         elif arg == 4:
             # Notification
             raise NextScene("Notification")
 
     def _ser_reac(self, arg):
         if arg == 0:
+            # note
+            self._ser_reac_note()
+        elif arg == 1:
             # deck
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1)
             else:
                 self.popup((_("Please create reaction deck")), [(_("Ok"))])
-        elif arg == 1:
+        elif arg == 2:
             # search
             self.msk_.tmp.append("searchmode")
             raise NextScene("SelReaction")
+
+    def _ser_reac_note(self,arg=-1):
+        reactions = [("Return", lambda: None)]
+        if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+            if noteval["text"] is None:
+                noteid = noteval["renote"]["id"]
+                notereac = noteval["renote"]["reactions"]
+            else:
+                noteid = noteval["id"]
+                notereac = noteval["reactions"]
+        else:
+            noteid = noteval["id"]
+            notereac = noteval["reactions"]
+        for reac in notereac.keys():
+            if "@" in reac.replace("@.",""):
+                continue
+            else:
+                reactions.append((reac.replace("@.",""), lambda point=len(reactions): self._ser_reac_note(point)))
+        if arg == -1:
+            if len(reactions) == 1:
+                self.popup(_("there is no reactions"), [_("Ok")])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
+        else:
+            self.popup(reactions[arg][0],["Ok"])
+            is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
+            if is_create_seccess:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
 
     def _ser_reac_deck(self,arg):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -441,7 +474,7 @@ class NoteView(Frame):
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i:self._ser_reac_deck(x)) for i in range(len(reacdeck))]
             reacmenu.insert(0, ("Return", lambda: None))
-            self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
+            self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
