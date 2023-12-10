@@ -1266,11 +1266,11 @@ class Notification(Frame):
         self.fix()
     
     def get_ntfy(self):
-        self.txtbx.value = ""
+        self.clear()
         ntfys = self.msk_.get_ntfy()
         if ntfys is None:
-            self.txtbx.value = (_("Fail to get notifications"))
-            self._scene.add_effect(PopUpDialog(self.screen,(_("Fail to get ntfy")), [(_("Ok"))]))
+            self._txtbxput(_("Fail to get notifications"))
+            self.popup(_("Fail to get ntfy"),[(_("Ok"))])
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
             for i in ntfys:
@@ -1280,59 +1280,79 @@ class Notification(Frame):
                     checkntfytype["mention"].append(i)
                 else:
                     if not i.get("note"):
-                        continue
-                    if (ntfytype == "renote") or (ntfytype == "quote"):
+                        pass
+                    elif (ntfytype == "renote") or (ntfytype == "quote"):
                         if i["note"]["renote"]["id"] not in checkntfytype["notes"]:
                             checkntfytype["notes"][i["note"]["renote"]["id"]] = {"value":i["note"]["renote"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["renote"]["id"]]["ntfy"].append(i)
-                        continue
-                    if ntfytype == "reply":
+                    elif ntfytype == "reply":
                         if i["note"]["reply"]["id"] not in checkntfytype["notes"]:
                             checkntfytype["notes"][i["note"]["reply"]["id"]] = {"value":i["note"]["reply"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["reply"]["id"]]["ntfy"].append(i)
-                        continue
-                    if ntfytype == "reaction":
+                    elif ntfytype == "reaction":
                         if i["note"]["id"] not in checkntfytype["notes"]:
                             checkntfytype["notes"][i["note"]["id"]] = {"value":i["note"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["id"]]["ntfy"].append(i)
                     else:
                         checkntfytype["else"].append(i)
-            if len(follower := checkntfytype["follow"]) != 0:
-                self._txtbxput((_("Follow comming!")),"\n".join(char["user"]["name"] if char["user"].get("name") else char["user"]["username"] for char in follower),"")
-            if len(mentions := checkntfytype["mention"]) != 0:
-                self._txtbxput((_("mention comming!")),
-                               "\n\n".join(char["user"]["name"]+"\n"+char["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if char["user"]["isCat"] else char["note"]["text"] for char in mentions),
-                               "")
-            if len(notes := checkntfytype["notes"]) != 0:
-                for i in notes:
-                    headtext = f"noteid:{i}\n"+f'text:{str(notes[i]["value"]["text"].replace("な","にゃ").replace("ナ","ニャ") if notes[i]["value"]["user"]["isCat"] else notes[i]["value"]["text"])}\n'
-                    txt = []
-                    for i in notes[i]["ntfy"]:
-                        if i.get("user"):
-                            if i["user"]["name"] is None:
-                                username = i["user"]["username"]
-                            else:
-                                username = i["user"]["name"]
-                        else:
-                            username = "Deleted user?"
-                            i["user"] = {"isCat":False}
-                        if (nttype := i["type"]) == "reply":
-                            txt.append((_("{} was reply")).format(username))
-                            txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
-                        elif nttype == "quote":
-                            txt.append((_("{} was quoted")).format(username))
-                            txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
-                        elif nttype == "renote":
-                            txt.append((_("{} was renoted")).format(username))
-                        elif nttype == "reaction":
-                            txt.append((_('{} was reaction [{}]')).format(username, i["reaction"]))
-                    self._txtbxput(headtext,*txt,"\n")
-            self._scene.add_effect(PopUpDialog(self.screen,(_("Success")), [(_("Ok"))]))
+            self.ntfys = checkntfytype
+            self.inp_all()
+            self.popup(_("Success"),[(_("Ok"))])
+
+    def clear(self):
+        self.txtbx.value = ""
+
+    def inp_all(self):
+        self.clear()
+        if len(self.ntfys["follow"]) != 0:
+            self._txtbxput(_("Follow comming!"))
+            self.inp_follow()
+        if len(self.ntfys["mention"]) != 0:
+            self._txtbxput(_("mention comming!"))
+            self.inp_mention()
+        for note in self.ntfys["notes"]:
+            self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
+            self.inp_note(note)
+    
+    def inp_note(self, note):
+        for ntfy in self.ntfys["notes"][note]["ntfy"]:
+            if ntfy.get("user"):
+                if ntfy["user"]["name"] is None:
+                    username = ntfy["user"]["username"]
+                else:
+                    username = ntfy["user"]["name"]
+            else:
+                username = "Deleted user?"
+                ntfy["user"] = {"isCat":False}
+            if (nttype := ntfy["type"]) == "reply":
+                self._txtbxput((_("{} was reply")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+            elif nttype == "quote":
+                self._txtbxput((_("{} was quoted")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+            elif nttype == "renote":
+                self._txtbxput((_("{} was renoted")).format(username))
+            elif nttype == "reaction":
+                self._txtbxput((_('{} was reaction [{}]')).format(username, ntfy["reaction"]))
+        self._txtbxput("-"*(self.screen.width-18))
+
+    def inp_follow(self):
+        for char in self.ntfys["follow"]:
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"],"")
+
+    def inp_mention(self):
+        for char in self.ntfys["mention"]:
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["text"]),"")
 
     def _txtbxput(self,*arg):
         for i in arg:
             self.txtbx.value += str(i)+"\n"
-    
+
+    def popup(self, txt: str, button: list, on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
+
+    @staticmethod
+    def nyaize(txt: str) -> str:
+        return str(txt).replace("な","にゃ").replace("ナ","ニャ")
+
     @staticmethod
     def return_():
         raise NextScene("Main")
