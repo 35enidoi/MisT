@@ -1240,6 +1240,7 @@ class Notification(Frame):
                                       can_scroll=False)
         # initialize
         self.msk_ = msk
+        self.ntfys = None
         self.set_theme(self.msk_.theme)
 
         # txtbox create
@@ -1248,8 +1249,12 @@ class Notification(Frame):
         self.txtbx.value = (_("Tab to change widget"))
 
         # buttons create
-        buttonnames = ((_("Get ntfy")), (_("return")))
-        on_click = (self.get_ntfy, self.return_)
+        buttonnames = ((_("Get ntfy")), (_("Clear")), (_("All")), (_("Follow")),
+                       (_("Mention")), (_("Note")), (_("Reply")), (_("Quote")),
+                       (_("return")))
+        on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
+                    self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
+                    self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -1271,6 +1276,7 @@ class Notification(Frame):
         if ntfys is None:
             self._txtbxput(_("Fail to get notifications"))
             self.popup(_("Fail to get ntfy"),[(_("Ok"))])
+            self.ntfys = None
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
             for i in ntfys:
@@ -1302,18 +1308,96 @@ class Notification(Frame):
     def clear(self):
         self.txtbx.value = ""
 
-    def inp_all(self):
-        self.clear()
-        if len(self.ntfys["follow"]) != 0:
-            self._txtbxput(_("Follow comming!"))
+    def _ser_follow(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
             self.inp_follow()
-        if len(self.ntfys["mention"]) != 0:
-            self._txtbxput(_("mention comming!"))
+
+    def _ser_mention(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
             self.inp_mention()
-        for note in self.ntfys["notes"]:
-            self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
-            self.inp_note(note)
-    
+
+    def _ser_note(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            for note in self.ntfys["notes"]:
+                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
+                self.inp_note(note)
+
+    def _ser_reply(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            replys = {}
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "reply":
+                        if ntfys not in replys:
+                            replys[ntfys] = []
+                        replys[ntfys].append(ntfy)
+            for noteid in replys:
+                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
+                for reply in replys[noteid]:
+                    if reply.get("user"):
+                        if reply["user"]["name"] is None:
+                            username = reply["user"]["username"]
+                        else:
+                            username = reply["user"]["name"]
+                    else:
+                        username = "Deleted user?"
+                        reply["user"] = {"isCat":False}
+                    self._txtbxput((_("{} was reply")).format(username), self.nyaize(reply["note"]["text"]), "")
+                self._txtbxput("-"*(self.screen.width-18))
+
+    def _ser_quote(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            quotes = {}
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "quote":
+                        if ntfys not in quotes:
+                            quotes[ntfys] = []
+                        quotes[ntfys].append(ntfy)
+            for noteid in quotes:
+                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
+                for quote in quotes[noteid]:
+                    if quote.get("user"):
+                        if quote["user"]["name"] is None:
+                            username = quote["user"]["username"]
+                        else:
+                            username = quote["user"]["name"]
+                    else:
+                        username = "Deleted user?"
+                        quote["user"] = {"isCat":False}
+                    self._txtbxput((_("{} was quoted")).format(username), self.nyaize(quote["note"]["text"]), "")
+                self._txtbxput("-"*(self.screen.width-18))
+
+    def inp_all(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            if len(self.ntfys["follow"]) != 0:
+                self._txtbxput(_("Follow comming!"))
+                self.inp_follow()
+            if len(self.ntfys["mention"]) != 0:
+                self._txtbxput(_("mention comming!"))
+                self.inp_mention()
+            for note in self.ntfys["notes"]:
+                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
+                self.inp_note(note)
+
     def inp_note(self, note):
         for ntfy in self.ntfys["notes"][note]["ntfy"]:
             if ntfy.get("user"):
