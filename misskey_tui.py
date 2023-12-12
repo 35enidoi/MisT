@@ -1458,7 +1458,7 @@ class Notification(Frame):
 
     def inp_mention(self):
         for char in self.ntfys["mention"]:
-            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["text"]),"")
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
 
     def _txtbxput(self,*arg):
         for i in arg:
