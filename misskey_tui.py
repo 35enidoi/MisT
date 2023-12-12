@@ -934,12 +934,12 @@ class ConfigMenu(Frame):
     def language_(self,arg=-1):
         import glob
         import pathlib
-
-        langlst = glob.glob("./locale/*/LC_MESSAGES")
+        filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
+        langlst = glob.glob(filedir)
         if len(langlst) == 0:
             self.popup(_("there is no translation files."),[_("Ok")])
         else:
-            selects = [pathlib.PurePath(lang).parts[1] for lang in langlst]
+            selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
                 selects.append(_("reset"))
                 selects.append(_("return"))
