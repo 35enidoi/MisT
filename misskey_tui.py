@@ -153,10 +153,10 @@ class MkAPIs():
 
     def get_reactiondb(self):
         import requests
+        import json
         try:
             ret = requests.get(f'https://{self.instance}/api/emojis')
             if ret.status_code == 200:
-                import json
                 self.reacdb = {}
                 for i in json.loads(ret.text)["emojis"]:
                     self.reacdb[i["name"]] = i["aliases"]
@@ -374,7 +374,7 @@ class NoteView(Frame):
         else:
             self._noteput(note["text"],"")
         if len(note["files"]) != 0:
-            self._noteput(f'{len(note["files"])} files')
+            self._noteput(_("{} files").format(len(note["files"])))
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
                         "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()), "")
 
@@ -435,11 +435,19 @@ class NoteView(Frame):
                 self.popup((_("Please create reaction deck")), [(_("Ok"))])
         elif arg == 2:
             # search
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
+            else:
+                noteid = noteval["id"]
+            self.msk_.tmp.append(noteid)
             self.msk_.tmp.append("searchmode")
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self,arg=-1):
-        reactions = [("Return", lambda: None)]
+        reactions = [(_("return"), lambda: None)]
         if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
             if noteval["text"] is None:
                 noteid = noteval["renote"]["id"]
@@ -456,12 +464,13 @@ class NoteView(Frame):
             else:
                 reactions.append((reac.replace("@.",""), lambda point=len(reactions): self._ser_reac_note(point)))
         if arg == -1:
+            # initialize
             if len(reactions) == 1:
                 self.popup(_("there is no reactions"), [_("Ok")])
             else:
                 self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
         else:
-            self.popup(reactions[arg][0],["Ok"])
+            # Create reaction
             is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
             if is_create_seccess:
                 self.popup((_('Create success! :)')), [(_("Ok"))])
@@ -474,7 +483,7 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i:self._ser_reac_deck(x)) for i in range(len(reacdeck))]
-            reacmenu.insert(0, ("Return", lambda: None))
+            reacmenu.insert(0, (_("return"), lambda: None))
             self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
@@ -1196,6 +1205,7 @@ class SelectReaction(Frame):
             if (tmpval := self.msk_.tmp[-1]) == "searchmode":
                 self.msk_.tmp.pop()
                 self.flag = "search"
+                self.noteid = self.msk_.tmp.pop()
             elif tmpval == "deck":
                 self.msk_.tmp.pop()
                 self.flag = "deckadd"
@@ -1226,14 +1236,7 @@ class SelectReaction(Frame):
             pass
         else:
             if self.flag == "search":
-                if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
-                    if noteval["text"] is None:
-                        noteid = noteval["renote"]["id"]
-                    else:
-                        noteid = noteval["id"]
-                else:
-                    noteid = noteval["id"]
-                is_create_seccess = self.msk_.create_reaction(noteid,f":{reaction}:")
+                is_create_seccess = self.msk_.create_reaction(self.noteid,f":{reaction}:")
                 if is_create_seccess:
                     self.popup((_('Create success! :)')), [(_("Ok"))], self.return_)
                 else:
@@ -1285,10 +1288,10 @@ class Notification(Frame):
         # buttons create
         buttonnames = ((_("Get ntfy")), (_("Clear")), (_("All")), (_("Follow")),
                        (_("Mention")), (_("Note")), (_("Reply")), (_("Quote")),
-                       (_("return")))
+                       (_("Select")), (_("return")))
         on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
                     self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
-                    self.return_)
+                    self.select, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -1459,6 +1462,165 @@ class Notification(Frame):
     def inp_mention(self):
         for char in self.ntfys["mention"]:
             self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
+
+    def select(self, arg=-1):
+        buttons = [(_("return"), lambda:None)]
+        if arg == -1:
+            # initialize
+            if self.ntfys is None:
+                self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            else:
+                self.popup(_("select from"),[_("Mention"),_("Reply"),_("Quote"),_("return")],self.select)
+            return
+        elif arg == 0:
+            # mention
+            for i, r in enumerate(self.ntfys["mention"]):
+                buttons.append((r["note"]["text"][:self.screen.width//2], lambda x=i:self.select_note(0,x)))
+        elif arg == 1:
+            # reply
+            replys = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "reply":
+                        replys.append(ntfy)
+            for i, r in enumerate(replys):
+                buttons.append((r["note"]["text"][:self.screen.width//2], lambda x=i:self.select_note(1,x)))
+        elif arg == 2:
+            # quote
+            quotes = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "quote":
+                        quotes.append(ntfy)
+            for i, r in enumerate(quotes):
+                buttons.append((r["note"]["text"][:self.screen.width//2], lambda x=i:self.select_note(2,x)))
+        elif arg == 3:
+            # return
+            return
+        self._scene.add_effect(PopupMenu(self.screen, buttons, self.screen.width//3, 0))
+
+    def select_note(self, from_, arg):
+        poptxt = (_("Select note\n"))
+        if from_ == 0:
+            # mention
+            note = self.ntfys["mention"][arg]
+            poptxt += _("type:mention\n")
+        elif from_ == 1:
+            # reply
+            fromnote = []
+            replys = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "reply":
+                        fromnote.append(self.ntfys["notes"][ntfys]["value"])
+                        replys.append(ntfy)
+            note = replys[arg]
+            poptxt += _("type:reply\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
+        elif from_ == 2:
+            # quote
+            fromnote = []
+            quotes = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "quote":
+                        fromnote.append(self.ntfys["notes"][ntfys]["value"])
+                        quotes.append(ntfy)
+            note = quotes[arg]
+            poptxt += _("type:quote\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["note"]["id"], fromnote[arg]["text"])
+        poptxt += _("name:{}\nusername:{}\n").format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
+                                                   note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
+        poptxt += _("noteid:{}\ntxt:{}\n").format(note["note"]["id"],note["note"]["text"])
+        if len(note["note"]["files"]) != 0:
+            poptxt += (_("{} files").format(len(note["note"]["files"])))
+        self.popup(poptxt, [(_("Renote")), (_("Quote")), (_("Reply")), (_("Reaction")), (_("return"))], lambda select, note_=note:self.select_do(select, note_))
+
+    def select_do(self, arg, note):
+        if arg == 0:
+            # renote
+            username = note["user"]["name"]
+            if len(text := note["note"]["text"]) <= 15:
+                pass
+            else:
+                text = text[:16]+"..."
+            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(note["note"]["id"],username,text), [(_("Ok")),(_("No"))],on_close=lambda arg, note_=note : self._ser_rn(arg, note_))
+        elif arg == 1:
+            # Quote
+            self.msk_.crnoteconf["renoteId"] = note["note"]["id"]
+            raise NextScene("CreateNote")
+        elif arg == 2:
+            # Reply
+            self.msk_.crnoteconf["replyId"] = note["note"]["id"]
+            raise NextScene("CreateNote")
+        elif arg == 3:
+            # Reaction
+            self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], lambda arg, note_=note : self._ser_reac(arg, note_))
+
+    def _ser_rn(self, arg, note):
+        if arg == 0:
+            # renote
+            createnote = self.msk_.create_renote(note["note"]["id"])
+            if createnote is not None:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
+
+    def _ser_reac(self, arg, note):
+        if arg == 0:
+            # note
+            self._ser_reac_note(-1, note)
+        elif arg == 1:
+            # deck
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
+                self._ser_reac_deck(-1, note)
+            else:
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+        elif arg == 2:
+            # search
+            noteid = note["note"]["id"]
+            self.msk_.tmp.append(noteid)
+            self.msk_.tmp.append("searchmode")
+            raise NextScene("SelReaction")
+
+    def _ser_reac_note(self, arg, note):
+        reactions = [(_("return"), lambda: None)]
+        noteid = note["note"]["id"]
+        notereac = note["note"]["reactions"]
+        for reac in notereac.keys():
+            if "@" in reac.replace("@.",""):
+                continue
+            else:
+                reactions.append((reac.replace("@.",""), lambda point=len(reactions), note_=note: self._ser_reac_note(point,note_)))
+        if arg == -1:
+            # initialize
+            if len(reactions) == 1:
+                self.popup(_("there is no reactions"), [_("Ok")])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
+        else:
+            # Create reaction
+            is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
+            if is_create_seccess:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
+
+    def _ser_reac_deck(self, arg, note):
+        tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+        reacdeck = self.msk_.mistconfig["tokens"][tokenindex]["reacdeck"]
+        if arg == -1:
+            # initialize
+            reacmenu = [(reacdeck[i], lambda x=i, note_=note:self._ser_reac_deck(x,note_)) for i in range(len(reacdeck))]
+            reacmenu.insert(0, (_("return"), lambda: None))
+            self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
+        else:
+            # Create reaction
+            noteid = note["note"]["id"]
+            is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
+            if is_create_seccess:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
 
     def _txtbxput(self,*arg):
         for i in arg:
