@@ -1106,7 +1106,7 @@ class CreateNoteConfig(Frame):
         from misskey import enum
         if arg == -1:
             # initialize
-            self.popup(_("Notevisibility"), [_("Public"),_("Home"),_("Followers"),_("return")], self.notevisibility)
+            self.popup(_("notevisibility"), [_("Public"),_("Home"),_("Followers"),_("return")], self.notevisibility)
             return
         elif arg == 0:
             # Public
@@ -1546,7 +1546,7 @@ class Notification(Frame):
                         fromnote.append(self.ntfys["notes"][ntfys]["value"])
                         quotes.append(ntfy)
             note = quotes[arg]
-            poptxt += _("type:quote\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["note"]["id"], fromnote[arg]["text"])
+            poptxt += _("type:quote\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
         poptxt += _("name:{}\nusername:{}\n").format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
                                                    note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
         poptxt += _("noteid:{}\ntxt:{}\n").format(note["note"]["id"],note["note"]["text"])
