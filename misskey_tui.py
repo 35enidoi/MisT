@@ -267,7 +267,6 @@ class NoteView(Frame):
         # disable
         self.note.disabled = True
         moreind = buttonnames.index(_("More"))
-        noteupind = buttonnames.index(_("Noteupdate"))
         if self.msk_.i is None:
             self.buttons[moreind].disabled = True
         else:
