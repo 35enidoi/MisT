@@ -16,7 +16,7 @@ class MkAPIs():
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.381
+        self.version = 0.39
         # mistconfig load
         if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
             self.mistconfig_put(True)
