@@ -224,7 +224,7 @@ class MkAPIs():
             return None
 
 class NoteView(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(NoteView, self).__init__(screen,
                                        screen.height,
                                        screen.width,
@@ -559,7 +559,7 @@ class NoteView(Frame):
         raise NextScene("Configration")
 
 class ConfigMenu(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(ConfigMenu, self).__init__(screen,
                                        screen.height,
                                        screen.width,
@@ -974,7 +974,7 @@ class ConfigMenu(Frame):
         raise NextScene("Main")
 
 class CreateNote(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(CreateNote, self).__init__(screen,
                                       screen.height,
                                       screen.width,
@@ -1053,7 +1053,7 @@ class CreateNote(Frame):
         raise NextScene("CreNoteConf")
 
 class CreateNoteConfig(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(CreateNoteConfig, self).__init__(screen,
                                     screen.height,
                                     screen.width,
@@ -1162,7 +1162,7 @@ class CreateNoteConfig(Frame):
         raise NextScene("CreateNote")
 
 class SelectReaction(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(SelectReaction, self).__init__(screen,
                                       screen.height,
                                       screen.width,
