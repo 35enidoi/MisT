@@ -41,7 +41,7 @@ class MkAPIs():
         self.nowpoint = 0
         self.reacdb = None
         self.cfgtxts = ""
-        self.crnotetxts = "Tab to change widget"
+        self.crnotetxts = ""
         self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
         self.constcrnoteconf = self.crnoteconf.copy()
         self.init_translation()
@@ -236,7 +236,7 @@ class NoteView(Frame):
         self.set_theme(self.msk_.theme)
 
         # notebox create
-        self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
+        self.note=TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
 
         # button create
         buttonnames = (_("Quit"), _("Move L"), _("Move R"),
@@ -265,7 +265,6 @@ class NoteView(Frame):
         self.layout2 = layout2
 
         # disable
-        self.note.disabled = True
         moreind = buttonnames.index(_("More"))
         if self.msk_.i is None:
             self.buttons[moreind].disabled = True
@@ -321,7 +320,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput((_("something occured while noteget.")),(_("or welcome to MisT!")))
+            self._noteput((_("something occured while noteget.")), (_("or welcome to MisT!")), (_("Tab to change widget")))
             self.buttons[3].disabled = True
         else:
             self.buttons[3].disabled = False
@@ -1024,7 +1023,7 @@ class CreateNote(Frame):
             return_ = self.msk_.create_note(self.txtbx.value)
             if return_ is not None:
                 self._scene.add_effect(PopUpDialog(self.screen,(_("Create note success :)")), [(_("Ok"))],on_close=self.return_))
-                self.msk_.crnotetxts = (_("Tab to change widget"))
+                self.msk_.crnotetxts = ""
                 self.txtbx.value = self.msk_.crnotetxts
                 self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
