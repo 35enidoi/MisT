@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-12-05 21:56+0900\n"
+"POT-Creation-Date: 2023-12-16 06:28+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,174 +15,212 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: ../misskey_tui.py:241
+#: ../misskey_tui.py:244
 msgid "Quit"
 msgstr ""
 
-#: ../misskey_tui.py:241 ../misskey_tui.py:261
+#: ../misskey_tui.py:244 ../misskey_tui.py:264
 msgid "Move L"
 msgstr ""
 
-#: ../misskey_tui.py:241 ../misskey_tui.py:262
+#: ../misskey_tui.py:244 ../misskey_tui.py:265
 msgid "Move R"
 msgstr ""
 
-#: ../misskey_tui.py:242
+#: ../misskey_tui.py:245
 msgid "Note Get"
 msgstr ""
 
-#: ../misskey_tui.py:242 ../misskey_tui.py:268
-msgid "More"
-msgstr ""
-
-#: ../misskey_tui.py:242 ../misskey_tui.py:269
+#: ../misskey_tui.py:245
 msgid "Noteupdate"
 msgstr ""
 
-#: ../misskey_tui.py:243
+#: ../misskey_tui.py:245 ../misskey_tui.py:270
+msgid "More"
+msgstr ""
+
+#: ../misskey_tui.py:246
 msgid "Config"
 msgstr ""
 
-#: ../misskey_tui.py:286
+#: ../misskey_tui.py:283
 msgid ""
 "connect failed.\n"
 "Please Instance recreate."
 msgstr ""
 
-#: ../misskey_tui.py:286 ../misskey_tui.py:297 ../misskey_tui.py:313
-#: ../misskey_tui.py:315 ../misskey_tui.py:401 ../misskey_tui.py:407
-#: ../misskey_tui.py:421 ../misskey_tui.py:435 ../misskey_tui.py:460
-#: ../misskey_tui.py:462 ../misskey_tui.py:482 ../misskey_tui.py:506
-#: ../misskey_tui.py:508 ../misskey_tui.py:603 ../misskey_tui.py:610
-#: ../misskey_tui.py:823 ../misskey_tui.py:834 ../misskey_tui.py:908
-#: ../misskey_tui.py:986 ../misskey_tui.py:991 ../misskey_tui.py:1080
-#: ../misskey_tui.py:1094 ../misskey_tui.py:1206 ../misskey_tui.py:1208
-#: ../misskey_tui.py:1214 ../misskey_tui.py:1217 ../misskey_tui.py:1222
-#: ../misskey_tui.py:1224 ../misskey_tui.py:1275 ../misskey_tui.py:1332
+#: ../misskey_tui.py:283 ../misskey_tui.py:294 ../misskey_tui.py:310
+#: ../misskey_tui.py:312 ../misskey_tui.py:398 ../misskey_tui.py:404
+#: ../misskey_tui.py:418 ../misskey_tui.py:435 ../misskey_tui.py:469
+#: ../misskey_tui.py:476 ../misskey_tui.py:478 ../misskey_tui.py:499
+#: ../misskey_tui.py:501 ../misskey_tui.py:521 ../misskey_tui.py:545
+#: ../misskey_tui.py:547 ../misskey_tui.py:645 ../misskey_tui.py:652
+#: ../misskey_tui.py:865 ../misskey_tui.py:876 ../misskey_tui.py:952
+#: ../misskey_tui.py:1030 ../misskey_tui.py:1035 ../misskey_tui.py:1141
+#: ../misskey_tui.py:1155 ../misskey_tui.py:1261 ../misskey_tui.py:1263
+#: ../misskey_tui.py:1269 ../misskey_tui.py:1272 ../misskey_tui.py:1277
+#: ../misskey_tui.py:1279 ../misskey_tui.py:1335 ../misskey_tui.py:1363
+#: ../misskey_tui.py:1370 ../misskey_tui.py:1377 ../misskey_tui.py:1384
+#: ../misskey_tui.py:1393 ../misskey_tui.py:1419 ../misskey_tui.py:1445
+#: ../misskey_tui.py:1491 ../misskey_tui.py:1565 ../misskey_tui.py:1583
+#: ../misskey_tui.py:1585 ../misskey_tui.py:1597 ../misskey_tui.py:1617
+#: ../misskey_tui.py:1624 ../misskey_tui.py:1626 ../misskey_tui.py:1641
+#: ../misskey_tui.py:1643
 msgid "Ok"
 msgstr ""
 
-#: ../misskey_tui.py:288
+#: ../misskey_tui.py:285
 msgid "latest"
 msgstr ""
 
-#: ../misskey_tui.py:288
+#: ../misskey_tui.py:285
 msgid "note get from"
 msgstr ""
 
-#: ../misskey_tui.py:288
+#: ../misskey_tui.py:285
 msgid "since"
 msgstr ""
 
-#: ../misskey_tui.py:288
+#: ../misskey_tui.py:285
 msgid "until"
 msgstr ""
 
-#: ../misskey_tui.py:288 ../misskey_tui.py:389 ../misskey_tui.py:423
-#: ../misskey_tui.py:598 ../misskey_tui.py:638 ../misskey_tui.py:641
-#: ../misskey_tui.py:685 ../misskey_tui.py:827 ../misskey_tui.py:913
-#: ../misskey_tui.py:952 ../misskey_tui.py:1032 ../misskey_tui.py:1143
-#: ../misskey_tui.py:1253
+#: ../misskey_tui.py:285 ../misskey_tui.py:386 ../misskey_tui.py:420
+#: ../misskey_tui.py:450 ../misskey_tui.py:486 ../misskey_tui.py:640
+#: ../misskey_tui.py:680 ../misskey_tui.py:683 ../misskey_tui.py:727
+#: ../misskey_tui.py:869 ../misskey_tui.py:957 ../misskey_tui.py:996
+#: ../misskey_tui.py:1076 ../misskey_tui.py:1109 ../misskey_tui.py:1204
+#: ../misskey_tui.py:1311 ../misskey_tui.py:1487 ../misskey_tui.py:1493
+#: ../misskey_tui.py:1555 ../misskey_tui.py:1576 ../misskey_tui.py:1606
+#: ../misskey_tui.py:1634
 msgid "return"
 msgstr ""
 
-#: ../misskey_tui.py:297
+#: ../misskey_tui.py:294
 msgid "get note please(latest)"
 msgstr ""
 
-#: ../misskey_tui.py:313
+#: ../misskey_tui.py:310
 msgid "success"
 msgstr ""
 
-#: ../misskey_tui.py:315
+#: ../misskey_tui.py:312
 msgid "something occured"
 msgstr ""
 
-#: ../misskey_tui.py:328
+#: ../misskey_tui.py:325
 msgid "or welcome to MisT!"
 msgstr ""
 
-#: ../misskey_tui.py:328
+#: ../misskey_tui.py:325
 msgid "something occured while noteget."
 msgstr ""
 
-#: ../misskey_tui.py:389
+#: ../misskey_tui.py:325 ../misskey_tui.py:1306
+msgid "Tab to change widget"
+msgstr ""
+
+#: ../misskey_tui.py:377 ../misskey_tui.py:1554
+msgid "{} files"
+msgstr ""
+
+#: ../misskey_tui.py:386
 msgid "?"
 msgstr ""
 
-#: ../misskey_tui.py:389
+#: ../misskey_tui.py:386
 msgid "Create Note"
 msgstr ""
 
-#: ../misskey_tui.py:389
+#: ../misskey_tui.py:386 ../misskey_tui.py:400 ../misskey_tui.py:1555
+msgid "Renote"
+msgstr ""
+
+#: ../misskey_tui.py:386 ../misskey_tui.py:1295
+msgid "Notification"
+msgstr ""
+
+#: ../misskey_tui.py:386 ../misskey_tui.py:1310 ../misskey_tui.py:1493
+#: ../misskey_tui.py:1555
+msgid "Reply"
+msgstr ""
+
+#: ../misskey_tui.py:386 ../misskey_tui.py:1555
 msgid "Reaction"
 msgstr ""
 
 #: ../misskey_tui.py:389
-msgid "Reply"
-msgstr ""
-
-#: ../misskey_tui.py:389 ../misskey_tui.py:403
-msgid "Renote"
-msgstr ""
-
-#: ../misskey_tui.py:389 ../misskey_tui.py:1240
-msgid "Notification"
-msgstr ""
-
-#: ../misskey_tui.py:392
 msgid "Quit?"
 msgstr ""
 
-#: ../misskey_tui.py:392
+#: ../misskey_tui.py:389
 msgid "yes"
 msgstr ""
 
-#: ../misskey_tui.py:392 ../misskey_tui.py:1004 ../misskey_tui.py:1006
+#: ../misskey_tui.py:389 ../misskey_tui.py:1048 ../misskey_tui.py:1050
 msgid "no"
 msgstr ""
 
-#: ../misskey_tui.py:401 ../misskey_tui.py:407 ../misskey_tui.py:421
+#: ../misskey_tui.py:398 ../misskey_tui.py:404 ../misskey_tui.py:418
 msgid "Please Note Get"
 msgstr ""
 
-#: ../misskey_tui.py:403
-msgid "Quote"
-msgstr ""
-
-#: ../misskey_tui.py:403
+#: ../misskey_tui.py:400
 msgid "Renote or Quote?"
 msgstr ""
 
-#: ../misskey_tui.py:403 ../misskey_tui.py:540
+#: ../misskey_tui.py:400 ../misskey_tui.py:582
 msgid "Return"
 msgstr ""
 
-#: ../misskey_tui.py:423
+#: ../misskey_tui.py:400 ../misskey_tui.py:1310 ../misskey_tui.py:1493
+#: ../misskey_tui.py:1555
+msgid "Quote"
+msgstr ""
+
+#: ../misskey_tui.py:420 ../misskey_tui.py:1576
 msgid "deck"
 msgstr ""
 
-#: ../misskey_tui.py:423
-msgid "from deck or search?"
+#: ../misskey_tui.py:420 ../misskey_tui.py:1576
+msgid "note"
 msgstr ""
 
-#: ../misskey_tui.py:423
+#: ../misskey_tui.py:420 ../misskey_tui.py:1576
+msgid "reaction from note or deck or search?"
+msgstr ""
+
+#: ../misskey_tui.py:420 ../misskey_tui.py:1576
 msgid "search"
 msgstr ""
 
-#: ../misskey_tui.py:435 ../misskey_tui.py:603 ../misskey_tui.py:610
+#: ../misskey_tui.py:435 ../misskey_tui.py:645 ../misskey_tui.py:652
+#: ../misskey_tui.py:1597
 msgid "Please create reaction deck"
 msgstr ""
 
-#: ../misskey_tui.py:460 ../misskey_tui.py:506 ../misskey_tui.py:1206
+#: ../misskey_tui.py:469 ../misskey_tui.py:1617
+msgid "there is no reactions"
+msgstr ""
+
+#: ../misskey_tui.py:476 ../misskey_tui.py:499 ../misskey_tui.py:545
+#: ../misskey_tui.py:1261 ../misskey_tui.py:1583 ../misskey_tui.py:1624
+#: ../misskey_tui.py:1641
 msgid "Create success! :)"
 msgstr ""
 
-#: ../misskey_tui.py:462 ../misskey_tui.py:508 ../misskey_tui.py:1208
+#: ../misskey_tui.py:478 ../misskey_tui.py:501 ../misskey_tui.py:547
+#: ../misskey_tui.py:1263 ../misskey_tui.py:1585 ../misskey_tui.py:1626
+#: ../misskey_tui.py:1643
 msgid "Create fail :("
 msgstr ""
 
-#: ../misskey_tui.py:482
+#: ../misskey_tui.py:521 ../misskey_tui.py:805 ../misskey_tui.py:811
+#: ../misskey_tui.py:876 ../misskey_tui.py:1024 ../misskey_tui.py:1565
+msgid "No"
+msgstr ""
+
+#: ../misskey_tui.py:521 ../misskey_tui.py:1565
 msgid ""
 "Renote this?\n"
 "noteId:{}\n"
@@ -190,198 +228,189 @@ msgid ""
 "text:{}"
 msgstr ""
 
-#: ../misskey_tui.py:482 ../misskey_tui.py:763 ../misskey_tui.py:769
-#: ../misskey_tui.py:834 ../misskey_tui.py:980
-msgid "No"
-msgstr ""
-
-#: ../misskey_tui.py:540
+#: ../misskey_tui.py:582
 msgid "Reaction deck"
 msgstr ""
 
-#: ../misskey_tui.py:540 ../misskey_tui.py:635
+#: ../misskey_tui.py:582 ../misskey_tui.py:677
 msgid "Change TL"
 msgstr ""
 
-#: ../misskey_tui.py:540 ../misskey_tui.py:638
+#: ../misskey_tui.py:582 ../misskey_tui.py:680
 msgid "Change Theme"
 msgstr ""
 
-#: ../misskey_tui.py:541
+#: ../misskey_tui.py:583
 msgid "Current"
 msgstr ""
 
-#: ../misskey_tui.py:541
+#: ../misskey_tui.py:583
 msgid "Instance"
 msgstr ""
 
-#: ../misskey_tui.py:541
+#: ../misskey_tui.py:583
 msgid "Version"
 msgstr ""
 
-#: ../misskey_tui.py:541 ../misskey_tui.py:685
+#: ../misskey_tui.py:583 ../misskey_tui.py:727
 msgid "TOKEN"
 msgstr ""
 
-#: ../misskey_tui.py:542
-msgid "Clear"
-msgstr ""
-
-#: ../misskey_tui.py:542
+#: ../misskey_tui.py:584
 msgid "Language"
 msgstr ""
 
-#: ../misskey_tui.py:542
+#: ../misskey_tui.py:584
 msgid "Refresh"
 msgstr ""
 
-#: ../misskey_tui.py:542 ../misskey_tui.py:596 ../misskey_tui.py:1032
+#: ../misskey_tui.py:584 ../misskey_tui.py:638 ../misskey_tui.py:1076
 msgid "OK"
 msgstr ""
 
-#: ../misskey_tui.py:570
+#: ../misskey_tui.py:584 ../misskey_tui.py:1309
+msgid "Clear"
+msgstr ""
+
+#: ../misskey_tui.py:612
 msgid "write by @iodine53@misskey.io"
 msgstr ""
 
-#: ../misskey_tui.py:573
+#: ../misskey_tui.py:615
 msgid "Instance:{}"
 msgstr ""
 
-#: ../misskey_tui.py:575
+#: ../misskey_tui.py:617
 msgid "TOKEN:None"
 msgstr ""
 
-#: ../misskey_tui.py:579
+#: ../misskey_tui.py:621
 msgid " name:{}"
 msgstr ""
 
-#: ../misskey_tui.py:579
+#: ../misskey_tui.py:621
 msgid " username:{}"
 msgstr ""
 
-#: ../misskey_tui.py:579 ../misskey_tui.py:581
+#: ../misskey_tui.py:621 ../misskey_tui.py:623
 msgid "TOKEN:Available"
 msgstr ""
 
-#: ../misskey_tui.py:581 ../misskey_tui.py:816
+#: ../misskey_tui.py:623 ../misskey_tui.py:858
 msgid "fail to get userinfo :("
 msgstr ""
 
-#: ../misskey_tui.py:596
+#: ../misskey_tui.py:638
 msgid "Please set TOKEN"
 msgstr ""
 
-#: ../misskey_tui.py:598
+#: ../misskey_tui.py:640
 msgid "add deck"
 msgstr ""
 
-#: ../misskey_tui.py:598
+#: ../misskey_tui.py:640
 msgid "check deck"
 msgstr ""
 
-#: ../misskey_tui.py:598
+#: ../misskey_tui.py:640
 msgid "check deck or add deck?"
 msgstr ""
 
-#: ../misskey_tui.py:598
+#: ../misskey_tui.py:640
 msgid "del deck"
 msgstr ""
 
-#: ../misskey_tui.py:635
+#: ../misskey_tui.py:677
 msgid "GTL"
 msgstr ""
 
-#: ../misskey_tui.py:635
+#: ../misskey_tui.py:677
 msgid "HTL"
 msgstr ""
 
-#: ../misskey_tui.py:635
+#: ../misskey_tui.py:677
 msgid "LTL"
 msgstr ""
 
-#: ../misskey_tui.py:635
+#: ../misskey_tui.py:677
 msgid "STL"
 msgstr ""
 
-#: ../misskey_tui.py:638
+#: ../misskey_tui.py:680
 msgid "bright"
 msgstr ""
 
-#: ../misskey_tui.py:638
+#: ../misskey_tui.py:680
 msgid "default"
 msgstr ""
 
-#: ../misskey_tui.py:638
+#: ../misskey_tui.py:680
 msgid "green"
 msgstr ""
 
-#: ../misskey_tui.py:638
+#: ../misskey_tui.py:680
 msgid "monochrome"
 msgstr ""
 
-#: ../misskey_tui.py:641
+#: ../misskey_tui.py:683
 msgid "Create"
 msgstr ""
 
-#: ../misskey_tui.py:641
+#: ../misskey_tui.py:683
 msgid ""
 "How to?\n"
 "current instance:{}"
 msgstr ""
 
-#: ../misskey_tui.py:641 ../misskey_tui.py:714
+#: ../misskey_tui.py:683 ../misskey_tui.py:756 ../misskey_tui.py:1311
 msgid "Select"
 msgstr ""
 
-#: ../misskey_tui.py:648
+#: ../misskey_tui.py:690
 msgid "change TL:HomeTL"
 msgstr ""
 
-#: ../misskey_tui.py:650
+#: ../misskey_tui.py:692
 msgid "HTL is TOKEN required"
 msgstr ""
 
-#: ../misskey_tui.py:654
+#: ../misskey_tui.py:696
 msgid "change TL:LocalTL"
 msgstr ""
 
-#: ../misskey_tui.py:659
+#: ../misskey_tui.py:701
 msgid "change TL:SocialTL"
 msgstr ""
 
-#: ../misskey_tui.py:661
+#: ../misskey_tui.py:703
 msgid "STL is TOKEN required"
 msgstr ""
 
-#: ../misskey_tui.py:665
+#: ../misskey_tui.py:707
 msgid "change TL:GlobalTL"
 msgstr ""
 
-#: ../misskey_tui.py:680
-msgid "self error"
-msgstr ""
-
-#: ../misskey_tui.py:685
+#: ../misskey_tui.py:727
 msgid "MiAuth or write TOKEN?"
 msgstr ""
 
-#: ../misskey_tui.py:689
+#: ../misskey_tui.py:731
 msgid "Create TOKEN please."
 msgstr ""
 
-#: ../misskey_tui.py:689 ../misskey_tui.py:1083 ../misskey_tui.py:1091
+#: ../misskey_tui.py:731 ../misskey_tui.py:1144 ../misskey_tui.py:1152
 msgid "ok"
 msgstr ""
 
-#: ../misskey_tui.py:705
+#: ../misskey_tui.py:747
 msgid "check ok"
 msgstr ""
 
-#: ../misskey_tui.py:705
+#: ../misskey_tui.py:747
 msgid "cliped!"
 msgstr ""
 
-#: ../misskey_tui.py:705
+#: ../misskey_tui.py:747
 msgid ""
 "miauth url\n"
 "\n"
@@ -389,31 +418,31 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../misskey_tui.py:708
+#: ../misskey_tui.py:750
 msgid "write your TOKEN"
 msgstr ""
 
-#: ../misskey_tui.py:714
+#: ../misskey_tui.py:756
 msgid "Delete"
 msgstr ""
 
-#: ../misskey_tui.py:714
+#: ../misskey_tui.py:756
 msgid "L"
 msgstr ""
 
-#: ../misskey_tui.py:714
+#: ../misskey_tui.py:756
 msgid "R"
 msgstr ""
 
-#: ../misskey_tui.py:714
+#: ../misskey_tui.py:756
 msgid "Set def"
 msgstr ""
 
-#: ../misskey_tui.py:714
+#: ../misskey_tui.py:756
 msgid "unset def"
 msgstr ""
 
-#: ../misskey_tui.py:718
+#: ../misskey_tui.py:760
 msgid ""
 "<1/{}>\n"
 "\n"
@@ -423,18 +452,18 @@ msgid ""
 "token:{}..."
 msgstr ""
 
-#: ../misskey_tui.py:725
+#: ../misskey_tui.py:767
 msgid ""
 "Too Left.\n"
 msgstr ""
 
-#: ../misskey_tui.py:729 ../misskey_tui.py:741
+#: ../misskey_tui.py:771 ../misskey_tui.py:783
 msgid ""
 "Select\n"
 msgstr ""
 
-#: ../misskey_tui.py:730 ../misskey_tui.py:742 ../misskey_tui.py:762
-#: ../misskey_tui.py:768 ../misskey_tui.py:779
+#: ../misskey_tui.py:772 ../misskey_tui.py:784 ../misskey_tui.py:804
+#: ../misskey_tui.py:810 ../misskey_tui.py:821
 msgid ""
 "<{}/{}>\n"
 "\n"
@@ -443,266 +472,342 @@ msgid ""
 "token:{}..."
 msgstr ""
 
-#: ../misskey_tui.py:737
+#: ../misskey_tui.py:779
 msgid ""
 "Too Right.\n"
 msgstr ""
 
-#: ../misskey_tui.py:748
+#: ../misskey_tui.py:790
 msgid "select user:{}"
 msgstr ""
 
-#: ../misskey_tui.py:748 ../misskey_tui.py:837 ../misskey_tui.py:882
+#: ../misskey_tui.py:790 ../misskey_tui.py:879 ../misskey_tui.py:924
 msgid "current instance:{}"
 msgstr ""
 
-#: ../misskey_tui.py:753
+#: ../misskey_tui.py:795
 msgid "connect ok!"
 msgstr ""
 
-#: ../misskey_tui.py:757
+#: ../misskey_tui.py:799
 msgid "connect fail :("
 msgstr ""
 
-#: ../misskey_tui.py:761
+#: ../misskey_tui.py:803
 msgid ""
 "Delete this?\n"
 msgstr ""
 
-#: ../misskey_tui.py:763 ../misskey_tui.py:769
+#: ../misskey_tui.py:805 ../misskey_tui.py:811
 msgid "Yes"
-msgstr ""
-
-#: ../misskey_tui.py:767
-msgid ""
-"set to default?\n"
-msgstr ""
-
-#: ../misskey_tui.py:774
-msgid ""
-"default token is none\n"
-msgstr ""
-
-#: ../misskey_tui.py:778
-msgid ""
-"unset success!\n"
 msgstr ""
 
 #: ../misskey_tui.py:809
 msgid ""
+"set to default?\n"
+msgstr ""
+
+#: ../misskey_tui.py:816
+msgid ""
+"default token is none\n"
+msgstr ""
+
+#: ../misskey_tui.py:820
+msgid ""
+"unset success!\n"
+msgstr ""
+
+#: ../misskey_tui.py:851
+msgid ""
 "MiAuth check Success!\n"
 msgstr ""
 
-#: ../misskey_tui.py:814
+#: ../misskey_tui.py:856
 msgid "Hello {}"
 msgstr ""
 
-#: ../misskey_tui.py:817
+#: ../misskey_tui.py:859
 msgid "fail to get"
 msgstr ""
 
-#: ../misskey_tui.py:826
+#: ../misskey_tui.py:868
 msgid ""
 "MiAuth check Fail :(\n"
 "try again?"
 msgstr ""
 
-#: ../misskey_tui.py:827
+#: ../misskey_tui.py:869
 msgid "again"
 msgstr ""
 
-#: ../misskey_tui.py:834
+#: ../misskey_tui.py:876
 msgid ""
 "TOKEN detect!\n"
 "change instance will delete TOKEN.\n"
 "Ok?"
 msgstr ""
 
-#: ../misskey_tui.py:837
+#: ../misskey_tui.py:879
 msgid "input instance such as 'misskey.io' 'misskey.backspace.fm'"
 msgstr ""
 
-#: ../misskey_tui.py:849
+#: ../misskey_tui.py:891
 msgid "TOKEN check OK :)"
 msgstr ""
 
-#: ../misskey_tui.py:852
+#: ../misskey_tui.py:894
 msgid "get fail"
 msgstr ""
 
-#: ../misskey_tui.py:853
+#: ../misskey_tui.py:895
 msgid "fail to get your info :("
 msgstr ""
 
-#: ../misskey_tui.py:856
+#: ../misskey_tui.py:898
 msgid "Hello {}!"
 msgstr ""
 
-#: ../misskey_tui.py:862
+#: ../misskey_tui.py:904
 msgid "TOKEN check fail :("
 msgstr ""
 
-#: ../misskey_tui.py:868
+#: ../misskey_tui.py:910
 msgid "instance connected! :)"
 msgstr ""
 
-#: ../misskey_tui.py:873
+#: ../misskey_tui.py:915
 msgid "error occured while get icon :("
 msgstr ""
 
-#: ../misskey_tui.py:878
+#: ../misskey_tui.py:920
 msgid "error occured while get meta :("
 msgstr ""
 
-#: ../misskey_tui.py:881
+#: ../misskey_tui.py:923
 msgid "instance connect fail :("
 msgstr ""
 
-#: ../misskey_tui.py:908
+#: ../misskey_tui.py:952
 msgid "there is no translation files."
 msgstr ""
 
-#: ../misskey_tui.py:912
+#: ../misskey_tui.py:956
 msgid "reset"
 msgstr ""
 
-#: ../misskey_tui.py:914
+#: ../misskey_tui.py:958
 msgid "select language"
 msgstr ""
 
-#: ../misskey_tui.py:952
+#: ../misskey_tui.py:996
 msgid "MoreConf"
 msgstr ""
 
-#: ../misskey_tui.py:952
+#: ../misskey_tui.py:996
 msgid "Note Create"
 msgstr ""
 
-#: ../misskey_tui.py:952
+#: ../misskey_tui.py:996
 msgid "hug punch"
 msgstr ""
 
-#: ../misskey_tui.py:980
+#: ../misskey_tui.py:1024
 msgid "Are you sure about that?"
 msgstr ""
 
-#: ../misskey_tui.py:980
+#: ../misskey_tui.py:1024
 msgid "Sure"
 msgstr ""
 
-#: ../misskey_tui.py:986
+#: ../misskey_tui.py:1030
 msgid "Create note success :)"
 msgstr ""
 
-#: ../misskey_tui.py:987 ../misskey_tui.py:1250
-msgid "Tab to change widget"
-msgstr ""
-
-#: ../misskey_tui.py:991
+#: ../misskey_tui.py:1035
 msgid "Create note fail :("
 msgstr ""
 
-#: ../misskey_tui.py:1004
+#: ../misskey_tui.py:1048
 msgid ""
 "renoteId detect!\n"
 "if return, it will delete\n"
 " are you sure about that?"
 msgstr ""
 
-#: ../misskey_tui.py:1004 ../misskey_tui.py:1006
+#: ../misskey_tui.py:1048 ../misskey_tui.py:1050
 msgid "sure"
 msgstr ""
 
-#: ../misskey_tui.py:1006
+#: ../misskey_tui.py:1050
 msgid ""
 "replyId detect!\n"
 "if return, it will delete\n"
 " are you sure about that?"
 msgstr ""
 
-#: ../misskey_tui.py:1032
+#: ../misskey_tui.py:1076
+msgid "notevisibility"
+msgstr ""
+
+#: ../misskey_tui.py:1076
 msgid "renoteId"
 msgstr ""
 
-#: ../misskey_tui.py:1032
+#: ../misskey_tui.py:1076
 msgid "replyId"
 msgstr ""
 
-#: ../misskey_tui.py:1080 ../misskey_tui.py:1091
+#: ../misskey_tui.py:1109
+msgid "Followers"
+msgstr ""
+
+#: ../misskey_tui.py:1109
+msgid "Home"
+msgstr ""
+
+#: ../misskey_tui.py:1109
+msgid "Public"
+msgstr ""
+
+#: ../misskey_tui.py:1141 ../misskey_tui.py:1152
 msgid ""
 "user:{}\n"
 "text:{}"
 msgstr ""
 
-#: ../misskey_tui.py:1083 ../misskey_tui.py:1094
+#: ../misskey_tui.py:1144 ../misskey_tui.py:1155
 msgid ""
 "note show fail :(\n"
 "maybe this noteId is unavailable"
 msgstr ""
 
-#: ../misskey_tui.py:1143
+#: ../misskey_tui.py:1204
 msgid "GetDB"
 msgstr ""
 
-#: ../misskey_tui.py:1177 ../misskey_tui.py:1193
+#: ../misskey_tui.py:1239 ../misskey_tui.py:1255
 msgid "DB is None, Please GetDB."
 msgstr ""
 
-#: ../misskey_tui.py:1214
+#: ../misskey_tui.py:1269
 msgid "this reaction already in deck"
 msgstr ""
 
-#: ../misskey_tui.py:1217
+#: ../misskey_tui.py:1272
 msgid ""
 "reaction added\n"
 "name:{}"
 msgstr ""
 
-#: ../misskey_tui.py:1222
+#: ../misskey_tui.py:1277
 msgid "GetDB fail :("
 msgstr ""
 
-#: ../misskey_tui.py:1224
+#: ../misskey_tui.py:1279
 msgid "GetDB success!"
 msgstr ""
 
-#: ../misskey_tui.py:1253
+#: ../misskey_tui.py:1309
+msgid "All"
+msgstr ""
+
+#: ../misskey_tui.py:1309
+msgid "Follow"
+msgstr ""
+
+#: ../misskey_tui.py:1309
 msgid "Get ntfy"
 msgstr ""
 
-#: ../misskey_tui.py:1274
+#: ../misskey_tui.py:1310
+msgid "Note"
+msgstr ""
+
+#: ../misskey_tui.py:1310 ../misskey_tui.py:1493
+msgid "Mention"
+msgstr ""
+
+#: ../misskey_tui.py:1334
 msgid "Fail to get notifications"
 msgstr ""
 
-#: ../misskey_tui.py:1275
+#: ../misskey_tui.py:1335
 msgid "Fail to get ntfy"
 msgstr ""
 
-#: ../misskey_tui.py:1303
-msgid "Follow comming!"
+#: ../misskey_tui.py:1363
+msgid "Success"
 msgstr ""
 
-#: ../misskey_tui.py:1305
-msgid "mention comming!"
+#: ../misskey_tui.py:1370 ../misskey_tui.py:1377 ../misskey_tui.py:1384
+#: ../misskey_tui.py:1393 ../misskey_tui.py:1419 ../misskey_tui.py:1445
+#: ../misskey_tui.py:1491
+msgid "Please Get ntfy"
 msgstr ""
 
-#: ../misskey_tui.py:1322
+#: ../misskey_tui.py:1414 ../misskey_tui.py:1469
 msgid "{} was reply"
 msgstr ""
 
-#: ../misskey_tui.py:1325
+#: ../misskey_tui.py:1440 ../misskey_tui.py:1471
 msgid "{} was quoted"
 msgstr ""
 
-#: ../misskey_tui.py:1328
+#: ../misskey_tui.py:1449
+msgid "Follow comming!"
+msgstr ""
+
+#: ../misskey_tui.py:1452
+msgid "mention comming!"
+msgstr ""
+
+#: ../misskey_tui.py:1473
 msgid "{} was renoted"
 msgstr ""
 
-#: ../misskey_tui.py:1330
+#: ../misskey_tui.py:1475
 msgid "{} was reaction [{}]"
 msgstr ""
 
-#: ../misskey_tui.py:1332
-msgid "Success"
+#: ../misskey_tui.py:1493
+msgid "select from"
+msgstr ""
+
+#: ../misskey_tui.py:1523
+msgid ""
+"Select note\n"
+msgstr ""
+
+#: ../misskey_tui.py:1527
+msgid ""
+"type:mention\n"
+msgstr ""
+
+#: ../misskey_tui.py:1538
+msgid ""
+"type:reply\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
+msgstr ""
+
+#: ../misskey_tui.py:1549
+msgid ""
+"type:quote\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
+msgstr ""
+
+#: ../misskey_tui.py:1550
+msgid ""
+"name:{}\n"
+"username:{}\n"
+msgstr ""
+
+#: ../misskey_tui.py:1552
+msgid ""
+"noteid:{}\n"
+"txt:{}\n"
 msgstr ""
 

@@ -16,9 +16,9 @@ class MkAPIs():
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.381
+        self.version = 0.39
         # mistconfig load
-        if os.path.isfile("mistconfig.conf"):
+        if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
             self.mistconfig_put(True)
             if self.mistconfig["version"] < self.version:
                 self.mistconfig["version"] = self.version
@@ -41,8 +41,8 @@ class MkAPIs():
         self.nowpoint = 0
         self.reacdb = None
         self.cfgtxts = ""
-        self.crnotetxts = "Tab to change widget"
-        self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
+        self.crnotetxts = ""
+        self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None,"visibility":"public"}
         self.constcrnoteconf = self.crnoteconf.copy()
         self.init_translation()
         # Misskey py settings
@@ -65,11 +65,12 @@ class MkAPIs():
 
     def mistconfig_put(self,loadmode=False):
         import json
+        filepath = os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))
         if loadmode:
-            with open("mistconfig.conf", "r") as f:
+            with open(filepath, "r") as f:
                 self.mistconfig = json.loads(f.read())
         else:
-            with open("mistconfig.conf", "w") as f:
+            with open(filepath, "w") as f:
                 f.write(json.dumps(self.mistconfig))
 
     def init_translation(self):
@@ -152,10 +153,10 @@ class MkAPIs():
 
     def get_reactiondb(self):
         import requests
+        import json
         try:
             ret = requests.get(f'https://{self.instance}/api/emojis')
             if ret.status_code == 200:
-                import json
                 self.reacdb = {}
                 for i in json.loads(ret.text)["emojis"]:
                     self.reacdb[i["name"]] = i["aliases"]
@@ -206,7 +207,8 @@ class MkAPIs():
         try:
             return self.mk.notes_create(text, self.crnoteconf["CW"],
                                         renote_id=self.crnoteconf["renoteId"],
-                                        reply_id=self.crnoteconf["replyId"])
+                                        reply_id=self.crnoteconf["replyId"],
+                                        visibility=self.crnoteconf["visibility"])
         except exceptions.MisskeyAPIException:
             return None
 
@@ -223,11 +225,12 @@ class MkAPIs():
             return None
 
 class NoteView(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(NoteView, self).__init__(screen,
                                        screen.height,
                                        screen.width,
                                        title="Notes",
+                                       on_load=self.load,
                                        reduce_cpu=True,
                                        can_scroll=False)
         # initialize
@@ -235,7 +238,7 @@ class NoteView(Frame):
         self.set_theme(self.msk_.theme)
 
         # notebox create
-        self.note=TextBox(screen.height-3,as_string=True,line_wrap=True)
+        self.note=TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
 
         # button create
         buttonnames = (_("Quit"), _("Move L"), _("Move R"),
@@ -264,17 +267,11 @@ class NoteView(Frame):
         self.layout2 = layout2
 
         # disable
-        self.note.disabled = True
         moreind = buttonnames.index(_("More"))
-        noteupind = buttonnames.index(_("Noteupdate"))
         if self.msk_.i is None:
             self.buttons[moreind].disabled = True
         else:
             self.buttons[moreind].disabled = False
-        if len(self.msk_.notes) == 0:
-            self.buttons[noteupind].disabled = True
-        else:
-            self.buttons[noteupind].disabled = False
 
         # fix
         self._note_reload()
@@ -325,7 +322,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput((_("something occured while noteget.")),(_("or welcome to MisT!")))
+            self._noteput((_("something occured while noteget.")), (_("or welcome to MisT!")), (_("Tab to change widget")))
             self.buttons[3].disabled = True
         else:
             self.buttons[3].disabled = False
@@ -377,7 +374,7 @@ class NoteView(Frame):
         else:
             self._noteput(note["text"],"")
         if len(note["files"]) != 0:
-            self._noteput(f'{len(note["files"])} files')
+            self._noteput(_("{} files").format(len(note["files"])))
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
                         "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()), "")
 
@@ -420,23 +417,65 @@ class NoteView(Frame):
             if len(self.msk_.notes) == 0:
                 self.popup((_("Please Note Get")), [(_("Ok"))])
             else:
-                self.popup((_("from deck or search?")), [(_("deck")), (_("search")), (_("return"))], self._ser_reac)
+                self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], self._ser_reac)
         elif arg == 4:
             # Notification
             raise NextScene("Notification")
 
     def _ser_reac(self, arg):
         if arg == 0:
+            # note
+            self._ser_reac_note()
+        elif arg == 1:
             # deck
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1)
             else:
                 self.popup((_("Please create reaction deck")), [(_("Ok"))])
-        elif arg == 1:
+        elif arg == 2:
             # search
+            if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+                if noteval["text"] is None:
+                    noteid = noteval["renote"]["id"]
+                else:
+                    noteid = noteval["id"]
+            else:
+                noteid = noteval["id"]
+            self.msk_.tmp.append(noteid)
             self.msk_.tmp.append("searchmode")
             raise NextScene("SelReaction")
+
+    def _ser_reac_note(self,arg=-1):
+        reactions = [(_("return"), lambda: None)]
+        if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
+            if noteval["text"] is None:
+                noteid = noteval["renote"]["id"]
+                notereac = noteval["renote"]["reactions"]
+            else:
+                noteid = noteval["id"]
+                notereac = noteval["reactions"]
+        else:
+            noteid = noteval["id"]
+            notereac = noteval["reactions"]
+        for reac in notereac.keys():
+            if "@" in reac.replace("@.",""):
+                continue
+            else:
+                reactions.append((reac.replace("@.",""), lambda point=len(reactions): self._ser_reac_note(point)))
+        if arg == -1:
+            # initialize
+            if len(reactions) == 1:
+                self.popup(_("there is no reactions"), [_("Ok")])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
+        else:
+            # Create reaction
+            is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
+            if is_create_seccess:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
 
     def _ser_reac_deck(self,arg):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -444,8 +483,8 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i:self._ser_reac_deck(x)) for i in range(len(reacdeck))]
-            reacmenu.insert(0, ("Return", lambda: None))
-            self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
+            reacmenu.insert(0, (_("return"), lambda: None))
+            self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -515,12 +554,15 @@ class NoteView(Frame):
             self.msk_.mistconfig_put()
             raise StopApplication("UserQuit")
 
+    def load(self):
+        self.switch_focus(self.layout2,0,0)
+
     @staticmethod
     def config():
         raise NextScene("Configration")
 
 class ConfigMenu(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(ConfigMenu, self).__init__(screen,
                                        screen.height,
                                        screen.width,
@@ -904,12 +946,12 @@ class ConfigMenu(Frame):
     def language_(self,arg=-1):
         import glob
         import pathlib
-
-        langlst = glob.glob("./locale/*/LC_MESSAGES")
+        filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
+        langlst = glob.glob(filedir)
         if len(langlst) == 0:
             self.popup(_("there is no translation files."),[_("Ok")])
         else:
-            selects = [pathlib.PurePath(lang).parts[1] for lang in langlst]
+            selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
                 selects.append(_("reset"))
                 selects.append(_("return"))
@@ -935,7 +977,7 @@ class ConfigMenu(Frame):
         raise NextScene("Main")
 
 class CreateNote(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(CreateNote, self).__init__(screen,
                                       screen.height,
                                       screen.width,
@@ -986,7 +1028,7 @@ class CreateNote(Frame):
             return_ = self.msk_.create_note(self.txtbx.value)
             if return_ is not None:
                 self._scene.add_effect(PopUpDialog(self.screen,(_("Create note success :)")), [(_("Ok"))],on_close=self.return_))
-                self.msk_.crnotetxts = (_("Tab to change widget"))
+                self.msk_.crnotetxts = ""
                 self.txtbx.value = self.msk_.crnotetxts
                 self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
@@ -1014,7 +1056,7 @@ class CreateNote(Frame):
         raise NextScene("CreNoteConf")
 
 class CreateNoteConfig(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(CreateNoteConfig, self).__init__(screen,
                                     screen.height,
                                     screen.width,
@@ -1031,8 +1073,8 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ((_("return")),"CW",(_("renoteId")),(_("replyId")),(_("OK")))
-        onclicks = (self.return_,self.cw,self.renoteid,self.replyid,self.ok_)
+        buttonnames = ((_("return")),"CW",(_("notevisibility")),(_("renoteId")),(_("replyId")),(_("OK")))
+        onclicks = (self.return_,self.cw,self.notevisibility,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # layout
@@ -1059,7 +1101,24 @@ class CreateNoteConfig(Frame):
         self.msk_.tmp.append("cw")
         self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
         self._disables()
-    
+
+    def notevisibility(self,arg=-1):
+        from misskey import enum
+        if arg == -1:
+            # initialize
+            self.popup(_("notevisibility"), [_("Public"),_("Home"),_("Followers"),_("return")], self.notevisibility)
+            return
+        elif arg == 0:
+            # Public
+            self.msk_.crnoteconf["visibility"] = enum.NoteVisibility.PUBLIC.value
+        elif arg == 1:
+            # Home
+            self.msk_.crnoteconf["visibility"] = enum.NoteVisibility.HOME.value
+        elif arg == 2:
+            # Followers
+            self.msk_.crnoteconf["visibility"] = enum.NoteVisibility.FOLLOWERS.value
+        self.nowconf()
+
     def renoteid(self):
         self.msk_.tmp.append("renote")
         self.txt.value = "" if self.msk_.crnoteconf["renoteId"] is None else self.msk_.crnoteconf["renoteId"]
@@ -1123,7 +1182,7 @@ class CreateNoteConfig(Frame):
         raise NextScene("CreateNote")
 
 class SelectReaction(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(SelectReaction, self).__init__(screen,
                                       screen.height,
                                       screen.width,
@@ -1166,6 +1225,7 @@ class SelectReaction(Frame):
             if (tmpval := self.msk_.tmp[-1]) == "searchmode":
                 self.msk_.tmp.pop()
                 self.flag = "search"
+                self.noteid = self.msk_.tmp.pop()
             elif tmpval == "deck":
                 self.msk_.tmp.pop()
                 self.flag = "deckadd"
@@ -1196,14 +1256,7 @@ class SelectReaction(Frame):
             pass
         else:
             if self.flag == "search":
-                if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
-                    if noteval["text"] is None:
-                        noteid = noteval["renote"]["id"]
-                    else:
-                        noteid = noteval["id"]
-                else:
-                    noteid = noteval["id"]
-                is_create_seccess = self.msk_.create_reaction(noteid,f":{reaction}:")
+                is_create_seccess = self.msk_.create_reaction(self.noteid,f":{reaction}:")
                 if is_create_seccess:
                     self.popup((_('Create success! :)')), [(_("Ok"))], self.return_)
                 else:
@@ -1244,6 +1297,7 @@ class Notification(Frame):
                                       can_scroll=False)
         # initialize
         self.msk_ = msk
+        self.ntfys = None
         self.set_theme(self.msk_.theme)
 
         # txtbox create
@@ -1252,8 +1306,12 @@ class Notification(Frame):
         self.txtbx.value = (_("Tab to change widget"))
 
         # buttons create
-        buttonnames = ((_("Get ntfy")), (_("return")))
-        on_click = (self.get_ntfy, self.return_)
+        buttonnames = ((_("Get ntfy")), (_("Clear")), (_("All")), (_("Follow")),
+                       (_("Mention")), (_("Note")), (_("Reply")), (_("Quote")),
+                       (_("Select")), (_("return")))
+        on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
+                    self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
+                    self.select, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -1270,11 +1328,12 @@ class Notification(Frame):
         self.fix()
     
     def get_ntfy(self):
-        self.txtbx.value = ""
+        self.clear()
         ntfys = self.msk_.get_ntfy()
         if ntfys is None:
-            self.txtbx.value = (_("Fail to get notifications"))
-            self._scene.add_effect(PopUpDialog(self.screen,(_("Fail to get ntfy")), [(_("Ok"))]))
+            self._txtbxput(_("Fail to get notifications"))
+            self.popup(_("Fail to get ntfy"),[(_("Ok"))])
+            self.ntfys = None
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
             for i in ntfys:
@@ -1284,59 +1343,316 @@ class Notification(Frame):
                     checkntfytype["mention"].append(i)
                 else:
                     if not i.get("note"):
-                        continue
-                    if (ntfytype == "renote") or (ntfytype == "quote"):
+                        pass
+                    elif (ntfytype == "renote") or (ntfytype == "quote"):
                         if i["note"]["renote"]["id"] not in checkntfytype["notes"]:
                             checkntfytype["notes"][i["note"]["renote"]["id"]] = {"value":i["note"]["renote"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["renote"]["id"]]["ntfy"].append(i)
-                        continue
-                    if ntfytype == "reply":
+                    elif ntfytype == "reply":
                         if i["note"]["reply"]["id"] not in checkntfytype["notes"]:
                             checkntfytype["notes"][i["note"]["reply"]["id"]] = {"value":i["note"]["reply"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["reply"]["id"]]["ntfy"].append(i)
-                        continue
-                    if ntfytype == "reaction":
+                    elif ntfytype == "reaction":
                         if i["note"]["id"] not in checkntfytype["notes"]:
                             checkntfytype["notes"][i["note"]["id"]] = {"value":i["note"],"ntfy":[]}
                         checkntfytype["notes"][i["note"]["id"]]["ntfy"].append(i)
                     else:
                         checkntfytype["else"].append(i)
-            if len(follower := checkntfytype["follow"]) != 0:
-                self._txtbxput((_("Follow comming!")),"\n".join(char["user"]["name"] if char["user"].get("name") else char["user"]["username"] for char in follower),"")
-            if len(mentions := checkntfytype["mention"]) != 0:
-                self._txtbxput((_("mention comming!")),
-                               "\n\n".join(char["user"]["name"]+"\n"+char["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if char["user"]["isCat"] else char["note"]["text"] for char in mentions),
-                               "")
-            if len(notes := checkntfytype["notes"]) != 0:
-                for i in notes:
-                    headtext = f"noteid:{i}\n"+f'text:{str(notes[i]["value"]["text"].replace("な","にゃ").replace("ナ","ニャ") if notes[i]["value"]["user"]["isCat"] else notes[i]["value"]["text"])}\n'
-                    txt = []
-                    for i in notes[i]["ntfy"]:
-                        if i.get("user"):
-                            if i["user"]["name"] is None:
-                                username = i["user"]["username"]
-                            else:
-                                username = i["user"]["name"]
+            self.ntfys = checkntfytype
+            self.inp_all()
+            self.popup(_("Success"),[(_("Ok"))])
+
+    def clear(self):
+        self.txtbx.value = ""
+
+    def _ser_follow(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            self.inp_follow()
+
+    def _ser_mention(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            self.inp_mention()
+
+    def _ser_note(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            for note in self.ntfys["notes"]:
+                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
+                self.inp_note(note)
+
+    def _ser_reply(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            replys = {}
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "reply":
+                        if ntfys not in replys:
+                            replys[ntfys] = []
+                        replys[ntfys].append(ntfy)
+            for noteid in replys:
+                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
+                for reply in replys[noteid]:
+                    if reply.get("user"):
+                        if reply["user"]["name"] is None:
+                            username = reply["user"]["username"]
                         else:
-                            username = "Deleted user?"
-                            i["user"] = {"isCat":False}
-                        if (nttype := i["type"]) == "reply":
-                            txt.append((_("{} was reply")).format(username))
-                            txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
-                        elif nttype == "quote":
-                            txt.append((_("{} was quoted")).format(username))
-                            txt.append(i["note"]["text"].replace("な","にゃ").replace("ナ","ニャ") if i["user"]["isCat"] else i["note"]["text"])
-                        elif nttype == "renote":
-                            txt.append((_("{} was renoted")).format(username))
-                        elif nttype == "reaction":
-                            txt.append((_('{} was reaction [{}]')).format(username, i["reaction"]))
-                    self._txtbxput(headtext,*txt,"\n")
-            self._scene.add_effect(PopUpDialog(self.screen,(_("Success")), [(_("Ok"))]))
+                            username = reply["user"]["name"]
+                    else:
+                        username = "Deleted user?"
+                        reply["user"] = {"isCat":False}
+                    self._txtbxput((_("{} was reply")).format(username), self.nyaize(reply["note"]["text"]), "")
+                self._txtbxput("-"*(self.screen.width-18))
+
+    def _ser_quote(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            quotes = {}
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "quote":
+                        if ntfys not in quotes:
+                            quotes[ntfys] = []
+                        quotes[ntfys].append(ntfy)
+            for noteid in quotes:
+                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
+                for quote in quotes[noteid]:
+                    if quote.get("user"):
+                        if quote["user"]["name"] is None:
+                            username = quote["user"]["username"]
+                        else:
+                            username = quote["user"]["name"]
+                    else:
+                        username = "Deleted user?"
+                        quote["user"] = {"isCat":False}
+                    self._txtbxput((_("{} was quoted")).format(username), self.nyaize(quote["note"]["text"]), "")
+                self._txtbxput("-"*(self.screen.width-18))
+
+    def inp_all(self):
+        if self.ntfys == None:
+            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+        else:
+            self.clear()
+            if len(self.ntfys["follow"]) != 0:
+                self._txtbxput(_("Follow comming!"))
+                self.inp_follow()
+            if len(self.ntfys["mention"]) != 0:
+                self._txtbxput(_("mention comming!"))
+                self.inp_mention()
+            for note in self.ntfys["notes"]:
+                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
+                self.inp_note(note)
+
+    def inp_note(self, note):
+        for ntfy in self.ntfys["notes"][note]["ntfy"]:
+            if ntfy.get("user"):
+                if ntfy["user"]["name"] is None:
+                    username = ntfy["user"]["username"]
+                else:
+                    username = ntfy["user"]["name"]
+            else:
+                username = "Deleted user?"
+                ntfy["user"] = {"isCat":False}
+            if (nttype := ntfy["type"]) == "reply":
+                self._txtbxput((_("{} was reply")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+            elif nttype == "quote":
+                self._txtbxput((_("{} was quoted")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+            elif nttype == "renote":
+                self._txtbxput((_("{} was renoted")).format(username))
+            elif nttype == "reaction":
+                self._txtbxput((_('{} was reaction [{}]')).format(username, ntfy["reaction"]))
+        self._txtbxput("-"*(self.screen.width-18))
+
+    def inp_follow(self):
+        for char in self.ntfys["follow"]:
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"],"")
+
+    def inp_mention(self):
+        for char in self.ntfys["mention"]:
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
+
+    def select(self, arg=-1):
+        buttons = [(_("return"), lambda:None)]
+        if arg == -1:
+            # initialize
+            if self.ntfys is None:
+                self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            else:
+                self.popup(_("select from"),[_("Mention"),_("Reply"),_("Quote"),_("return")],self.select)
+            return
+        elif arg == 0:
+            # mention
+            for i, r in enumerate(self.ntfys["mention"]):
+                buttons.append((r["note"]["text"][:self.screen.width//2], lambda x=i:self.select_note(0,x)))
+        elif arg == 1:
+            # reply
+            replys = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "reply":
+                        replys.append(ntfy)
+            for i, r in enumerate(replys):
+                buttons.append((r["note"]["text"][:self.screen.width//2], lambda x=i:self.select_note(1,x)))
+        elif arg == 2:
+            # quote
+            quotes = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "quote":
+                        quotes.append(ntfy)
+            for i, r in enumerate(quotes):
+                buttons.append((r["note"]["text"][:self.screen.width//2], lambda x=i:self.select_note(2,x)))
+        elif arg == 3:
+            # return
+            return
+        self._scene.add_effect(PopupMenu(self.screen, buttons, self.screen.width//3, 0))
+
+    def select_note(self, from_, arg):
+        poptxt = (_("Select note\n"))
+        if from_ == 0:
+            # mention
+            note = self.ntfys["mention"][arg]
+            poptxt += _("type:mention\n")
+        elif from_ == 1:
+            # reply
+            fromnote = []
+            replys = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "reply":
+                        fromnote.append(self.ntfys["notes"][ntfys]["value"])
+                        replys.append(ntfy)
+            note = replys[arg]
+            poptxt += _("type:reply\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
+        elif from_ == 2:
+            # quote
+            fromnote = []
+            quotes = []
+            for ntfys in self.ntfys["notes"]:
+                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
+                    if ntfy["type"] == "quote":
+                        fromnote.append(self.ntfys["notes"][ntfys]["value"])
+                        quotes.append(ntfy)
+            note = quotes[arg]
+            poptxt += _("type:quote\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
+        poptxt += _("name:{}\nusername:{}\n").format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
+                                                   note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
+        poptxt += _("noteid:{}\ntxt:{}\n").format(note["note"]["id"],note["note"]["text"])
+        if len(note["note"]["files"]) != 0:
+            poptxt += (_("{} files").format(len(note["note"]["files"])))
+        self.popup(poptxt, [(_("Renote")), (_("Quote")), (_("Reply")), (_("Reaction")), (_("return"))], lambda select, note_=note:self.select_do(select, note_))
+
+    def select_do(self, arg, note):
+        if arg == 0:
+            # renote
+            username = note["user"]["name"]
+            if len(text := note["note"]["text"]) <= 15:
+                pass
+            else:
+                text = text[:16]+"..."
+            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(note["note"]["id"],username,text), [(_("Ok")),(_("No"))],on_close=lambda arg, note_=note : self._ser_rn(arg, note_))
+        elif arg == 1:
+            # Quote
+            self.msk_.crnoteconf["renoteId"] = note["note"]["id"]
+            raise NextScene("CreateNote")
+        elif arg == 2:
+            # Reply
+            self.msk_.crnoteconf["replyId"] = note["note"]["id"]
+            raise NextScene("CreateNote")
+        elif arg == 3:
+            # Reaction
+            self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], lambda arg, note_=note : self._ser_reac(arg, note_))
+
+    def _ser_rn(self, arg, note):
+        if arg == 0:
+            # renote
+            createnote = self.msk_.create_renote(note["note"]["id"])
+            if createnote is not None:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
+
+    def _ser_reac(self, arg, note):
+        if arg == 0:
+            # note
+            self._ser_reac_note(-1, note)
+        elif arg == 1:
+            # deck
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
+                self._ser_reac_deck(-1, note)
+            else:
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+        elif arg == 2:
+            # search
+            noteid = note["note"]["id"]
+            self.msk_.tmp.append(noteid)
+            self.msk_.tmp.append("searchmode")
+            raise NextScene("SelReaction")
+
+    def _ser_reac_note(self, arg, note):
+        reactions = [(_("return"), lambda: None)]
+        noteid = note["note"]["id"]
+        notereac = note["note"]["reactions"]
+        for reac in notereac.keys():
+            if "@" in reac.replace("@.",""):
+                continue
+            else:
+                reactions.append((reac.replace("@.",""), lambda point=len(reactions), note_=note: self._ser_reac_note(point,note_)))
+        if arg == -1:
+            # initialize
+            if len(reactions) == 1:
+                self.popup(_("there is no reactions"), [_("Ok")])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
+        else:
+            # Create reaction
+            is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
+            if is_create_seccess:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
+
+    def _ser_reac_deck(self, arg, note):
+        tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+        reacdeck = self.msk_.mistconfig["tokens"][tokenindex]["reacdeck"]
+        if arg == -1:
+            # initialize
+            reacmenu = [(reacdeck[i], lambda x=i, note_=note:self._ser_reac_deck(x,note_)) for i in range(len(reacdeck))]
+            reacmenu.insert(0, (_("return"), lambda: None))
+            self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
+        else:
+            # Create reaction
+            noteid = note["note"]["id"]
+            is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
+            if is_create_seccess:
+                self.popup((_('Create success! :)')), [(_("Ok"))])
+            else:
+                self.popup((_("Create fail :(")), [(_("Ok"))])
 
     def _txtbxput(self,*arg):
         for i in arg:
             self.txtbx.value += str(i)+"\n"
-    
+
+    def popup(self, txt: str, button: list, on_close=None):
+        self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
+
+    @staticmethod
+    def nyaize(txt: str) -> str:
+        return str(txt).replace("な","にゃ").replace("ナ","ニャ")
+
     @staticmethod
     def return_():
         raise NextScene("Main")

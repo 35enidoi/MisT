@@ -42,3 +42,32 @@ M       M  I  SSS  T """
     else:
         mist_figs = figlet_format("MisT",fonts[randomint])
     return mist_figs
+
+if __name__ == "__main__":
+    print("""
+                          @#99999&&&&&&9##G2
+                         999##9#GHG#9&@@@&&&999##H
+                       @999GGh2AAssA23HG#99&@@@&&&&&&
+                      &99#GG3s.       23hhhHHGG#9&&@#
+                     @99GGGhs               r3hhHHGHA
+                    &&9#GGhA                       A
+                   @&9#GGhA
+                 @@&9GGHh
+                @&&9GGH3
+               @&&#GGH3
+              @@&#GGh2
+             &@&#G#h2
+            @&&#GGh2
+          @@@9GGGh2
+         &&@9G#Ghs
+        &&&#G#Hh
+       &&&#GGh2
+      &&&#GGh2
+     &&&#GGhA
+   9&&9G#G2s
+  #&@9G#H2;
+ &&@9G#HA:
+&&@9##hA
+#GHG#hs
+GHhH3A""")
+    print("\nThis is hexagon-wrench.\n実行するファイル間違えてるよ!")
