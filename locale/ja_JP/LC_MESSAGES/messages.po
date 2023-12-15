@@ -104,6 +104,10 @@ msgstr "MisTへようこそ"
 msgid "something occured while noteget."
 msgstr "ノート取得時に何かが起きました。"
 
+#: ../misskey_tui.py:377 ../misskey_tui.py:1554
+msgid "{} files"
+msgstr "{}個のファイル"
+
 #: misskey_tui.py:353
 msgid "?"
 msgstr "どうしますか?"
@@ -160,9 +164,13 @@ msgstr "戻る"
 msgid "deck"
 msgstr "デッキ"
 
+#: ../misskey_tui.py:420 ../misskey_tui.py:1576
+msgid "note"
+msgstr "ノート"
+
 #: misskey_tui.py:387
-msgid "from deck or search?"
-msgstr "デッキにしますか?検索しますか?"
+msgid "reaction from note or deck or search?"
+msgstr "デッキにしますか?検索しますか?あるいはノートについている物から？"
 
 #: misskey_tui.py:387
 msgid "search"
@@ -171,6 +179,10 @@ msgstr "検索"
 #: misskey_tui.py:399 misskey_tui.py:567 misskey_tui.py:574
 msgid "Please create reaction deck"
 msgstr "リアクションデッキを作成してください"
+
+#: ../misskey_tui.py:469 ../misskey_tui.py:1617
+msgid "there is no reactions"
+msgstr "ノートにリアクションがついていません"
 
 #: misskey_tui.py:424 misskey_tui.py:470 misskey_tui.py:1146
 msgid "Create success! :)"
@@ -667,6 +679,10 @@ msgstr ""
 "戻れば削除されますが"
 "よろしいですか?"
 
+#: ../misskey_tui.py:1076
+msgid "notevisibility"
+msgstr "公開範囲"
+
 #: misskey_tui.py:972
 msgid "renoteId"
 msgstr "リノートID"
@@ -674,6 +690,18 @@ msgstr "リノートID"
 #: misskey_tui.py:972
 msgid "replyId"
 msgstr "リプライID"
+
+#: ../misskey_tui.py:1109
+msgid "Followers"
+msgstr "フォロワー"
+
+#: ../misskey_tui.py:1109
+msgid "Home"
+msgstr "ホーム"
+
+#: ../misskey_tui.py:1109
+msgid "Public"
+msgstr "パブリック"
 
 #: misskey_tui.py:1020 misskey_tui.py:1031
 msgid ""
@@ -719,9 +747,25 @@ msgstr "データの取得に失敗しました"
 msgid "GetDB success!"
 msgstr "データの取得に成功しました"
 
+#: ../misskey_tui.py:1309
+msgid "All"
+msgstr "すべて"
+
+#: ../misskey_tui.py:1309
+msgid "Follow"
+msgstr "フォロー"
+
 #: misskey_tui.py:1193
 msgid "Get ntfy"
 msgstr "通知を取得"
+
+#: ../misskey_tui.py:1310
+msgid "Note"
+msgstr "ノート"
+
+#: ../misskey_tui.py:1310 ../misskey_tui.py:1493
+msgid "Mention"
+msgstr "メンション"
 
 #: misskey_tui.py:1214
 msgid "Fail to get notifications"
@@ -730,6 +774,12 @@ msgstr "通知の取得に失敗しました"
 #: misskey_tui.py:1215
 msgid "Fail to get ntfy"
 msgstr "通知の取得に失敗しました"
+
+#: ../misskey_tui.py:1370 ../misskey_tui.py:1377 ../misskey_tui.py:1384
+#: ../misskey_tui.py:1393 ../misskey_tui.py:1419 ../misskey_tui.py:1445
+#: ../misskey_tui.py:1491
+msgid "Please Get ntfy"
+msgstr "通知を取得してください"
 
 #: misskey_tui.py:1243
 msgid "Follow comming!"
@@ -745,11 +795,11 @@ msgstr "{}が返信しました"
 
 #: misskey_tui.py:1265
 msgid "{} was quoted"
-msgstr "{}が引用されました"
+msgstr "{}が引用しました"
 
 #: misskey_tui.py:1268
 msgid "{} was renoted"
-msgstr "{}がリノートされました"
+msgstr "{}がリノートしました"
 
 #: misskey_tui.py:1270
 msgid "{} was reaction [{}]"
@@ -759,3 +809,56 @@ msgstr "{}が{}でリアクションしました"
 msgid "Success"
 msgstr "成功"
 
+#: ../misskey_tui.py:1493
+msgid "select from"
+msgstr "取得元を選択"
+
+#: ../misskey_tui.py:1523
+msgid ""
+"Select note\n"
+msgstr "選択したノート\n"
+
+#: ../misskey_tui.py:1527
+msgid ""
+"type:mention\n"
+msgstr "タイプ:メンション\n"
+
+#: ../misskey_tui.py:1538
+msgid ""
+"type:reply\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
+msgstr ""
+"タイプ:リプライ\n"
+"リプライ元 ノートid:{}\n"
+"          テキスト:{}\n"
+"\n"
+
+#: ../misskey_tui.py:1549
+msgid ""
+"type:quote\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
+msgstr ""
+"タイプ:引用\n"
+"引用元 ノートid:{}\n"
+"       テキスト:{}\n"
+"\n"
+
+#: ../misskey_tui.py:1550
+msgid ""
+"name:{}\n"
+"username:{}\n"
+msgstr ""
+"名前:{}\n"
+"ユーザーネーム:{}\n"
+
+#: ../misskey_tui.py:1552
+msgid ""
+"noteid:{}\n"
+"txt:{}\n"
+msgstr ""
+"ノートid:{}\n"
+"テキスト:{}\n"
