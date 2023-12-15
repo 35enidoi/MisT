@@ -229,6 +229,7 @@ class NoteView(Frame):
                                        screen.height,
                                        screen.width,
                                        title="Notes",
+                                       on_load=self.load,
                                        reduce_cpu=True,
                                        can_scroll=False)
         # initialize
@@ -551,6 +552,9 @@ class NoteView(Frame):
         if arg == 0:
             self.msk_.mistconfig_put()
             raise StopApplication("UserQuit")
+
+    def load(self):
+        self.switch_focus(self.layout2,0,0)
 
     @staticmethod
     def config():
