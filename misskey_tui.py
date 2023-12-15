@@ -42,7 +42,7 @@ class MkAPIs():
         self.reacdb = None
         self.cfgtxts = ""
         self.crnotetxts = ""
-        self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None}
+        self.crnoteconf = {"CW":None,"renoteId":None,"replyId":None,"visibility":"public"}
         self.constcrnoteconf = self.crnoteconf.copy()
         self.init_translation()
         # Misskey py settings
@@ -207,7 +207,8 @@ class MkAPIs():
         try:
             return self.mk.notes_create(text, self.crnoteconf["CW"],
                                         renote_id=self.crnoteconf["renoteId"],
-                                        reply_id=self.crnoteconf["replyId"])
+                                        reply_id=self.crnoteconf["replyId"],
+                                        visibility=self.crnoteconf["visibility"])
         except exceptions.MisskeyAPIException:
             return None
 
@@ -1072,8 +1073,8 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ((_("return")),"CW",(_("renoteId")),(_("replyId")),(_("OK")))
-        onclicks = (self.return_,self.cw,self.renoteid,self.replyid,self.ok_)
+        buttonnames = ((_("return")),"CW",(_("notevisibility")),(_("renoteId")),(_("replyId")),(_("OK")))
+        onclicks = (self.return_,self.cw,self.notevisibility,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # layout
@@ -1100,7 +1101,24 @@ class CreateNoteConfig(Frame):
         self.msk_.tmp.append("cw")
         self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
         self._disables()
-    
+
+    def notevisibility(self,arg=-1):
+        from misskey import enum
+        if arg == -1:
+            # initialize
+            self.popup(_("Notevisibility"), [_("Public"),_("Home"),_("Followers"),_("return")], self.notevisibility)
+            return
+        elif arg == 0:
+            # Public
+            self.msk_.crnoteconf["visibility"] = enum.NoteVisibility.PUBLIC.value
+        elif arg == 1:
+            # Home
+            self.msk_.crnoteconf["visibility"] = enum.NoteVisibility.HOME.value
+        elif arg == 2:
+            # Followers
+            self.msk_.crnoteconf["visibility"] = enum.NoteVisibility.FOLLOWERS.value
+        self.nowconf()
+
     def renoteid(self):
         self.msk_.tmp.append("renote")
         self.txt.value = "" if self.msk_.crnoteconf["renoteId"] is None else self.msk_.crnoteconf["renoteId"]
