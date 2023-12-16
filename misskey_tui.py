@@ -739,11 +739,11 @@ class ConfigMenu(Frame):
             self.msk_.tmp.append(self.msk_.miauth_load())
             url = self.msk_.tmp[-1].generate_url()
             webshow(url)
+            copysuccess = pypcopy(url)
             space = "      \n      "
             lens = self.screen.width//2
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
-            copysuccess = pypcopy(url)
             self.popup((_("miauth url\n\n{}\n\n")).format(url)+((_("cliped!")) if copysuccess else ""), [(_("check ok"))],self.miauth_get)
         elif arg == 1:
             # TOKEN
