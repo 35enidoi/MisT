@@ -15,11 +15,16 @@ def pypcopy(url):
 
 def webshow(url):
     """
-    WEBを開く関数
-    
-    デスクトップ環境がない場合動作しないことを確認済み(Raspberry Pi OS Lite(Bullseye) : Raspberrypi Zero 2 W)(SSH接続)"""
+    WEBを開く関数"""
     import webbrowser
-    webbrowser.open(url)
+    try:
+        browser = webbrowser.get()
+        if type(browser) is webbrowser.GenericBrowser:
+            return
+        else:
+            browser.open(url)
+    except webbrowser.Error:
+        return
 
 def mistfigleter():
     """
