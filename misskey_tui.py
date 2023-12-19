@@ -1657,7 +1657,7 @@ class Notification(Frame):
     def return_():
         raise NextScene("Main")
 
-def wrap(screen, scene):
+def wrap(screen, scene, msk:MkAPIs):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
               Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
               Scene([CreateNote(screen, msk)], -1, name="CreateNote"),
@@ -1667,12 +1667,11 @@ def wrap(screen, scene):
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 def main():
-    global msk
     msk = MkAPIs()
     last_scene = None
     while True:
         try:
-            Screen.wrapper(wrap, arguments=[last_scene])
+            Screen.wrapper(wrap, arguments=[last_scene, msk])
             os._exit(0)
         except ResizeScreenError as e:
             last_scene = e.scene
