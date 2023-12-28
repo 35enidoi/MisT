@@ -370,7 +370,7 @@ class NoteView(Frame):
         if note["cw"] is not None:
             self._noteput("CW detect!",note["cw"],"~"*(self.screen.width-4))
         if note["user"]["isCat"]:
-            self._noteput(note["text"].replace("な","にゃ").replace("ナ","ニャ"),"")
+            self._noteput(str(note["text"]).replace("な","にゃ").replace("ナ","ニャ"),"")
         else:
             self._noteput(note["text"],"")
         if len(note["files"]) != 0:
