@@ -66,9 +66,8 @@ class MkAPIs():
         import daemons
         # daemons initalize
         self.daemon = daemons.Ds(self)
-        self.daemon._startds()
-        print(self.daemon._mains)
-        
+        self._finds = self.daemon._startds()
+        print(self.daemon._dmains)
 
     def mistconfig_put(self,loadmode=False):
         import json
@@ -1679,7 +1678,7 @@ def main():
     while True:
         try:
             Screen.wrapper(wrap, arguments=[last_scene, msk])
-            msk.daemon._finds()
+            msk._finds()
             os._exit(0)
         except ResizeScreenError as e:
             last_scene = e.scene
