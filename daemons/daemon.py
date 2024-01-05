@@ -24,7 +24,7 @@ class Daemon:
                 mains_["mains"][i] = asyncio.create_task(clss_[i]["main"][0](*clss_[i]["main"][1:]))
             starteve_.set()
             print("ugagagaga")
-            await eve_.wait()
+            await asyncio.to_thread(eve_.wait)
             print("thonk")
             for i in mains_["mains"]:
                 mains_["mains"][i].cancel()
@@ -41,13 +41,11 @@ class Daemon:
             print("hogehoge")
             th_.join()
 
-        eve = asyncio.Event()
-        starteve = asyncio.Event()
+        eve = threading.Event()
+        starteve = threading.Event()
         th = threading.Thread(target=lambda:asyncio.run(_main(starteve, self._dmains, eve, clss)))
         th.start()
-        async def wait_(w):
-            await w.wait()
-        asyncio.run(wait_(starteve))
+        starteve.wait()
         print("startds fin")
         return lambda:asyncio.run(_fin(eve, th, clss, self._dmains))
 
