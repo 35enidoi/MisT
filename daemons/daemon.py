@@ -34,7 +34,7 @@ class Daemon:
                     pass
             print("d_main_fin")
 
-        async def _fin(eve_:asyncio.Event, th_:threading.Thread, clss_:dict[dict], mains_:list):
+        async def _fin(eve_:asyncio.Event, th_:threading.Thread, clss_:dict[dict]):
             await asyncio.gather(*(clss[i]["fin"][0](*clss[i]["fin"][1:]) for i in clss_ if clss[i].get("fin")))
             print("gueeeee")
             eve_.set()
@@ -47,7 +47,7 @@ class Daemon:
         th.start()
         starteve.wait()
         print("startds fin")
-        return lambda:asyncio.run(_fin(eve, th, clss, self._dmains))
+        return lambda:asyncio.run(_fin(eve, th, clss))
 
     def _check_deamonname(self, name) -> bool:
         if name in self.d_dict:
