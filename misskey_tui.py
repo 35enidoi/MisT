@@ -67,7 +67,6 @@ class MkAPIs():
         # daemons initalize
         self.daemon = daemons.Ds(self)
         self._finds = self.daemon._startds()
-        print(self.daemon._dmains)
 
     def mistconfig_put(self,loadmode=False):
         import json

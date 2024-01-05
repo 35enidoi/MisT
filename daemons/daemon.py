@@ -13,7 +13,7 @@ class Daemon:
 
     def _startds(self):
         "悪魔の召喚"
-        self._dmains = {"returns":[], "mains":{}}
+        _dmains = {"returns":[], "mains":{}}
         clss = {}
         for i in self.d_dict:
             if type(val := self.d_dict[i]) == dict:
@@ -23,31 +23,33 @@ class Daemon:
             for i in clss_:
                 mains_["mains"][i] = asyncio.create_task(clss_[i]["main"][0](*clss_[i]["main"][1:]))
             starteve_.set()
-            print("ugagagaga")
             await asyncio.to_thread(eve_.wait)
-            print("thonk")
+            n = 0
             for i in mains_["mains"]:
-                mains_["mains"][i].cancel()
+                if clss_[i].get("fin"):
+                    if mains_["fins"][n]:
+                        pass
+                    else:
+                        mains_["mains"][i].cancel()
+                    n += 1
+                else:
+                    mains_["mains"][i].cancel()
                 try:
                     await mains_["mains"][i]
                 except asyncio.CancelledError:
                     pass
-            print("d_main_fin")
 
-        async def _fin(eve_:asyncio.Event, th_:threading.Thread, clss_:dict[dict]):
-            await asyncio.gather(*(clss[i]["fin"][0](*clss[i]["fin"][1:]) for i in clss_ if clss[i].get("fin")))
-            print("gueeeee")
+        async def _fin(eve_:asyncio.Event, th_:threading.Thread, clss_:dict[dict], mains_:dict):
+            mains_["fins"] = await asyncio.gather(*(clss_[i]["fin"][0](*clss_[i]["fin"][1:]) for i in clss_ if clss_[i].get("fin")))
             eve_.set()
-            print("hogehoge")
             th_.join()
 
         eve = threading.Event()
         starteve = threading.Event()
-        th = threading.Thread(target=lambda:asyncio.run(_main(starteve, self._dmains, eve, clss)))
+        th = threading.Thread(target=lambda:asyncio.run(_main(starteve, _dmains, eve, clss)))
         th.start()
         starteve.wait()
-        print("startds fin")
-        return lambda:asyncio.run(_fin(eve, th, clss))
+        return lambda:asyncio.run(_fin(eve, th, clss, _dmains))
 
     def _check_deamonname(self, name) -> bool:
         if name in self.d_dict:
@@ -87,7 +89,9 @@ class Daemon:
         """
         悪魔の終了処理を入れる場所
 
-        ラッピングした後に実行することで予約される"""
+        ラッピングした後に実行することで予約される
+        
+        予約する関数の返り値をTrueにすることでそのクラスのメイン関数をキャンセルせずにawaitさせるようにする"""
         def _wrap(*args):
             if self._check_deamonname(self, clsname:=func.__qualname__.split(".")[-2]):
                 if asyncio.iscoroutinefunction(func):
