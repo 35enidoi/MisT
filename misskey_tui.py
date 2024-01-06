@@ -366,7 +366,7 @@ class NoteView(Frame):
             self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}")
         flugs = ""
         if note["user"]["isBot"]:
-            flugs += "isBot:True"
+            flugs += "isBot:True "
         if note["user"]["isCat"]:
             flugs += "isCat:True"
         if flugs != "":
