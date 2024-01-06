@@ -135,16 +135,20 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ConnectionError):
             return None
 
-    def get_note(self,untilid=None,sinceid=None):
+    def get_note(self,untilid=None,sinceid=None,upd=False) -> bool:
+        if upd:
+            lim = 100
+        else:
+            lim = self.tl_len
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                self.notes = self.mk.notes_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                self.notes = self.mk.notes_local_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                self.notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                self.notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             return True
         except (exceptions.MisskeyAPIException, ReadTimeout):
             self.notes = []
@@ -173,9 +177,11 @@ class MkAPIs():
 
     def note_update(self):
         beforenotes = self.notes.copy()
-        noteid = self.notes[0]["id"]
-        is_ok = self.get_note(noteid[0:14]+"zz")
+        noteid = self.notes[len(self.notes)-1]["id"]
+        is_ok = self.get_note(sinceid=noteid[0:14]+"aa", upd=True)
         if is_ok:
+            if (dif :=  len(self.notes)-len(beforenotes)) != 0:
+                self.nowpoint += dif
             return True
         else:
             self.notes = beforenotes
@@ -250,7 +256,7 @@ class NoteView(Frame):
                        _("Noteupdate"), _("Note Get"), _("More"),
                        _("Config"))
         on_click = (self.pop_quit, self.move_l, self.move_r,
-                    self.noteupdate, self.get_note, self.pop_more,
+                    self.noteupdate, self.get_note_, self.pop_more,
                     self.config)
         self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
 
@@ -282,12 +288,12 @@ class NoteView(Frame):
         self._note_reload()
         self.fix()
 
-    def get_note(self,arg=-1):
+    def get_note_(self,arg=-1):
         if arg == -1:
             if self.msk_.mk is None:
                 self.popup((_("connect failed.\nPlease Instance recreate.")), [(_("Ok"))])
                 return
-            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note)
+            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note_)
             return
         elif arg == 0:
             untilid = None
