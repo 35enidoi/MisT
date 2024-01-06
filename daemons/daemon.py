@@ -73,7 +73,9 @@ class Daemon:
         """
         悪魔の処理を入れる場所
 
-        ラッピングした後に実行することで予約される"""
+        ラッピングした後に実行することで予約される
+        
+        ラッピングする関数はコルーチンでなければならない"""
         def _wrap(*args):
             if self._check_deamonname(self, clsname:=func.__qualname__.split(".")[-2]):
                 if asyncio.iscoroutinefunction(func):
@@ -91,6 +93,8 @@ class Daemon:
 
         ラッピングした後に実行することで予約される
         
+        ラッピングする関数はコルーチンでなければならない
+
         予約する関数の返り値をTrueにすることでそのクラスのメイン関数をキャンセルせずにawaitさせるようにする"""
         def _wrap(*args):
             if self._check_deamonname(self, clsname:=func.__qualname__.split(".")[-2]):
