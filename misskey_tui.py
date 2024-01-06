@@ -364,13 +364,13 @@ class NoteView(Frame):
             self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}")
         else:
             self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}")
-        self.msk_.tmp.append("")
+        flugs = ""
         if note["user"]["isBot"]:
-            self.msk_.tmp[-1] += "isBot:True "
+            flugs += "isBot:True"
         if note["user"]["isCat"]:
-            self.msk_.tmp[-1] += "isCat:True"
-        if (a := self.msk_.tmp.pop()) != "":
-            self._noteput(a)
+            flugs += "isCat:True"
+        if flugs != "":
+            self._noteput(flugs)
         if note["user"].get("badgeRoles"):
             if len(note["user"]["badgeRoles"]) != 0:
                 self._noteput("badgeRoles:["+",".join(i["name"] for i in note["user"]["badgeRoles"])+"]")
