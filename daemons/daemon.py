@@ -13,17 +13,17 @@ class Daemon:
 
     def _startds(self):
         "悪魔の召喚"
-        _dmains = {"returns":[], "mains":{}}
+        dmains = {"returns":[], "mains":{}}
         clss = {}
         for i in self.d_dict:
             if type(val := self.d_dict[i]) == dict:
                 clss[i] = val
 
-        async def _main(starteve_:asyncio.Event, mains_:dict, eve_:asyncio.Event, clss_:dict):
+        async def _main(fineve_:asyncio.Event, starteve_:asyncio.Event, clss_:dict, mains_:dict):
             for i in clss_:
                 mains_["mains"][i] = asyncio.create_task(clss_[i]["main"][0](*clss_[i]["main"][1:]))
             starteve_.set()
-            await asyncio.to_thread(eve_.wait)
+            await asyncio.to_thread(fineve_.wait)
             n = 0
             for i in mains_["mains"]:
                 if clss_[i].get("fin"):
@@ -39,17 +39,17 @@ class Daemon:
                 except asyncio.CancelledError:
                     pass
 
-        async def _fin(eve_:asyncio.Event, th_:threading.Thread, clss_:dict[dict], mains_:dict):
+        async def _fin(fineve_:asyncio.Event, th_:threading.Thread, clss_:dict[dict], mains_:dict):
             mains_["fins"] = await asyncio.gather(*(clss_[i]["fin"][0](*clss_[i]["fin"][1:]) for i in clss_ if clss_[i].get("fin")))
-            eve_.set()
+            fineve_.set()
             th_.join()
 
-        eve = threading.Event()
         starteve = threading.Event()
-        th = threading.Thread(target=lambda:asyncio.run(_main(starteve, _dmains, eve, clss)))
+        fineve = threading.Event()
+        th = threading.Thread(target=lambda:asyncio.run(_main(fineve, starteve, clss, dmains)))
         th.start()
         starteve.wait()
-        return lambda:asyncio.run(_fin(eve, th, clss, _dmains))
+        return lambda:asyncio.run(_fin(fineve, th, clss, dmains))
 
     def _check_deamonname(self, name) -> bool:
         if name in self.d_dict:
