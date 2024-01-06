@@ -4,6 +4,7 @@ import queue
 
 @Daemon.newd
 class Wheeld:
+    "命令に従って非同期処理を実行するdaemon"
     def __init__(self) -> None:
         self._wheeld_queue = queue.Queue()
         self._wheeld_ope = {}
