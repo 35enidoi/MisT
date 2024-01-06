@@ -65,7 +65,7 @@ class MkAPIs():
         # import daemons
         import daemons
         # daemons initalize
-        self.daemon = daemons.Ds(self)
+        self.daemon = daemons.Ds(self, self.mistconfig)
         self._finds = self.daemon._startds()
 
     def mistconfig_put(self,loadmode=False):
