@@ -13,12 +13,6 @@ class Daemon:
 
     def _startds(self):
         "悪魔の召喚"
-        dmains = {"returns":[], "mains":{}}
-        clss = {}
-        for i in self.d_dict:
-            if type(val := self.d_dict[i]) == dict:
-                clss[i] = val
-
         async def _main(fineve_:asyncio.Event, starteve_:asyncio.Event, clss_:dict, mains_:dict):
             for i in clss_:
                 mains_["mains"][i] = asyncio.create_task(clss_[i]["main"][0](*clss_[i]["main"][1:]))
@@ -43,6 +37,12 @@ class Daemon:
             mains_["fins"] = await asyncio.gather(*(clss_[i]["fin"][0](*clss_[i]["fin"][1:]) for i in clss_ if clss_[i].get("fin")))
             fineve_.set()
             th_.join()
+
+        dmains = {"returns":[], "mains":{}}
+        clss = {}
+        for i in self.d_dict:
+            if type(val := self.d_dict[i]) == dict:
+                clss[i] = val
 
         starteve = threading.Event()
         fineve = threading.Event()
