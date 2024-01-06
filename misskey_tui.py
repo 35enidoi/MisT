@@ -174,7 +174,7 @@ class MkAPIs():
     def note_update(self):
         beforenotes = self.notes.copy()
         noteid = self.notes[0]["id"]
-        is_ok = self.get_note(noteid[0:8]+"zz")
+        is_ok = self.get_note(noteid[0:14]+"zz")
         if is_ok:
             return True
         else:
