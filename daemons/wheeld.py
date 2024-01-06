@@ -37,6 +37,8 @@ class Wheeld:
     def wheeld_ope_add(self, name, func):
         if self._wheeld_ope.get(name):
             raise KeyError(f"命令の名前:{name}:はもう登録されています")
+        if not asyncio.iscoroutinefunction(func):
+            raise ValueError(f"関数はコルーチンでなければなりません。")
         self._wheeld_ope[name] = func
         self._wheeld_tasks[name] = []
 
