@@ -178,7 +178,7 @@ class MkAPIs():
     def note_update(self):
         beforenotes = self.notes.copy()
         noteid = self.notes[len(self.notes)-1]["id"]
-        is_ok = self.get_note(sinceid=noteid[0:14]+"aa", upd=True)
+        is_ok = self.get_note(sinceid=noteid[:-2]+"aa", upd=True)
         if is_ok:
             if (dif :=  len(self.notes)-len(beforenotes)) != 0:
                 self.nowpoint += dif
