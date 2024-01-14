@@ -20,6 +20,12 @@ class Anupd:
         @Daemon.glb_getter
         def __anupd_ope(msk, _):
             if len(msk.notes) != 0:
-                msk.note_update()
+                btmnoteid = msk.notes[len(msk.notes)-1]["id"]
+                notes = msk.get_note(sinceid=btmnoteid[:-2]+"aa")
+                if notes is not None:
+                    ints = {i["id"] for i in msk.notes}&{i["id"] for i in notes}
+                    if len(ints) >= len(msk.notes)-2 and len(ints) != 0:
+                        msk.nowpoint += len(notes)-len(msk.notes)
+                        msk.notes = notes
 
         await asyncio.to_thread(__anupd_ope, self)

@@ -135,24 +135,21 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ConnectionError):
             return None
 
-    def get_note(self,untilid=None,sinceid=None,upd=False) -> bool:
-        if upd:
-            lim = 100
-        else:
-            lim = self.tl_len
+    def get_note(self, lim:int=100, untilid=None, sinceid=None) -> list[dict]:
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_local_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
-            return True
+                notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+            else:
+                notes = None
+            return notes
         except (exceptions.MisskeyAPIException, ReadTimeout):
-            self.notes = []
-            return False
+            return None
 
     def get_ntfy(self):
         try:
@@ -174,18 +171,6 @@ class MkAPIs():
                 self.reacdb = None
         except ConnectTimeout:
             self.reacdb = None
-
-    def note_update(self):
-        beforenotes = self.notes.copy()
-        noteid = self.notes[len(self.notes)-1]["id"]
-        is_ok = self.get_note(sinceid=noteid[:-2]+"aa", upd=True)
-        if is_ok:
-            if (dif :=  len(self.notes)-len(beforenotes)) != 0:
-                self.nowpoint += dif
-            return True
-        else:
-            self.notes = beforenotes
-            return False
 
     def noteshow(self,noteid):
         try:
@@ -310,13 +295,21 @@ class NoteView(Frame):
             elif arg == 2:
                 untilid = None
                 sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
-        self.msk_.get_note(untilid,sinceid)
-        self.msk_.nowpoint=0
+        note = self.msk_.get_note(self.msk_.tl_len, untilid,sinceid)
+        if note is None:
+            self.popup((_("something occured")), [_("Ok")])
+            return
+        self.msk_.nowpoint = 0
+        self.msk_.notes = note
         self._note_reload()
-    
+
     def noteupdate(self):
-        is_ok = self.msk_.note_update()
-        if is_ok:
+        btmnoteid = self.msk_.notes[len(self.msk_.notes)-1]["id"]
+        notes = self.msk_.get_note(sinceid=btmnoteid[:-2]+"aa")
+        if notes != None:
+            if (dif := len(notes)-len(self.msk_.notes)) > 0:
+                self.msk_.nowpoint += dif
+            self.msk_.notes = notes
             self._note_reload()
             self.popup((_("success")), [_("Ok")])
         else:
