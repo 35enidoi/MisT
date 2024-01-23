@@ -58,7 +58,6 @@ class MkAPIs():
             self.instance = "misskey.io"
         self.mk = None
         self.tl = "LTL"
-        self.tl_len = 10
         is_ok = self.reload()
         if not is_ok:
             self.i = None
