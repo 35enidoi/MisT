@@ -275,33 +275,41 @@ class NoteView(Frame):
 
     def get_note_(self,arg=-1):
         if arg == -1:
+            # initialize
             if self.msk_.mk is None:
                 self.popup((_("connect failed.\nPlease Instance recreate.")), [(_("Ok"))])
                 return
             self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note_)
             return
         elif arg == 0:
+            # normal(latest)
+            tllen = 10
             untilid = None
             sinceid = None
         elif arg == 3:
+            # return
             return
         else:
+            tllen = 100
             if len(self.msk_.notes) == 0:
+                # check notes available
                 self.popup((_("get note please(latest)")),[(_("Ok"))])
                 return
             elif arg == 1:
+                # until
                 untilid = self.msk_.notes[self.msk_.nowpoint]["id"]
                 sinceid = None
             elif arg == 2:
+                # since
                 untilid = None
                 sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
-        note = self.msk_.get_note(self.msk_.tl_len, untilid,sinceid)
+        note = self.msk_.get_note(tllen, untilid,sinceid)
         if note is None:
             self.popup((_("something occured")), [_("Ok")])
-            return
-        self.msk_.nowpoint = 0
-        self.msk_.notes = note
-        self._note_reload()
+        else:
+            self.msk_.nowpoint = 0
+            self.msk_.notes = note
+            self._note_reload()
 
     def noteupdate(self):
         btmnoteid = self.msk_.notes[len(self.msk_.notes)-1]["id"]
