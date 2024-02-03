@@ -631,9 +631,17 @@ msgstr "もっと設定"
 msgid "Note Create"
 msgstr "ノート作成"
 
+#: .\misskey_tui.py:1007
+msgid "emoji"
+msgstr "絵文字"
+
 #: misskey_tui.py:892
 msgid "hug punch"
 msgstr "フグパンチ"
+
+#: .\misskey_tui.py:1039
+msgid "emoji select from..."
+msgstr "絵文字の選択方法"
 
 #: misskey_tui.py:920
 msgid "Are you sure about that?"

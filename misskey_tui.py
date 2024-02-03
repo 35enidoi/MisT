@@ -677,7 +677,7 @@ class ConfigMenu(Frame):
             if len(reacmenu) == 0:
                 self.msk_.mistconfig_put()
             else:
-                reacmenu.insert(0, ("Return", lambda: self.msk_.mistconfig_put()))
+                reacmenu.insert(0, (_("return"), lambda: self.msk_.mistconfig_put()))
                 self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
         else:
             # del reaction
@@ -994,18 +994,18 @@ class CreateNote(Frame):
                                       screen.width,
                                       title="CreateNote",
                                       reduce_cpu=True,
-                                      can_scroll=False)
+                                      can_scroll=False,
+                                      on_load=self.load)
         # initialize
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
 
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,on_change=self.reminder)
-        self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
-        buttonnames = ((_("Note Create")), (_("hug punch")), (_("return")), (_("MoreConf")))
-        on_click = (self.popcreatenote, self.hug_punch, self.return_, self.conf_)
+        buttonnames = ((_("Note Create")), (_("hug punch")), (_("emoji")), (_("return")), (_("MoreConf")))
+        on_click = (self.popcreatenote, self.hug_punch, self.emoji, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -1022,6 +1022,9 @@ class CreateNote(Frame):
         # fix
         self.fix()
 
+    def load(self):
+        self.txtbx.value = self.msk_.crnotetxts
+
     def reminder(self):
         self.msk_.crnotetxts = self.txtbx.value
     
@@ -1030,6 +1033,23 @@ class CreateNote(Frame):
         hugpunchs = ["(Δ・x・Δ)","v('ω')v","(=^・・^=)","✌️(´･_･`)✌️",
                      "( ‘ω’ و(و “","ԅ( ˘ω˘ ԅ)ﾓﾐﾓﾐ","🐡( '-' 🐡 )ﾌｸﾞﾊﾟﾝﾁ!!!!","(｡>﹏<｡)"]
         self.txtbx.value += hugpunchs[randint(0,len(hugpunchs)-1)]
+
+    def emoji(self, arg=-1):
+        if arg == -1:
+            self.popup(_("emoji select from..."), [_("deck"), _("search")], on_close=self.emoji)
+        elif arg == 0:
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen,[(_("return"), lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
+        elif arg == 1:
+            self.msk_.tmp.append("crnote")
+            raise NextScene("SelReaction")
+
+    def put_emoji(self, arg):
+        emoji = self.msk_.mistconfig["tokens"][[char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)]["reacdeck"][arg]
+        self.txtbx.value += f":{emoji}:"
 
     def popcreatenote(self):
         self._scene.add_effect(PopUpDialog(self.screen,(_("Are you sure about that?")), [(_("Sure")), (_("No"))],self._ser_createnote))
@@ -1240,6 +1260,8 @@ class SelectReaction(Frame):
             elif tmpval == "deck":
                 self.msk_.tmp.pop()
                 self.flag = "deckadd"
+            elif tmpval == "crnote":
+                self.flag = self.msk_.tmp.pop()
             else:
                 self.flag = ""
         else:
@@ -1281,6 +1303,9 @@ class SelectReaction(Frame):
                 else:
                     nowtoken["reacdeck"].append(reaction)
                     self.popup((_("reaction added\nname:{}")).format(reaction),[(_("Ok"))])
+            elif self.flag == "crnote":
+                self.msk_.crnotetxts += f":{reaction}:"
+                raise NextScene("CreateNote")
 
     def getdb(self):
         self.msk_.get_reactiondb()
