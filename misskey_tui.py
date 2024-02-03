@@ -1285,7 +1285,9 @@ class SelectReaction(Frame):
     def select(self):
         self.save()
         index = self.data["emojilist"]
-        if (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
+        if index is None:
+            pass
+        elif (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
             pass
         else:
             if self.flag == "search":
