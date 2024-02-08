@@ -1707,13 +1707,17 @@ def wrap(screen, scene, msk:MkAPIs):
 def main():
     msk = MkAPIs()
     last_scene = None
-    while True:
-        try:
-            Screen.wrapper(wrap, arguments=[last_scene, msk])
-            msk._finds()
-            os._exit(0)
-        except ResizeScreenError as e:
-            last_scene = e.scene
+    try:
+        while True:
+            try:
+                Screen.wrapper(wrap, arguments=[last_scene, msk])
+                os._exit(0)
+            except ResizeScreenError as e:
+                last_scene = e.scene
+    except:
+        raise
+    finally:
+        msk._finds()
 
 if __name__ == "__main__":
     main()
