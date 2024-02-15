@@ -10,13 +10,13 @@ import os
 # _を定義
 # プログラム的には意味はない
 # これがないとlinterが地獄になる(_の定義がないため)
-global _
+_:None
 
 class MkAPIs():
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.391
+        self.version = 0.4
         # mistconfig load
         if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
             self.mistconfig_put(True)
@@ -58,10 +58,14 @@ class MkAPIs():
             self.instance = "misskey.io"
         self.mk = None
         self.tl = "LTL"
-        self.tl_len = 10
         is_ok = self.reload()
         if not is_ok:
             self.i = None
+        # import daemons
+        import daemons
+        # daemons initalize
+        self.daemon = daemons.Ds(self, self.mistconfig)
+        self._finds = self.daemon._startds()
 
     def mistconfig_put(self,loadmode=False):
         import json
@@ -130,20 +134,21 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ConnectionError):
             return None
 
-    def get_note(self,untilid=None,sinceid=None):
+    def get_note(self, lim:int=100, untilid=None, sinceid=None) -> list[dict]:
         try:
             if self.tl == "HTL":
-                self.notes = self.mk.notes_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "LTL":
-                self.notes = self.mk.notes_local_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_local_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "STL":
-                self.notes = self.mk.notes_hybrid_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
-                self.notes = self.mk.notes_global_timeline(self.tl_len,with_files=False,until_id=untilid,since_id=sinceid)
-            return True
+                notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+            else:
+                notes = None
+            return notes
         except (exceptions.MisskeyAPIException, ReadTimeout):
-            self.notes = []
-            return False
+            return None
 
     def get_ntfy(self):
         try:
@@ -165,16 +170,6 @@ class MkAPIs():
                 self.reacdb = None
         except ConnectTimeout:
             self.reacdb = None
-
-    def note_update(self):
-        beforenotes = self.notes.copy()
-        noteid = self.notes[0]["id"]
-        is_ok = self.get_note(noteid[0:8]+"zz")
-        if is_ok:
-            return True
-        else:
-            self.notes = beforenotes
-            return False
 
     def noteshow(self,noteid):
         try:
@@ -245,7 +240,7 @@ class NoteView(Frame):
                        _("Noteupdate"), _("Note Get"), _("More"),
                        _("Config"))
         on_click = (self.pop_quit, self.move_l, self.move_r,
-                    self.noteupdate, self.get_note, self.pop_more,
+                    self.noteupdate, self.get_note_, self.pop_more,
                     self.config)
         self.buttons = [Button(buttonnames[i], on_click[i]) for i in range(len(buttonnames))]
 
@@ -277,35 +272,51 @@ class NoteView(Frame):
         self._note_reload()
         self.fix()
 
-    def get_note(self,arg=-1):
+    def get_note_(self,arg=-1):
         if arg == -1:
+            # initialize
             if self.msk_.mk is None:
                 self.popup((_("connect failed.\nPlease Instance recreate.")), [(_("Ok"))])
                 return
-            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note)
+            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note_)
             return
         elif arg == 0:
+            # normal(latest)
+            tllen = 10
             untilid = None
             sinceid = None
         elif arg == 3:
+            # return
             return
         else:
+            tllen = 100
             if len(self.msk_.notes) == 0:
+                # check notes available
                 self.popup((_("get note please(latest)")),[(_("Ok"))])
                 return
             elif arg == 1:
+                # until
                 untilid = self.msk_.notes[self.msk_.nowpoint]["id"]
                 sinceid = None
             elif arg == 2:
+                # since
                 untilid = None
                 sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
-        self.msk_.get_note(untilid,sinceid)
-        self.msk_.nowpoint=0
-        self._note_reload()
-    
+        note = self.msk_.get_note(tllen, untilid,sinceid)
+        if note is None:
+            self.popup((_("something occured")), [_("Ok")])
+        else:
+            self.msk_.nowpoint = 0
+            self.msk_.notes = note
+            self._note_reload()
+
     def noteupdate(self):
-        is_ok = self.msk_.note_update()
-        if is_ok:
+        btmnoteid = self.msk_.notes[len(self.msk_.notes)-1]["id"]
+        notes = self.msk_.get_note(sinceid=btmnoteid[:-2]+"aa")
+        if notes != None:
+            if (dif := len(notes)-len(self.msk_.notes)) > 0:
+                self.msk_.nowpoint += dif
+            self.msk_.notes = notes
             self._note_reload()
             self.popup((_("success")), [_("Ok")])
         else:
@@ -353,13 +364,13 @@ class NoteView(Frame):
             self._noteput(f"{name} [{username}] was renoted    noteId:{note['id']}")
         else:
             self._noteput(f"{name} [{username}] was noted    noteId:{note['id']}")
-        self.msk_.tmp.append("")
+        flugs = ""
         if note["user"]["isBot"]:
-            self.msk_.tmp[-1] += "isBot:True "
+            flugs += "isBot:True "
         if note["user"]["isCat"]:
-            self.msk_.tmp[-1] += "isCat:True"
-        if (a := self.msk_.tmp.pop()) != "":
-            self._noteput(a)
+            flugs += "isCat:True"
+        if flugs != "":
+            self._noteput(flugs)
         if note["user"].get("badgeRoles"):
             if len(note["user"]["badgeRoles"]) != 0:
                 self._noteput("badgeRoles:["+",".join(i["name"] for i in note["user"]["badgeRoles"])+"]")
@@ -370,7 +381,7 @@ class NoteView(Frame):
         if note["cw"] is not None:
             self._noteput("CW detect!",note["cw"],"~"*(self.screen.width-4))
         if note["user"]["isCat"]:
-            self._noteput(note["text"].replace("な","にゃ").replace("ナ","ニャ"),"")
+            self._noteput(str(note["text"]).replace("な","にゃ").replace("ナ","ニャ"),"")
         else:
             self._noteput(note["text"],"")
         if len(note["files"]) != 0:
@@ -666,7 +677,7 @@ class ConfigMenu(Frame):
             if len(reacmenu) == 0:
                 self.msk_.mistconfig_put()
             else:
-                reacmenu.insert(0, ("Return", lambda: self.msk_.mistconfig_put()))
+                reacmenu.insert(0, (_("return"), lambda: self.msk_.mistconfig_put()))
                 self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
         else:
             # del reaction
@@ -983,18 +994,18 @@ class CreateNote(Frame):
                                       screen.width,
                                       title="CreateNote",
                                       reduce_cpu=True,
-                                      can_scroll=False)
+                                      can_scroll=False,
+                                      on_load=self.load)
         # initialize
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
 
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,on_change=self.reminder)
-        self.txtbx.value = self.msk_.crnotetxts
 
         # buttons create
-        buttonnames = ((_("Note Create")), (_("hug punch")), (_("return")), (_("MoreConf")))
-        on_click = (self.popcreatenote, self.hug_punch, self.return_, self.conf_)
+        buttonnames = ((_("Note Create")), (_("hug punch")), (_("emoji")), (_("return")), (_("MoreConf")))
+        on_click = (self.popcreatenote, self.hug_punch, self.emoji, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -1011,6 +1022,9 @@ class CreateNote(Frame):
         # fix
         self.fix()
 
+    def load(self):
+        self.txtbx.value = self.msk_.crnotetxts
+
     def reminder(self):
         self.msk_.crnotetxts = self.txtbx.value
     
@@ -1019,6 +1033,23 @@ class CreateNote(Frame):
         hugpunchs = ["(Δ・x・Δ)","v('ω')v","(=^・・^=)","✌️(´･_･`)✌️",
                      "( ‘ω’ و(و “","ԅ( ˘ω˘ ԅ)ﾓﾐﾓﾐ","🐡( '-' 🐡 )ﾌｸﾞﾊﾟﾝﾁ!!!!","(｡>﹏<｡)"]
         self.txtbx.value += hugpunchs[randint(0,len(hugpunchs)-1)]
+
+    def emoji(self, arg=-1):
+        if arg == -1:
+            self.popup(_("emoji select from..."), [_("deck"), _("search")], on_close=self.emoji)
+        elif arg == 0:
+            tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
+            if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
+                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+            else:
+                self._scene.add_effect(PopupMenu(self.screen,[(_("return"), lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
+        elif arg == 1:
+            self.msk_.tmp.append("crnote")
+            raise NextScene("SelReaction")
+
+    def put_emoji(self, arg):
+        emoji = self.msk_.mistconfig["tokens"][[char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)]["reacdeck"][arg]
+        self.txtbx.value += f":{emoji}:"
 
     def popcreatenote(self):
         self._scene.add_effect(PopUpDialog(self.screen,(_("Are you sure about that?")), [(_("Sure")), (_("No"))],self._ser_createnote))
@@ -1229,6 +1260,8 @@ class SelectReaction(Frame):
             elif tmpval == "deck":
                 self.msk_.tmp.pop()
                 self.flag = "deckadd"
+            elif tmpval == "crnote":
+                self.flag = self.msk_.tmp.pop()
             else:
                 self.flag = ""
         else:
@@ -1252,7 +1285,9 @@ class SelectReaction(Frame):
     def select(self):
         self.save()
         index = self.data["emojilist"]
-        if (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
+        if index is None:
+            pass
+        elif (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
             pass
         else:
             if self.flag == "search":
@@ -1270,6 +1305,9 @@ class SelectReaction(Frame):
                 else:
                     nowtoken["reacdeck"].append(reaction)
                     self.popup((_("reaction added\nname:{}")).format(reaction),[(_("Ok"))])
+            elif self.flag == "crnote":
+                self.msk_.crnotetxts += f":{reaction}:"
+                raise NextScene("CreateNote")
 
     def getdb(self):
         self.msk_.get_reactiondb()
@@ -1657,7 +1695,7 @@ class Notification(Frame):
     def return_():
         raise NextScene("Main")
 
-def wrap(screen, scene):
+def wrap(screen, scene, msk:MkAPIs):
     scenes = [Scene([NoteView(screen, msk)], -1, name="Main"),
               Scene([ConfigMenu(screen, msk)], -1, name="Configration"),
               Scene([CreateNote(screen, msk)], -1, name="CreateNote"),
@@ -1667,15 +1705,19 @@ def wrap(screen, scene):
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
 
 def main():
-    global msk
     msk = MkAPIs()
     last_scene = None
-    while True:
-        try:
-            Screen.wrapper(wrap, arguments=[last_scene])
-            os._exit(0)
-        except ResizeScreenError as e:
-            last_scene = e.scene
+    try:
+        while True:
+            try:
+                Screen.wrapper(wrap, arguments=[last_scene, msk])
+                break
+            except ResizeScreenError as e:
+                last_scene = e.scene
+    except:
+        raise
+    finally:
+        msk._finds()
 
 if __name__ == "__main__":
     main()
