@@ -1711,7 +1711,7 @@ def main():
         while True:
             try:
                 Screen.wrapper(wrap, arguments=[last_scene, msk])
-                os._exit(0)
+                break
             except ResizeScreenError as e:
                 last_scene = e.scene
     except:
