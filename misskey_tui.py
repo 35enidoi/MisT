@@ -278,7 +278,7 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             if self.msk_.mk is None:
-                self.popup((_("connect failed.\nPlease Instance recreate.")), [(_("Ok"))])
+                self.popup((_("connect failed.\nPlease Instance recreate.")), [NV_T.OK.value])
                 return
             self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note_)
             return
@@ -294,7 +294,7 @@ class NoteView(Frame):
             tllen = 100
             if len(self.msk_.notes) == 0:
                 # check notes available
-                self.popup((_("get note please(latest)")),[(_("Ok"))])
+                self.popup((_("get note please(latest)")),[NV_T.OK.value])
                 return
             elif arg == 1:
                 # until
@@ -306,7 +306,7 @@ class NoteView(Frame):
                 sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
         note = self.msk_.get_note(tllen, untilid,sinceid)
         if note is None:
-            self.popup((_("something occured")), [_("Ok")])
+            self.popup((_("something occured")), [NV_T.OK.value])
         else:
             self.msk_.nowpoint = 0
             self.msk_.notes = note
@@ -320,9 +320,9 @@ class NoteView(Frame):
                 self.msk_.nowpoint += dif
             self.msk_.notes = notes
             self._note_reload()
-            self.popup((_("success")), [_("Ok")])
+            self.popup((_("success")), [NV_T.OK.value])
         else:
-            self.popup((_("something occured")), [_("Ok")])
+            self.popup((_("something occured")), [NV_T.OK.value])
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -408,13 +408,13 @@ class NoteView(Frame):
         elif arg == 1:
             # Renote or Quote
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [(_("Ok"))])
+                self.popup((_("Please Note Get")), [NV_T.OK.value])
             else:
                 self.popup((_('Renote or Quote?')).format(), [(_("Renote")), (_("Quote")), (_("Return"))],self._ser_rn)
         elif arg == 2:
             # Reply
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [(_("Ok"))])
+                self.popup((_("Please Note Get")), [NV_T.OK.value])
             else:
                 if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
                     if noteval["text"] is None:
@@ -428,7 +428,7 @@ class NoteView(Frame):
         elif arg == 3:
             # Reaction
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [(_("Ok"))])
+                self.popup((_("Please Note Get")), [NV_T.OK.value])
             else:
                 self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], self._ser_reac)
         elif arg == 4:
@@ -445,7 +445,7 @@ class NoteView(Frame):
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1)
             else:
-                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+                self.popup((_("Please create reaction deck")), [NV_T.OK.value])
         elif arg == 2:
             # search
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -479,16 +479,16 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             if len(reactions) == 1:
-                self.popup(_("there is no reactions"), [_("Ok")])
+                self.popup(_("there is no reactions"), [NV_T.OK.value])
             else:
                 self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
         else:
             # Create reaction
             is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup((_('Create success! :)')), [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup((_("Create fail :(")), [NV_T.OK.value])
 
     def _ser_reac_deck(self,arg):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -509,9 +509,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup((_('Create success! :)')), [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup((_("Create fail :(")), [NV_T.OK.value])
 
     def _ser_rn(self, arg):
         if arg == 0:
@@ -531,7 +531,7 @@ class NoteView(Frame):
                 text = noteval["text"]
             else:
                 text = noteval["text"][0:16]+"..."
-            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(noteid,username,text), [(_("Ok")),(_("No"))],on_close=self._ser_renote)
+            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(noteid,username,text), [NV_T.OK.value,(_("No"))],on_close=self._ser_renote)
         if arg == 1:
             # Quote
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -555,9 +555,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup((_('Create success! :)')), [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup((_("Create fail :(")), [NV_T.OK.value])
 
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
@@ -594,7 +594,7 @@ class ConfigMenu(Frame):
         # buttons create
         buttonnames = ((_("Return")), (_("Change TL")), (_("Change Theme")), (_("Reaction deck")),
                        (_("TOKEN")), (_("Instance")), (_("Current")), (_("Version")),
-                       (_("Language")), (_("Clear")), (_("Refresh")), (_("OK")))
+                       (_("Language")), (_("Clear")), (_("Refresh")), (_("Ok")))
         onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
                     self.poptoken, self.instance_, self.current, self.version_,
                     self.language_, self.clear_, self.refresh_,self.ok_)
@@ -648,7 +648,7 @@ class ConfigMenu(Frame):
         if arg == -1:
             # initialize
             if self.msk_.i is None:
-                self.popup((_("Please set TOKEN")), [(_("OK"))])
+                self.popup((_("Please set TOKEN")), [(_("Ok"))])
             else:
                 self.popup((_("check deck or add deck?")), [(_("check deck")), (_("del deck")), (_("add deck")), (_("return"))], self.reactiondeck)
         elif arg == 0:
@@ -1106,7 +1106,7 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ((_("return")),"CW",(_("notevisibility")),(_("renoteId")),(_("replyId")),(_("OK")))
+        buttonnames = ((_("return")),"CW",(_("notevisibility")),(_("renoteId")),(_("replyId")),(_("Ok")))
         onclicks = (self.return_,self.cw,self.notevisibility,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 

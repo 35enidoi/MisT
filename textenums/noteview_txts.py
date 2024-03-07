@@ -15,6 +15,8 @@ class NV_T(Enum):
     BT_MORE = "More"
     BT_CFG = "Config"
 
+    OK = "Ok"
+
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":
             return _(super().__getattribute__(__name))
