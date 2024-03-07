@@ -7,6 +7,8 @@ from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
 import os
 
+from textenums import *
+
 # _を定義
 # プログラム的には意味はない
 # これがないとlinterが地獄になる(_の定義がないため)
@@ -236,9 +238,9 @@ class NoteView(Frame):
         self.note=TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
 
         # button create
-        buttonnames = (_("Quit"), _("Move L"), _("Move R"),
-                       _("Noteupdate"), _("Note Get"), _("More"),
-                       _("Config"))
+        buttonnames = (NV_T.BT_QUIT.value, NV_T.BT_MOVE_L.value, NV_T.BT_MOVE_R.value,
+                       NV_T.BT_NOTE_UP.value, NV_T.BT_NOTE_GET.value, NV_T.BT_MORE.value,
+                       NV_T.BT_CFG.value)
         on_click = (self.pop_quit, self.move_l, self.move_r,
                     self.noteupdate, self.get_note_, self.pop_more,
                     self.config)
@@ -256,13 +258,13 @@ class NoteView(Frame):
             layout2.add_widget(self.buttons[i],i)
 
         # define selfs
-        self._move_l = self.buttons[buttonnames.index(_("Move L"))]
-        self._move_r = self.buttons[buttonnames.index(_("Move R"))]
+        self._move_l = self.buttons[buttonnames.index(NV_T.BT_MOVE_L.value)]
+        self._move_r = self.buttons[buttonnames.index(NV_T.BT_MOVE_R.value)]
         self.layout = layout
         self.layout2 = layout2
 
         # disable
-        moreind = buttonnames.index(_("More"))
+        moreind = buttonnames.index(NV_T.BT_MORE.value)
         if self.msk_.i is None:
             self.buttons[moreind].disabled = True
         else:
