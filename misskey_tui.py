@@ -278,9 +278,12 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             if self.msk_.mk is None:
-                self.popup((_("connect failed.\nPlease Instance recreate.")), [NV_T.OK.value])
+                self.popup(NV_T.SEL_NOTE_CONNECT_FAIL.value, [NV_T.OK.value])
                 return
-            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note_)
+            self.popup(NV_T.SEL_NOTE_POPTXT.value,
+                       [NV_T.SEL_NOTE_POP_LATEST.value,NV_T.SEL_NOTE_POP_UNTIL.value,
+                        NV_T.SEL_NOTE_POP_SINCE.value, NV_T.RETURN.value],
+                       self.get_note_)
             return
         elif arg == 0:
             # normal(latest)
@@ -294,7 +297,7 @@ class NoteView(Frame):
             tllen = 100
             if len(self.msk_.notes) == 0:
                 # check notes available
-                self.popup((_("get note please(latest)")),[NV_T.OK.value])
+                self.popup(NV_T.SEL_NOTE_NOT_AVAILABLE.value,[NV_T.OK.value])
                 return
             elif arg == 1:
                 # until
@@ -306,7 +309,7 @@ class NoteView(Frame):
                 sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
         note = self.msk_.get_note(tllen, untilid,sinceid)
         if note is None:
-            self.popup((_("something occured")), [NV_T.OK.value])
+            self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
         else:
             self.msk_.nowpoint = 0
             self.msk_.notes = note
@@ -320,9 +323,9 @@ class NoteView(Frame):
                 self.msk_.nowpoint += dif
             self.msk_.notes = notes
             self._note_reload()
-            self.popup((_("success")), [NV_T.OK.value])
+            self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
         else:
-            self.popup((_("something occured")), [NV_T.OK.value])
+            self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -335,7 +338,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput((_("something occured while noteget.")), (_("or welcome to MisT!")), (_("Tab to change widget")))
+            self._noteput(NV_T.ERROR_OCCURED.value, NV_T.WELCOME_MESSAGE.value)
             self.buttons[3].disabled = True
         else:
             self.buttons[3].disabled = False
@@ -387,7 +390,7 @@ class NoteView(Frame):
         else:
             self._noteput(note["text"],"")
         if len(note["files"]) != 0:
-            self._noteput(_("{} files").format(len(note["files"])))
+            self._noteput("{} files".format(len(note["files"])))
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
                         "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()), "")
 
@@ -396,10 +399,12 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self.popup((_("?")), [(_("Create Note")), (_("Renote")), (_("Reply")), (_("Reaction")), (_("Notification")), (_("return"))],self._ser_more)
+        self.popup(NV_T.MORE_POPTXT.value, [NV_T.MORE_CREATE_NOTE.value, NV_T.MORE_RN.value,
+                                            NV_T.MORE_RP.value, NV_T.MORE_REACTION.value,
+                                            NV_T.MOREE_NOTIFI.value, NV_T.RETURN.value], self._ser_more)
 
     def pop_quit(self):
-        self.popup((_("Quit?")), [(_("yes")), (_("no"))],self._ser_quit)
+        self.popup(NV_T.QUIT.value, [NV_T.OK.value, NV_T.RETURN.value],self._ser_quit)
 
     def _ser_more(self,arg):
         if arg == 0:
@@ -408,13 +413,13 @@ class NoteView(Frame):
         elif arg == 1:
             # Renote or Quote
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [NV_T.OK.value])
+                self.popup(NV_T.MORE_SEL_GET_NOTE_PLS.value, [NV_T.OK.value])
             else:
-                self.popup((_('Renote or Quote?')).format(), [(_("Renote")), (_("Quote")), (_("Return"))],self._ser_rn)
+                self.popup(NV_T.MORE_SEL_RN_OR_QT.value, [NV_T.MORE_RN.value, NV_T.MORE_SEL_QT.value, NV_T.RETURN.value],self._ser_rn)
         elif arg == 2:
             # Reply
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [NV_T.OK.value])
+                self.popup(NV_T.MORE_SEL_GET_NOTE_PLS.value, [NV_T.OK.value])
             else:
                 if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
                     if noteval["text"] is None:
@@ -428,9 +433,10 @@ class NoteView(Frame):
         elif arg == 3:
             # Reaction
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [NV_T.OK.value])
+                self.popup(NV_T.MORE_SEL_GET_NOTE_PLS.value, [NV_T.OK.value])
             else:
-                self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], self._ser_reac)
+                self.popup(NV_T.MORE_SEL_REACTION_FROM.value, [NV_T.MORE_SEL_FROM_NOTE.value, NV_T.MORE_SEL_FROM_DECK.value,
+                                                               NV_T.MORE_SEL_FROM_SEARCH.value, NV_T.RETURN.value], self._ser_reac)
         elif arg == 4:
             # Notification
             raise NextScene("Notification")
@@ -445,7 +451,7 @@ class NoteView(Frame):
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1)
             else:
-                self.popup((_("Please create reaction deck")), [NV_T.OK.value])
+                self.popup(NV_T.SEL_REAC_FROM_DECK_NODECK.value, [NV_T.OK.value])
         elif arg == 2:
             # search
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -460,7 +466,7 @@ class NoteView(Frame):
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self,arg=-1):
-        reactions = [(_("return"), lambda: None)]
+        reactions = [(NV_T.RETURN.value, lambda: None)]
         if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
             if noteval["text"] is None:
                 noteid = noteval["renote"]["id"]
@@ -479,16 +485,16 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             if len(reactions) == 1:
-                self.popup(_("there is no reactions"), [NV_T.OK.value])
+                self.popup(NV_T.SEL_REAC_FROM_NOTE_NOREAC.value, [NV_T.OK.value])
             else:
                 self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
         else:
             # Create reaction
             is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [NV_T.OK.value])
+                self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [NV_T.OK.value])
+                self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def _ser_reac_deck(self,arg):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -496,7 +502,7 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i:self._ser_reac_deck(x)) for i in range(len(reacdeck))]
-            reacmenu.insert(0, (_("return"), lambda: None))
+            reacmenu.insert(0, (NV_T.RETURN.value, lambda: None))
             self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
@@ -509,9 +515,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [NV_T.OK.value])
+                self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [NV_T.OK.value])
+                self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def _ser_rn(self, arg):
         if arg == 0:
@@ -531,7 +537,7 @@ class NoteView(Frame):
                 text = noteval["text"]
             else:
                 text = noteval["text"][0:16]+"..."
-            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(noteid,username,text), [NV_T.OK.value,(_("No"))],on_close=self._ser_renote)
+            self.popup(NV_T.SEL_RN_NOTE_VAL.value.format(noteid,username,text), [NV_T.OK.value, NV_T.RETURN.value],on_close=self._ser_renote)
         if arg == 1:
             # Quote
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -555,9 +561,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
-                self.popup((_('Create success! :)')), [NV_T.OK.value])
+                self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [NV_T.OK.value])
+                self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
@@ -592,7 +598,7 @@ class ConfigMenu(Frame):
         self.txtbx.value = self.msk_.cfgtxts
 
         # buttons create
-        buttonnames = ((_("Return")), (_("Change TL")), (_("Change Theme")), (_("Reaction deck")),
+        buttonnames = ((_("return")), (_("Change TL")), (_("Change Theme")), (_("Reaction deck")),
                        (_("TOKEN")), (_("Instance")), (_("Current")), (_("Version")),
                        (_("Language")), (_("Clear")), (_("Refresh")), (_("Ok")))
         onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
