@@ -60,14 +60,36 @@ class CM_T(Enum):
     TOKEN_SEL_AUTH_OR_WRITE = "MiAuth or write TOKEN?"
     TOKEN_SEL_CREATE_PLS = "Create TOKEN please."
 
-    MIAUTH_URL = "MiAuth URL"
-    MIAUTH_COPIED = "cliped!"
+    TOKEN_SEL_MIAUTH_URL = "MiAuth URL"
+    TOKEN_SEL_COPIED = "cliped!"
 
-    TOKEN_CREATE_LEFT = "L"
-    TOKEN_CREATE_RIGHT = "R"
-    TOKEN_CREATE_DEL = "Delete"
-    TOKEN_CREATE_SET = "Set def"
-    TOKEN_CREATE_UNSET = "unset def"
+    TOKEN_SEARCH_LEFT = "L"
+    TOKEN_SEARCH_RIGHT = "R"
+    TOKEN_SEARCH_SEL = TOKEN_SELECT
+    TOKEN_SEARCH_DEL = "Delete"
+    TOKEN_SEARCH_SET = "Set def"
+    TOKEN_SEARCH_UNSET = "unset def"
+
+    TOKEN_SEARCH_MES_NAME = "name:{}"
+    TOKEN_SEARCH_MES_INSTANCE = "instance:{}"
+    TOKEN_SEARCH_MES_TOKEN = "token:{}..."
+
+    TOKEN_SEARCH_HEADMES_SEL = "Select"
+    TOKEN_SEARCH_HEADMES_DEL = "Delete this?"
+    TOKEN_SEARCH_HEADMES_SET = "set to default?"
+    TOKEN_SEARCH_HEADMES_LEFT = "Too Left"
+    TOKEN_SEARCH_HEADMES_RIGHT = "Too Right"
+    TOKEN_SEARCH_HEADMES_NO_DEFAULT = "default token is none"
+    TOKEN_SEARCH_HEADMES_UNSET = "unset success!"
+
+    TOKEN_SEARCH_SELECT_CONNECT_OK = "connect ok!"
+    TOKEN_SEARCH_SELECT_CONNECT_FAIL = "connect fail :("
+
+    MIAUTH_GET_SUCCESS = "MiAuth check Success!"
+    MIAUTH_HELLO_USER = "Hello {}"
+    MIAUTH_FAIL_TO_GET = "fail to get"
+    MIAUTH_FAIL_TO_GET_USER = MIAUTH_FAIL_TO_GET+" userinfo :("
+    MIAUTH_CHECK_FAIL = "MiAuth check Fail :(\ntry again?"
 
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":

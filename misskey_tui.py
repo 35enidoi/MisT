@@ -5,6 +5,7 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
+from functools import partial
 import os
 
 from textenums import *
@@ -763,7 +764,7 @@ class ConfigMenu(Frame):
             lens = self.screen.width//2
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
-            self.popup(CM_T.MIAUTH_URL.value, "\n", url, ("\n"+(CM_T.MIAUTH_COPIED.value if copysuccess else "")),
+            self.popup(CM_T.TOKEN_SEL_MIAUTH_URL.value, "\n", url, ("\n"+(CM_T.TOKEN_SEL_COPIED.value if copysuccess else "")),
                        [CM_T.OK.value],
                        self.miauth_get)
         elif arg == 1:
@@ -772,97 +773,81 @@ class ConfigMenu(Frame):
             self.msk_.tmp.append("TOKEN")
             self._disables()
     
-    def _ser_token_search(self,arg):
+    def _ser_token_search(self, arg, *, point=0):
         token = self.msk_.mistconfig["tokens"]
-        button = [CM_T.TOKEN_CREATE_LEFT.value, CM_T.TOKEN_CREATE_RIGHT.value,
-                  CM_T.TOKEN_SELECT.value, CM_T.TOKEN_CREATE_DEL.value,
-                  CM_T.TOKEN_CREATE_SET.value, CM_T.TOKEN_CREATE_UNSET.value]
-        if arg == -1:
-            # initialize
-            self.msk_.tmp.append(0)
-            msgs = ("")
-            mes = (_('<1/{}>\n\nSelect\nname:{}\ninstance:{}\ntoken:{}...').format(len(token),token[0]["name"],token[0]["instance"],token[0]["token"][0:8]))
-            self.popup(mes, button, self._ser_token_search)
-        elif arg == 0:
-            # L
-            num = self.msk_.tmp.pop()
-            if num == 0:
-                self.msk_.tmp.append(0)
-                headmes = (_("Too Left.\n"))
-            else:
-                num -= 1
-                self.msk_.tmp.append(num)
-                headmes = (_("Select\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, button,self._ser_token_search)
-        elif arg == 1:
-            # R
-            num = self.msk_.tmp.pop()
-            if num+1 == len(token):
-                self.msk_.tmp.append(num)
-                headmes = (_("Too Right.\n"))
-            else:
-                num += 1
-                self.msk_.tmp.append(num)
-                headmes = (_("Select\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, button,self._ser_token_search)
-        elif arg == 2:
+        button = [CM_T.TOKEN_SEARCH_LEFT.value, CM_T.TOKEN_SEARCH_RIGHT.value,
+                  CM_T.TOKEN_SEARCH_SEL.value, CM_T.TOKEN_SEARCH_DEL.value,
+                  CM_T.TOKEN_SEARCH_SET.value, CM_T.TOKEN_SEARCH_UNSET.value]
+        nowpoint = "<{}/{}>\n\n".format("{}", len(token))
+        name = CM_T.TOKEN_SEARCH_MES_NAME.value
+        instance = CM_T.TOKEN_SEARCH_MES_INSTANCE.value
+        token_ = CM_T.TOKEN_SEARCH_MES_TOKEN.value
+        headmes = CM_T.TOKEN_SEARCH_HEADMES_SEL.value
+        if arg == 2:
             # Select
-            num = self.msk_.tmp.pop()
-            userinfo = token[num]
-            self._txtbxput((_('select user:{}')).format(userinfo["name"]),(_('current instance:{}')).format(userinfo["instance"]),"")
+            userinfo = token[point]
             self.msk_.i = userinfo["token"]
             self.msk_.instance = userinfo["instance"]
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput((_("connect ok!")),"")
+                self._txtbxput(CM_T.TOKEN_SEARCH_SELECT_CONNECT_OK.value,"")
                 self.refresh_(True)
             else:
                 self.msk_.i = None
-                self._txtbxput((_("connect fail :(")),"")
+                self._txtbxput(CM_T.TOKEN_SEARCH_SELECT_CONNECT_FAIL.value,"")
+            self.current()
+            return
         elif arg == 3:
             # Delete
-            num = self.msk_.tmp[-1]
-            headmes = (_("Delete this?\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, [(_("Yes")),(_("No"))],self._ser_token_delete)
+            headmes = CM_T.TOKEN_SEARCH_HEADMES_DEL.value
+            func = self._ser_token_delete
+            button = [CM_T.OK.value, CM_T.RETURN.value]
         elif arg == 4:
             # Set
-            num = self.msk_.tmp[-1]
-            headmes = (_("set to default?\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes,[(_("Yes")),(_("No"))],self._ser_token_default)
-        elif arg == 5:
-            # Unset
-            num = self.msk_.tmp[-1]
-            if self.msk_.mistconfig["default"]["defaulttoken"] is None:
-                headmes = (_("default token is none\n"))
-            else:
-                self.msk_.mistconfig["default"]["defaulttoken"] = None
-                self.msk_.mistconfig_put()
-                headmes = (_("unset success!\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, button,self._ser_token_search)
+            headmes = CM_T.TOKEN_SEARCH_HEADMES_SET.value
+            func = self._ser_token_default
+            button = [CM_T.OK.value, CM_T.RETURN.value]
+        else:
+            if arg == 0:
+                # L
+                if point == 0:
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_LEFT.value
+                else:
+                    point -= 1
+            elif arg == 1:
+                # R
+                if point+1 == len(token):
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_RIGHT.value
+                else:
+                    point += 1
+            elif arg == 5:
+                # Unset
+                if self.msk_.mistconfig["default"]["defaulttoken"] is None:
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_NO_DEFAULT.value
+                else:
+                    self.msk_.mistconfig["default"]["defaulttoken"] = None
+                    self.msk_.mistconfig_put()
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_UNSET.value
+            func = self._ser_token_search
+        mes = (nowpoint+("\n".join((headmes, name, instance, token_)))).format(point+1, token[point]["name"], token[point]["instance"], token[point]["token"][:8])
+        self.popup(mes, button, partial(func, point=point))
 
-    def _ser_token_default(self,arg):
-        num = self.msk_.tmp[-1]
+    def _ser_token_default(self, arg, point):
         if arg == 0:
-            self.msk_.mistconfig["default"]["defaulttoken"] = num
+            self.msk_.mistconfig["default"]["defaulttoken"] = point
             self.msk_.mistconfig_put()
             self._ser_token_search(2)
         else:
             self._ser_token_search(-1)
 
-    def _ser_token_delete(self,arg):
-        num = self.msk_.tmp.pop()
+    def _ser_token_delete(self, arg, point):
         if arg == 0:
             if (deftkindex := self.msk_.mistconfig["default"]["defaulttoken"]) is not None:
-                if num < deftkindex:
+                if point < deftkindex:
                     self.msk_.mistconfig["default"]["defaulttoken"] -= 1
-                elif num == deftkindex:
+                elif point == deftkindex:
                     self.msk_.mistconfig["default"]["defaulttoken"] = None
-            self.msk_.mistconfig["tokens"].pop(num)
+            self.msk_.mistconfig["tokens"].pop(point)
             self.msk_.mistconfig_put()
             if len(self.msk_.mistconfig["tokens"]) == 0:
                 return
@@ -872,15 +857,15 @@ class ConfigMenu(Frame):
         if arg == 0:
             is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
             if is_ok:
-                text = (_("MiAuth check Success!\n"))
+                text = CM_T.MIAUTH_GET_SUCCESS.value + "\n"
                 self.msk_.reload()
                 userinfo = self.msk_.get_i()
                 if userinfo is not None:
                     name = userinfo["name"]
-                    text += (_('Hello {}')).format(name)
+                    text += CM_T.MIAUTH_HELLO_USER.value.format(name)
                 else:
-                    text += (_("fail to get userinfo :("))
-                    name = (_("fail to get"))
+                    text += CM_T.MIAUTH_FAIL_TO_GET_USER.value
+                    name = CM_T.MIAUTH_FAIL_TO_GET.value
                 userdict = {"name":name,"instance":self.msk_.instance,"token":self.msk_.i}
                 self.msk_.mistconfig["tokens"].append(userdict)
                 self.msk_.mistconfig_put()
@@ -889,7 +874,7 @@ class ConfigMenu(Frame):
                 self.popup(text, [CM_T.OK.value], self.refresh_)
                 self.msk_.tmp.pop()
             else:
-                text = (_("MiAuth check Fail :(\ntry again?"))
+                text = CM_T.MIAUTH_CHECK_FAIL.value
                 self.popup(text, [(_("again")), CM_T.RETURN.value], self.miauth_get)
         else:
             self.msk_.tmp.pop()
