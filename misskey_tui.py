@@ -875,17 +875,17 @@ class ConfigMenu(Frame):
                 self.msk_.tmp.pop()
             else:
                 text = CM_T.MIAUTH_CHECK_FAIL.value
-                self.popup(text, [(_("again")), CM_T.RETURN.value], self.miauth_get)
+                self.popup(text, [CM_T.MIAUTH_TRY_AGAIN.value, CM_T.RETURN.value], self.miauth_get)
         else:
             self.msk_.tmp.pop()
 
     def instance_(self, select=-1):
         if select == -1:
             if self.msk_.i is not None:
-                self.popup((_("TOKEN detect!\nchange instance will delete TOKEN.\nOk?")), [CM_T.OK.value,(_("No"))],on_close=self.instance_)
+                self.popup(CM_T.CHANGE_INSTANCE_DETECT_TOKEN.value, [CM_T.OK.value,CM_T.RETURN.value],on_close=self.instance_)
             else:
                 self.msk_.tmp.append("INSTANCE")
-                self._txtbxput((_("input instance such as 'misskey.io' 'misskey.backspace.fm'")), (_("current instance:{}")).format(self.msk_.instance),"")
+                self._txtbxput(CM_T.CHANGE_INSTANCE_HINT.value, CM_T.CHANGE_INSTANCE_CURRENT_INSTANCE.value.format(self.msk_.instance),"")
                 self._disables()
         elif select == 0:
             self.msk_.i = None
@@ -897,40 +897,40 @@ class ConfigMenu(Frame):
             self.msk_.i = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput((_("TOKEN check OK :)")))
+                self._txtbxput(CM_T.OK_TOKEN_CHECK.value)
                 i = self.msk_.get_i()
                 if i is None:
-                    name = (_("get fail"))
-                    self._txtbxput((_("fail to get your info :(")))
+                    name = (CM_T.OK_TOKEN_FAIL_TO_GET.value)
+                    self._txtbxput(CM_T.OK_TOKEN_FAIL_TO_GET_USER.value)
                 else:
                     name = i["name"]
-                    self._txtbxput((_("Hello {}!")).format(name))
+                    self._txtbxput(CM_T.OK_TOKEN_HELLO_USER.value.format(name))
                 self.msk_.mistconfig["tokens"].append({"name":name, "instance":self.msk_.instance, "token":self.msk_.i})
                 self.msk_.mistconfig_put()
                 self.refresh_(True)
             else:
                 self.msk_.i = ""
-                self._txtbxput((_("TOKEN check fail :(")))
+                self._txtbxput(CM_T.OK_TOKEN_CHECK_FAIL.value)
         elif ok_value == "INSTANCE":
             before_instance = self.msk_.instance
             self.msk_.instance = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput((_("instance connected! :)")))
+                self._txtbxput(CM_T.OK_INSTANCE_CONNECT.value)
                 is_ok = self.msk_.get_instance_meta()
                 if is_ok:
                     icon_bytes = self.msk_.get_instance_icon()
                     if icon_bytes == "Error":
-                        self._txtbxput((_("error occured while get icon :(")))
+                        self._txtbxput(CM_T.OK_INSTANCE_FAIL_TO_GET_ICON.value)
                     else:
                         icon = ImageFile(icon_bytes,self.screen.height//2)
                         self._txtbxput(icon)
                 else:
-                    self._txtbxput((_("error occured while get meta :(")))
+                    self._txtbxput(CM_T.OK_INSTANCE_FAIL_TO_GET_META.value)
             else:
                 self.msk_.instance = before_instance
-                self._txtbxput((_("instance connect fail :(")))
-            self._txtbxput((_("current instance:{}")).format(self.msk_.instance),"")
+                self._txtbxput(CM_T.OK_INSTANCE_CONNECT_FAIL.value)
+            self._txtbxput(CM_T.OK_INSTANCE_CURRENT_INSTANCE.value.format(self.msk_.instance),"")
             self.refresh_(True)
         self._disables(True)
 
@@ -958,13 +958,13 @@ class ConfigMenu(Frame):
         filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
         langlst = glob.glob(filedir)
         if len(langlst) == 0:
-            self.popup(_("there is no translation files."),[CM_T.OK.value])
+            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CM_T.OK.value])
         else:
             selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
-                selects.append(_("reset"))
+                selects.append(CM_T.LANG_RESET.value)
                 selects.append(CM_T.RETURN.value)
-                self.popup(_("select language"), selects, self.language_)
+                self.popup(CM_T.LANG_SELECT.value, selects, self.language_)
             else:
                 if arg == len(langlst)+1:
                     return

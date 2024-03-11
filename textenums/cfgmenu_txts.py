@@ -88,8 +88,29 @@ class CM_T(Enum):
     MIAUTH_GET_SUCCESS = "MiAuth check Success!"
     MIAUTH_HELLO_USER = "Hello {}"
     MIAUTH_FAIL_TO_GET = "fail to get"
-    MIAUTH_FAIL_TO_GET_USER = MIAUTH_FAIL_TO_GET+" userinfo :("
+    MIAUTH_FAIL_TO_GET_USER = "fail to get userinfo :("
     MIAUTH_CHECK_FAIL = "MiAuth check Fail :(\ntry again?"
+    MIAUTH_TRY_AGAIN = "try again"
+
+    CHANGE_INSTANCE_DETECT_TOKEN = "TOKEN detect!\nchange instance will delete TOKEN.\nOk?"
+    CHANGE_INSTANCE_HINT = "input instance such as 'misskey.io' 'misskey.backspace.fm'"
+    CHANGE_INSTANCE_CURRENT_INSTANCE = "current instance:{}"
+
+    OK_TOKEN_CHECK = "TOKEN check OK :)"
+    OK_TOKEN_CHECK_FAIL = "TOKEN check fail :("
+    OK_TOKEN_FAIL_TO_GET = MIAUTH_FAIL_TO_GET
+    OK_TOKEN_FAIL_TO_GET_USER = MIAUTH_FAIL_TO_GET_USER
+    OK_TOKEN_HELLO_USER = MIAUTH_HELLO_USER
+
+    OK_INSTANCE_CONNECT = "instance connected! :)"
+    OK_INSTANCE_CONNECT_FAIL = "instance connect fail :("
+    OK_INSTANCE_FAIL_TO_GET_ICON = "error occured while get icon :("
+    OK_INSTANCE_FAIL_TO_GET_META = "error occured while get meta :("
+    OK_INSTANCE_CURRENT_INSTANCE = CHANGE_INSTANCE_CURRENT_INSTANCE
+
+    LANG_NO_TRANSLATION_FILES = "there is no translation files."
+    LANG_RESET = "reset"
+    LANG_SELECT = "select language"
 
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":
