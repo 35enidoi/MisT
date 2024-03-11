@@ -958,7 +958,7 @@ class ConfigMenu(Frame):
         filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
         langlst = glob.glob(filedir)
         if len(langlst) == 0:
-            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CM_T.OK.value])
+            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CN_T.OK.value])
         else:
             selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
@@ -1002,7 +1002,8 @@ class CreateNote(Frame):
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,on_change=self.reminder)
 
         # buttons create
-        buttonnames = ((_("Note Create")), (_("hug punch")), (_("emoji")), (_("return")), (_("MoreConf")))
+        buttonnames = (CN_T.BT_NOTE_CREATE.value, CN_T.BT_HUG_PUNCH.value, CN_T.BT_EMOJI.value,
+                       CN_T.RETURN.value, CN_T.BT_MORE_CONF.value)
         on_click = (self.popcreatenote, self.hug_punch, self.emoji, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -1034,13 +1035,13 @@ class CreateNote(Frame):
 
     def emoji(self, arg=-1):
         if arg == -1:
-            self.popup(_("emoji select from..."), [_("deck"), _("search")], on_close=self.emoji)
+            self.popup(CN_T.EMOJI_SEL_FROM.value, [CN_T.EMOJI_SEL_FROM_DECK.value, CN_T.EMOJI_SEL_FROM_SEARCH.value], on_close=self.emoji)
         elif arg == 0:
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
-                self.popup((_("Please create reaction deck")), [CM_T.OK.value])
+                self.popup(CN_T.EMOJI_CREATE_DECK_PLS.value, [CN_T.OK.value])
             else:
-                self._scene.add_effect(PopupMenu(self.screen,[(_("return"), lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
+                self._scene.add_effect(PopupMenu(self.screen,[(CN_T.RETURN.value, lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
         elif arg == 1:
             self.msk_.tmp.append("crnote")
             raise NextScene("SelReaction")
@@ -1050,18 +1051,18 @@ class CreateNote(Frame):
         self.txtbx.value += f":{emoji}:"
 
     def popcreatenote(self):
-        self._scene.add_effect(PopUpDialog(self.screen,(_("Are you sure about that?")), [(_("Sure")), (_("No"))],self._ser_createnote))
+        self._scene.add_effect(PopUpDialog(self.screen,CN_T.CREATE_NOTE_ARE_YOU_SURE_ABOUT_THAT.value, [CN_T.OK.value, CN_T.RETURN.value],self._ser_createnote))
 
     def _ser_createnote(self,arg):
         if arg == 0:
             return_ = self.msk_.create_note(self.txtbx.value)
             if return_ is not None:
-                self._scene.add_effect(PopUpDialog(self.screen,(_("Create note success :)")), [CM_T.OK.value],on_close=self.return_))
+                self._scene.add_effect(PopUpDialog(self.screen,CN_T.CREATE_NOTE_SUCCESS.value, [CN_T.OK.value],on_close=self.return_))
                 self.msk_.crnotetxts = ""
                 self.txtbx.value = self.msk_.crnotetxts
                 self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
-                self._scene.add_effect(PopUpDialog(self.screen,(_("Create note fail :(")), [CM_T.OK.value]))
+                self._scene.add_effect(PopUpDialog(self.screen,CN_T.CREATE_NOTE_FAIL.value, [CN_T.OK.value]))
 
     def _ser_ret(self,arg):
         if arg == 0:
@@ -1074,9 +1075,13 @@ class CreateNote(Frame):
 
     def return_(self,*char):
         if (n := self.msk_.crnoteconf)["renoteId"] is not None:
-            self.popup((_("renoteId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
+            self.popup("\n".join(CN_T.RETURN_MAIN_RENOTEID_DETECT.value,
+                                 CN_T.RETURN_MAIN_DELETE_ANNOUNCE.value,
+                                 CN_T.RETURN_MAIN_CHECK.value),[CN_T.OK.value,CN_T.RETURN.value],self._ser_ret)
         elif n["replyId"] is not None:
-            self.popup((_("replyId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
+            self.popup("\n".join(CN_T.RETURN_MAIN_REPLYID_DETECT.value,
+                                 CN_T.RETURN_MAIN_DELETE_ANNOUNCE.value,
+                                 CN_T.RETURN_MAIN_CHECK.value),[CN_T.OK.value,CN_T.RETURN.value],self._ser_ret)
         else:
             raise NextScene("Main")
 
