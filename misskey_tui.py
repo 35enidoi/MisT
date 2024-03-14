@@ -1337,7 +1337,7 @@ class Notification(Frame):
         super(Notification, self).__init__(screen,
                                       screen.height,
                                       screen.width,
-                                      title=(_("Notification")),
+                                      title=NF_T.WINDOW_TITLE_NAME.value,
                                       reduce_cpu=True,
                                       can_scroll=False)
         # initialize
@@ -1348,12 +1348,13 @@ class Notification(Frame):
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
         self.txtbx.auto_scroll = False
-        self.txtbx.value = (_("Tab to change widget"))
+        self.txtbx.value = NF_T.DEAFAULT_TXTBX_VAL.value
 
         # buttons create
-        buttonnames = ((_("Get ntfy")), (_("Clear")), (_("All")), (_("Follow")),
-                       (_("Mention")), (_("Note")), (_("Reply")), (_("Quote")),
-                       (_("Select")), (_("return")))
+        buttonnames = (NF_T.BT_GET_NTFY.value, NF_T.BT_CLEAR.value, NF_T.BT_ALL.value,
+                       NF_T.BT_FOLLOW.value, NF_T.BT_MENTION.value, NF_T.BT_NOTE.value,
+                       NF_T.BT_RP.value, NF_T.BT_QT.value, NF_T.BT_SEL.value,
+                       NF_T.RETURN.value)
         on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
                     self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
                     self.select, self.return_)
@@ -1376,8 +1377,8 @@ class Notification(Frame):
         self.clear()
         ntfys = self.msk_.get_ntfy()
         if ntfys is None:
-            self._txtbxput(_("Fail to get notifications"))
-            self.popup(_("Fail to get ntfy"),[_("Ok")])
+            self._txtbxput(NF_T.GETNTFY_FAIL_TO_GET_TXTBX.value)
+            self.popup(NF_T.GETNTFY_FAIL_TO_GET.value,[NF_T.OK.value])
             self.ntfys = None
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
@@ -1405,28 +1406,28 @@ class Notification(Frame):
                         checkntfytype["else"].append(i)
             self.ntfys = checkntfytype
             self.inp_all()
-            self.popup(_("Success"),[_("Ok")])
+            self.popup(NF_T.SUCCESS.value,[NF_T.OK.value])
 
     def clear(self):
         self.txtbx.value = ""
 
     def _ser_follow(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [_("Ok")])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             self.inp_follow()
 
     def _ser_mention(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [_("Ok")])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             self.inp_mention()
 
     def _ser_note(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [_("Ok")])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             for note in self.ntfys["notes"]:
@@ -1435,7 +1436,7 @@ class Notification(Frame):
 
     def _ser_reply(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [_("Ok")])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             replys = {}
@@ -1456,12 +1457,12 @@ class Notification(Frame):
                     else:
                         username = "Deleted user?"
                         reply["user"] = {"isCat":False}
-                    self._txtbxput((_("{} was reply")).format(username), self.nyaize(reply["note"]["text"]), "")
+                    self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(reply["note"]["text"]), "")
                 self._txtbxput("-"*(self.screen.width-18))
 
     def _ser_quote(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [_("Ok")])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             quotes = {}
@@ -1482,19 +1483,19 @@ class Notification(Frame):
                     else:
                         username = "Deleted user?"
                         quote["user"] = {"isCat":False}
-                    self._txtbxput((_("{} was quoted")).format(username), self.nyaize(quote["note"]["text"]), "")
+                    self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(quote["note"]["text"]), "")
                 self._txtbxput("-"*(self.screen.width-18))
 
     def inp_all(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [_("Ok")])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             if len(self.ntfys["follow"]) != 0:
-                self._txtbxput(_("Follow comming!"))
+                self._txtbxput(NF_T.NT_FOLLOW.value)
                 self.inp_follow()
             if len(self.ntfys["mention"]) != 0:
-                self._txtbxput(_("mention comming!"))
+                self._txtbxput(NF_T.NT_MENTION.value)
                 self.inp_mention()
             for note in self.ntfys["notes"]:
                 self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
@@ -1511,13 +1512,13 @@ class Notification(Frame):
                 username = "Deleted user?"
                 ntfy["user"] = {"isCat":False}
             if (nttype := ntfy["type"]) == "reply":
-                self._txtbxput((_("{} was reply")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+                self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
             elif nttype == "quote":
-                self._txtbxput((_("{} was quoted")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+                self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
             elif nttype == "renote":
-                self._txtbxput((_("{} was renoted")).format(username))
+                self._txtbxput(NF_T.NT_RN.value.format(username))
             elif nttype == "reaction":
-                self._txtbxput((_('{} was reaction [{}]')).format(username, ntfy["reaction"]))
+                self._txtbxput(NF_T.NT_REACTION.value.format(username, ntfy["reaction"]))
         self._txtbxput("-"*(self.screen.width-18))
 
     def inp_follow(self):
@@ -1529,13 +1530,16 @@ class Notification(Frame):
             self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
 
     def select(self, arg=-1):
-        buttons = [(_("return"), lambda:None)]
+        buttons = [(NF_T.RETURN.value, lambda:None)]
         if arg == -1:
             # initialize
             if self.ntfys is None:
-                self.popup((_("Please Get ntfy")), [_("Ok")])
+                self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
             else:
-                self.popup(_("select from"),[_("Mention"),_("Reply"),_("Quote"),_("return")],self.select)
+                self.popup(NF_T.SELECT_SEL_FROM.value,[NF_T.BT_MENTION.value,
+                                                       NF_T.BT_RP.value,
+                                                       NF_T.BT_QT.value,
+                                                       NF_T.RETURN.value],self.select)
             return
         elif arg == 0:
             # mention
@@ -1565,11 +1569,11 @@ class Notification(Frame):
         self._scene.add_effect(PopupMenu(self.screen, buttons, self.screen.width//3, 0))
 
     def select_note(self, from_, arg):
-        poptxt = (_("Select note\n"))
+        poptxt = NF_T.SELECT_NOTE.value
         if from_ == 0:
             # mention
             note = self.ntfys["mention"][arg]
-            poptxt += _("type:mention\n")
+            poptxt += NF_T.SELECT_NOTE_TYPE_MENTION.value
         elif from_ == 1:
             # reply
             fromnote = []
@@ -1580,7 +1584,7 @@ class Notification(Frame):
                         fromnote.append(self.ntfys["notes"][ntfys]["value"])
                         replys.append(ntfy)
             note = replys[arg]
-            poptxt += _("type:reply\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
+            poptxt += NF_T.SELECT_NOTE_TYPE_RP.value.format(fromnote[arg]["id"], fromnote[arg]["text"])
         elif from_ == 2:
             # quote
             fromnote = []
@@ -1591,13 +1595,14 @@ class Notification(Frame):
                         fromnote.append(self.ntfys["notes"][ntfys]["value"])
                         quotes.append(ntfy)
             note = quotes[arg]
-            poptxt += _("type:quote\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
-        poptxt += _("name:{}\nusername:{}\n").format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
-                                                   note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
-        poptxt += _("noteid:{}\ntxt:{}\n").format(note["note"]["id"],note["note"]["text"])
+            poptxt += NF_T.SELECT_NOTE_TYPE_QT.value.format(fromnote[arg]["id"], fromnote[arg]["text"])
+        poptxt += NF_T.SELECT_NOTE_USER.value.format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
+                                                     note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
+        poptxt += NF_T.SELECT_NOTE_NOTE.value.format(note["note"]["id"],note["note"]["text"])
         if len(note["note"]["files"]) != 0:
-            poptxt += (_("{} files").format(len(note["note"]["files"])))
-        self.popup(poptxt, [(_("Renote")), (_("Quote")), (_("Reply")), (_("Reaction")), (_("return"))], lambda select, note_=note:self.select_do(select, note_))
+            poptxt += NF_T.SELECT_NOTE_FILES.value.format(len(note["note"]["files"]))
+        self.popup(poptxt, [NF_T.BT_RN.value, NF_T.BT_QT.value, NF_T.BT_RP.value,
+                            NF_T.BT_REACTION.value, NF_T.RETURN.value], lambda select, note_=note:self.select_do(select, note_))
 
     def select_do(self, arg, note):
         if arg == 0:
@@ -1607,7 +1612,7 @@ class Notification(Frame):
                 pass
             else:
                 text = text[:16]+"..."
-            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(note["note"]["id"],username,text), [_("Ok"),(_("No"))],on_close=lambda arg, note_=note : self._ser_rn(arg, note_))
+            self.popup(NF_T.RN_CHECK.value.format(note["note"]["id"],username,text), [NF_T.OK.value, NF_T.RETURN.value],on_close=lambda arg, note_=note : self._ser_rn(arg, note_))
         elif arg == 1:
             # Quote
             self.msk_.crnoteconf["renoteId"] = note["note"]["id"]
@@ -1618,16 +1623,19 @@ class Notification(Frame):
             raise NextScene("CreateNote")
         elif arg == 3:
             # Reaction
-            self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], lambda arg, note_=note : self._ser_reac(arg, note_))
+            self.popup(NF_T.REACTION_FROM.value, [NF_T.REACTION_FROM_NOTE.value,
+                                                  NF_T.REACTION_FROM_DECK.value,
+                                                  NF_T.REACTION_FROM_SEARCH.value,
+                                                  NF_T.RETURN.value], lambda arg, note_=note : self._ser_reac(arg, note_))
 
     def _ser_rn(self, arg, note):
         if arg == 0:
             # renote
             createnote = self.msk_.create_renote(note["note"]["id"])
             if createnote is not None:
-                self.popup((_('Create success! :)')), [_("Ok")])
+                self.popup(NF_T.RN_CREATE_SUCCESS.value, [NF_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [_("Ok")])
+                self.popup(NF_T.RN_CREATE_FAIL.value, [NF_T.OK.value])
 
     def _ser_reac(self, arg, note):
         if arg == 0:
@@ -1639,7 +1647,7 @@ class Notification(Frame):
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1, note)
             else:
-                self.popup((_("Please create reaction deck")), [_("Ok")])
+                self.popup(NF_T.REACTION_DECK_CREATE_PLS.value, [NF_T.OK.value])
         elif arg == 2:
             # search
             noteid = note["note"]["id"]
@@ -1648,7 +1656,7 @@ class Notification(Frame):
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self, arg, note):
-        reactions = [(_("return"), lambda: None)]
+        reactions = [(NF_T.RETURN.value, lambda: None)]
         noteid = note["note"]["id"]
         notereac = note["note"]["reactions"]
         for reac in notereac.keys():
@@ -1659,16 +1667,16 @@ class Notification(Frame):
         if arg == -1:
             # initialize
             if len(reactions) == 1:
-                self.popup(_("there is no reactions"), [_("Ok")])
+                self.popup(NF_T.REACTION_NOTE_THEREISNT.value, [NF_T.OK.value])
             else:
                 self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
         else:
             # Create reaction
             is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [_("Ok")])
+                self.popup(NF_T.REACTION_CREATE_SUCCESS.value, [NF_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [_("Ok")])
+                self.popup(NF_T.REACTION_CREATE_FAIL.value, [NF_T.OK.value])
 
     def _ser_reac_deck(self, arg, note):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -1676,16 +1684,16 @@ class Notification(Frame):
         if arg == -1:
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i, note_=note:self._ser_reac_deck(x,note_)) for i in range(len(reacdeck))]
-            reacmenu.insert(0, (_("return"), lambda: None))
+            reacmenu.insert(0, (NF_T.RETURN.value, lambda: None))
             self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
             noteid = note["note"]["id"]
             is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [_("Ok")])
+                self.popup(NF_T.REACTION_CREATE_SUCCESS.value, [NF_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [_("Ok")])
+                self.popup(NF_T.REACTION_CREATE_FAIL.value, [NF_T.OK.value])
 
     def _txtbxput(self,*arg):
         for i in arg:
