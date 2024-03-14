@@ -1107,7 +1107,8 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ((_("return")),"CW",(_("notevisibility")),(_("renoteId")),(_("replyId")),_("Ok"))
+        buttonnames = (CNC_T.RETURN.value, CNC_T.BT_CW.value, CNC_T.BT_NOTE_VISIBLE.value,
+                       CNC_T.BT_RENOTE_ID.value, CNC_T.BT_REPLY_ID.value, CNC_T.OK.value)
         onclicks = (self.return_,self.cw,self.notevisibility,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
@@ -1140,7 +1141,10 @@ class CreateNoteConfig(Frame):
         from misskey import enum
         if arg == -1:
             # initialize
-            self.popup(_("notevisibility"), [_("Public"),_("Home"),_("Followers"),_("return")], self.notevisibility)
+            self.popup(CNC_T.NOTE_VISIBLE_POPTXT.value, [CNC_T.NOTE_VISIBLE_PUBLIC.value,
+                                                         CNC_T.NOTE_VISIBLE_HOME.value,
+                                                         CNC_T.NOTE_VISIBLE_FOLLOWER.value,
+                                                         CNC_T.RETURN.value], self.notevisibility)
             return
         elif arg == 0:
             # Public
@@ -1172,10 +1176,10 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[_("Ok")])
+                    self.popup(CNC_T.OK_RN_SHOWNOTE.value.format(note["user"]["name"],note["text"]),[CNC_T.OK.value])
                     self.msk_.crnoteconf["renoteId"] = self.txt.value
                 else:
-                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("Ok"))])
+                    self.popup(CNC_T.OK_RN_SHOWNOTE_FAIL.value,[CNC_T.OK.value])
                     self.msk_.crnoteconf["renoteId"] = None
         elif ok_value == "reply":
             if self.txt.value == "":
@@ -1183,10 +1187,10 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("Ok"))])
+                    self.popup(CNC_T.OK_RP_SHOWNOTE.value.format(note["user"]["name"],note["text"]),[CNC_T.OK.value])
                     self.msk_.crnoteconf["replyId"] = self.txt.value
                 else:
-                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[_("Ok")])
+                    self.popup(CNC_T.OK_RP_SHOWNOTE_FAIL.value,[CNC_T.OK.value])
                     self.msk_.crnoteconf["replyId"] = None
         self.nowconf()
         self._disables(True)
