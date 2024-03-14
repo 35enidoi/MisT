@@ -1239,7 +1239,7 @@ class SelectReaction(Frame):
         self.lstbx = ListBox(self.screen.height-3, [], name="emojilist", on_select=self.select)
 
         # buttons create
-        buttonnames = ((_("GetDB")),(_("return")))
+        buttonnames = (SR_T.BT_GET_DB.value, SR_T.RETURN.value)
         on_click = (self.getdb,self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -1276,7 +1276,7 @@ class SelectReaction(Frame):
 
     def search(self):
         if self.msk_.reacdb is None:
-            self.lstbx.options = [((_("DB is None, Please GetDB.")),0)]
+            self.lstbx.options = [(SR_T.NO_DB.value,0)]
             self.txtbx.disabled = True
         else:
             self.lstbx.options = []
@@ -1294,24 +1294,24 @@ class SelectReaction(Frame):
         index = self.data["emojilist"]
         if index is None:
             pass
-        elif (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
+        elif (reaction := self.lstbx.options[index][0]) == SR_T.NO_DB.value:
             pass
         else:
             if self.flag == "search":
                 is_create_seccess = self.msk_.create_reaction(self.noteid,f":{reaction}:")
                 if is_create_seccess:
-                    self.popup((_('Create success! :)')), [_("Ok")], self.return_)
+                    self.popup(SR_T.SELECT_REACTION_CREATE_SUCCESS.value, [SR_T.OK.value], self.return_)
                 else:
-                    self.popup((_("Create fail :(")), [_("Ok")], self.return_)
+                    self.popup(SR_T.SELECT_REACTION_CREATE_FAIL.value, [SR_T.OK.value], self.return_)
             elif self.flag == "deckadd":
                 tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
                 if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
                     nowtoken["reacdeck"] = []
                 if reaction in nowtoken["reacdeck"]:
-                    self.popup((_("this reaction already in deck")), [_("Ok")])
+                    self.popup(SR_T.SELECT_DECKADD_ALREADY_IN_DECK.value, [SR_T.OK.value])
                 else:
                     nowtoken["reacdeck"].append(reaction)
-                    self.popup((_("reaction added\nname:{}")).format(reaction),[_("Ok")])
+                    self.popup(SR_T.SELECT_DECKADD.value.format(reaction),[SR_T.OK.value])
             elif self.flag == "crnote":
                 self.msk_.crnotetxts += f":{reaction}:"
                 raise NextScene("CreateNote")
@@ -1319,9 +1319,9 @@ class SelectReaction(Frame):
     def getdb(self):
         self.msk_.get_reactiondb()
         if self.msk_.reacdb is None:
-            self.popup((_("GetDB fail :(")),[_("Ok")])
+            self.popup(SR_T.GETDB_FAIL,[SR_T.OK.value])
         else:
-            self.popup((_("GetDB success!")),[_("Ok")])
+            self.popup(SR_T.GETDB_SUCCESS,[SR_T.OK.value])
             self.search()
     
     def popup(self,txt,button,on_close=None):
