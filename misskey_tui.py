@@ -602,7 +602,7 @@ class ConfigMenu(Frame):
         buttonnames = (CM_T.RETURN.value, CM_T.BT_CHANGGE_TL.value, CM_T.BT_CHANGGE_THEME.value,
                        CM_T.BT_REAC_DECK.value, CM_T.BT_TOKEN.value, CM_T.BT_INSTANCE.value,
                        CM_T.BT_CURRENT.value, CM_T.BT_VERSION.value, CM_T.BT_LANG.value,
-                       CM_T.BT_CLR.value, CM_T.BT_REFRESH.value, CM_T.OK)
+                       CM_T.BT_CLR.value, CM_T.BT_REFRESH.value, CM_T.OK.value)
         onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
                     self.poptoken, self.instance_, self.current, self.version_,
                     self.language_, self.clear_, self.refresh_, self.ok_)
