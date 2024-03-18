@@ -5,7 +5,10 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
+from functools import partial
 import os
+
+from textenums import *
 
 # _を定義
 # プログラム的には意味はない
@@ -236,9 +239,9 @@ class NoteView(Frame):
         self.note=TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
 
         # button create
-        buttonnames = (_("Quit"), _("Move L"), _("Move R"),
-                       _("Noteupdate"), _("Note Get"), _("More"),
-                       _("Config"))
+        buttonnames = (NV_T.BT_QUIT.value, NV_T.BT_MOVE_L.value, NV_T.BT_MOVE_R.value,
+                       NV_T.BT_NOTE_UP.value, NV_T.BT_NOTE_GET.value, NV_T.BT_MORE.value,
+                       NV_T.BT_CFG.value)
         on_click = (self.pop_quit, self.move_l, self.move_r,
                     self.noteupdate, self.get_note_, self.pop_more,
                     self.config)
@@ -256,13 +259,13 @@ class NoteView(Frame):
             layout2.add_widget(self.buttons[i],i)
 
         # define selfs
-        self._move_l = self.buttons[buttonnames.index(_("Move L"))]
-        self._move_r = self.buttons[buttonnames.index(_("Move R"))]
+        self._move_l = self.buttons[buttonnames.index(NV_T.BT_MOVE_L.value)]
+        self._move_r = self.buttons[buttonnames.index(NV_T.BT_MOVE_R.value)]
         self.layout = layout
         self.layout2 = layout2
 
         # disable
-        moreind = buttonnames.index(_("More"))
+        moreind = buttonnames.index(NV_T.BT_MORE.value)
         if self.msk_.i is None:
             self.buttons[moreind].disabled = True
         else:
@@ -276,9 +279,12 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             if self.msk_.mk is None:
-                self.popup((_("connect failed.\nPlease Instance recreate.")), [(_("Ok"))])
+                self.popup(NV_T.SEL_NOTE_CONNECT_FAIL.value, [NV_T.OK.value])
                 return
-            self.popup(_("note get from"),[(_("latest")),(_("until")),(_("since")),(_("return"))],self.get_note_)
+            self.popup(NV_T.SEL_NOTE_POPTXT.value,
+                       [NV_T.SEL_NOTE_POP_LATEST.value,NV_T.SEL_NOTE_POP_UNTIL.value,
+                        NV_T.SEL_NOTE_POP_SINCE.value, NV_T.RETURN.value],
+                       self.get_note_)
             return
         elif arg == 0:
             # normal(latest)
@@ -292,7 +298,7 @@ class NoteView(Frame):
             tllen = 100
             if len(self.msk_.notes) == 0:
                 # check notes available
-                self.popup((_("get note please(latest)")),[(_("Ok"))])
+                self.popup(NV_T.SEL_NOTE_NOT_AVAILABLE.value,[NV_T.OK.value])
                 return
             elif arg == 1:
                 # until
@@ -304,7 +310,7 @@ class NoteView(Frame):
                 sinceid = self.msk_.notes[self.msk_.nowpoint]["id"]
         note = self.msk_.get_note(tllen, untilid,sinceid)
         if note is None:
-            self.popup((_("something occured")), [_("Ok")])
+            self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
         else:
             self.msk_.nowpoint = 0
             self.msk_.notes = note
@@ -318,9 +324,9 @@ class NoteView(Frame):
                 self.msk_.nowpoint += dif
             self.msk_.notes = notes
             self._note_reload()
-            self.popup((_("success")), [_("Ok")])
+            self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
         else:
-            self.popup((_("something occured")), [_("Ok")])
+            self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def move_r(self):
         self.msk_.nowpoint += 1
@@ -333,7 +339,7 @@ class NoteView(Frame):
     def _note_reload(self):
         self.note.value = f"<{self.msk_.nowpoint+1}/{len(self.msk_.notes)}>\n"
         if len(self.msk_.notes) == 0:
-            self._noteput((_("something occured while noteget.")), (_("or welcome to MisT!")), (_("Tab to change widget")))
+            self._noteput(NV_T.ERROR_OCCURED.value, NV_T.WELCOME_MESSAGE.value)
             self.buttons[3].disabled = True
         else:
             self.buttons[3].disabled = False
@@ -385,7 +391,7 @@ class NoteView(Frame):
         else:
             self._noteput(note["text"],"")
         if len(note["files"]) != 0:
-            self._noteput(_("{} files").format(len(note["files"])))
+            self._noteput("{} files".format(len(note["files"])))
         self._noteput(f'{note["renoteCount"]} renotes {note["repliesCount"]} replys {sum(note["reactions"].values())} reactions',
                         "  ".join(f'{i.replace("@.","")}[{note["reactions"][i]}]' for i in note["reactions"].keys()), "")
 
@@ -394,10 +400,12 @@ class NoteView(Frame):
             self.note.value += str(i)+"\n"
 
     def pop_more(self):
-        self.popup((_("?")), [(_("Create Note")), (_("Renote")), (_("Reply")), (_("Reaction")), (_("Notification")), (_("return"))],self._ser_more)
+        self.popup(NV_T.MORE_POPTXT.value, [NV_T.MORE_CREATE_NOTE.value, NV_T.MORE_RN.value,
+                                            NV_T.MORE_RP.value, NV_T.MORE_REACTION.value,
+                                            NV_T.MOREE_NOTIFI.value, NV_T.RETURN.value], self._ser_more)
 
     def pop_quit(self):
-        self.popup((_("Quit?")), [(_("yes")), (_("no"))],self._ser_quit)
+        self.popup(NV_T.QUIT.value, [NV_T.OK.value, NV_T.RETURN.value],self._ser_quit)
 
     def _ser_more(self,arg):
         if arg == 0:
@@ -406,13 +414,13 @@ class NoteView(Frame):
         elif arg == 1:
             # Renote or Quote
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [(_("Ok"))])
+                self.popup(NV_T.MORE_SEL_GET_NOTE_PLS.value, [NV_T.OK.value])
             else:
-                self.popup((_('Renote or Quote?')).format(), [(_("Renote")), (_("Quote")), (_("Return"))],self._ser_rn)
+                self.popup(NV_T.MORE_SEL_RN_OR_QT.value, [NV_T.MORE_RN.value, NV_T.MORE_SEL_QT.value, NV_T.RETURN.value],self._ser_rn)
         elif arg == 2:
             # Reply
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [(_("Ok"))])
+                self.popup(NV_T.MORE_SEL_GET_NOTE_PLS.value, [NV_T.OK.value])
             else:
                 if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
                     if noteval["text"] is None:
@@ -426,9 +434,10 @@ class NoteView(Frame):
         elif arg == 3:
             # Reaction
             if len(self.msk_.notes) == 0:
-                self.popup((_("Please Note Get")), [(_("Ok"))])
+                self.popup(NV_T.MORE_SEL_GET_NOTE_PLS.value, [NV_T.OK.value])
             else:
-                self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], self._ser_reac)
+                self.popup(NV_T.MORE_SEL_REACTION_FROM.value, [NV_T.MORE_SEL_FROM_NOTE.value, NV_T.MORE_SEL_FROM_DECK.value,
+                                                               NV_T.MORE_SEL_FROM_SEARCH.value, NV_T.RETURN.value], self._ser_reac)
         elif arg == 4:
             # Notification
             raise NextScene("Notification")
@@ -443,7 +452,7 @@ class NoteView(Frame):
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1)
             else:
-                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+                self.popup(NV_T.SEL_REAC_FROM_DECK_NODECK.value, [NV_T.OK.value])
         elif arg == 2:
             # search
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -458,7 +467,7 @@ class NoteView(Frame):
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self,arg=-1):
-        reactions = [(_("return"), lambda: None)]
+        reactions = [(NV_T.RETURN.value, lambda: None)]
         if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
             if noteval["text"] is None:
                 noteid = noteval["renote"]["id"]
@@ -477,16 +486,16 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             if len(reactions) == 1:
-                self.popup(_("there is no reactions"), [_("Ok")])
+                self.popup(NV_T.SEL_REAC_FROM_NOTE_NOREAC.value, [NV_T.OK.value])
             else:
                 self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
         else:
             # Create reaction
             is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def _ser_reac_deck(self,arg):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -494,7 +503,7 @@ class NoteView(Frame):
         if arg == -1:
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i:self._ser_reac_deck(x)) for i in range(len(reacdeck))]
-            reacmenu.insert(0, (_("return"), lambda: None))
+            reacmenu.insert(0, (NV_T.RETURN.value, lambda: None))
             self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
@@ -507,9 +516,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def _ser_rn(self, arg):
         if arg == 0:
@@ -529,7 +538,7 @@ class NoteView(Frame):
                 text = noteval["text"]
             else:
                 text = noteval["text"][0:16]+"..."
-            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(noteid,username,text), [(_("Ok")),(_("No"))],on_close=self._ser_renote)
+            self.popup(NV_T.SEL_RN_NOTE_VAL.value.format(noteid,username,text), [NV_T.OK.value, NV_T.RETURN.value],on_close=self._ser_renote)
         if arg == 1:
             # Quote
             if (noteval := self.msk_.notes[self.msk_.nowpoint]).get("renote"):
@@ -553,9 +562,9 @@ class NoteView(Frame):
                 noteid = noteval["id"]
             createnote = self.msk_.create_renote(noteid)
             if createnote is not None:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup(NV_T.SUCCESS.value, [NV_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup(NV_T.ERROR_OCCURED.value, [NV_T.OK.value])
 
     def popup(self,txt,button,on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen,txt,button,on_close))
@@ -590,12 +599,13 @@ class ConfigMenu(Frame):
         self.txtbx.value = self.msk_.cfgtxts
 
         # buttons create
-        buttonnames = ((_("Return")), (_("Change TL")), (_("Change Theme")), (_("Reaction deck")),
-                       (_("TOKEN")), (_("Instance")), (_("Current")), (_("Version")),
-                       (_("Language")), (_("Clear")), (_("Refresh")), (_("OK")))
+        buttonnames = (CM_T.RETURN.value, CM_T.BT_CHANGGE_TL.value, CM_T.BT_CHANGGE_THEME.value,
+                       CM_T.BT_REAC_DECK.value, CM_T.BT_TOKEN.value, CM_T.BT_INSTANCE.value,
+                       CM_T.BT_CURRENT.value, CM_T.BT_VERSION.value, CM_T.BT_LANG.value,
+                       CM_T.BT_CLR.value, CM_T.BT_REFRESH.value, CM_T.OK.value)
         onclicks = (self.return_, self.poptl, self.poptheme, self.reactiondeck,
                     self.poptoken, self.instance_, self.current, self.version_,
-                    self.language_, self.clear_, self.refresh_,self.ok_)
+                    self.language_, self.clear_, self.refresh_, self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
         # Layout create
@@ -620,18 +630,22 @@ class ConfigMenu(Frame):
 
     def version_(self):
         from util import mistfigleter
-        self._txtbxput(mistfigleter()+"v"+str(self.msk_.version),"",(_("write by @iodine53@misskey.io")),"")
+        IODINE_ID = "@iodine53@misskey.io"
+        self._txtbxput(mistfigleter()+"v"+str(self.msk_.version),"",CM_T.VERSION_WRITE_BY.value.format(IODINE_ID),"")
 
     def current(self):
-        self._txtbxput((_("Instance:{}")).format(self.msk_.instance))
+        self._txtbxput(CM_T.CURRENT_INSTANCE.value.format(self.msk_.instance))
         if self.msk_.i is None:
-            self._txtbxput((_("TOKEN:None")),"")
+            self._txtbxput(CM_T.CURRENT_TOKEN_NONE.value,"")
         else:
             user = self.msk_.get_i()
             if user is not None:
-                self._txtbxput((_("TOKEN:Available")),(_(' name:{}')).format(user["name"]),(_(' username:{}')).format(user["username"]),"")
+                self._txtbxput(CM_T.CURRENT_TOKEN_AVAILABLE.value,
+                               CM_T.CURRENT_NAME.value.format(user["name"]),
+                               CM_T.CURRENT_USER_NAME.value.format(user["username"]),
+                               "")
             else:
-                self._txtbxput((_("TOKEN:Available")),(_("fail to get userinfo :(")),"")
+                self._txtbxput(CM_T.CURRENT_TOKEN_AVAILABLE.value, CM_T.ERROR_OCCURED.value,"")
 
     def clear_(self):
         self.txtbx.value = ""
@@ -646,21 +660,22 @@ class ConfigMenu(Frame):
         if arg == -1:
             # initialize
             if self.msk_.i is None:
-                self.popup((_("Please set TOKEN")), [(_("OK"))])
+                self.popup(CM_T.REAC_DECK_SET_TOKEN_PLS.value, [CM_T.OK.value])
             else:
-                self.popup((_("check deck or add deck?")), [(_("check deck")), (_("del deck")), (_("add deck")), (_("return"))], self.reactiondeck)
+                self.popup(CM_T.REAC_DECK_CHECK_OR_ADD.value, [CM_T.REAC_DECK_CHECK.value, CM_T.REAC_DECK_DEL.value,
+                                                               CM_T.REAC_DECK_ADD.value, CM_T.RETURN.value], self.reactiondeck)
         elif arg == 0:
             # check deck
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
-                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+                self.popup(CM_T.REAK_DECK_CREATE_DECK_PLS.value, [CM_T.OK.value])
             else:
                 self._scene.add_effect(PopupMenu(self.screen,[(char, lambda: None) for char in nowtoken["reacdeck"]], self.screen.width//3, 0))
         elif arg == 1:
             # del deck
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
-                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+                self.popup(CM_T.REAK_DECK_CREATE_DECK_PLS.value, [CM_T.OK.value])
             else:
                 self.reactiondel(-1)
         elif arg == 2:
@@ -677,7 +692,7 @@ class ConfigMenu(Frame):
             if len(reacmenu) == 0:
                 self.msk_.mistconfig_put()
             else:
-                reacmenu.insert(0, (_("return"), lambda: self.msk_.mistconfig_put()))
+                reacmenu.insert(0, (CM_T.RETURN.value, lambda: self.msk_.mistconfig_put()))
                 self._scene.add_effect(PopupMenu(self.screen,reacmenu, self.screen.width//3, 0))
         else:
             # del reaction
@@ -685,37 +700,31 @@ class ConfigMenu(Frame):
             self.reactiondel(-1)
 
     def poptl(self):
-        self.popup((_("Change TL")), [(_("HTL")), (_("LTL")), (_("STL")), (_("GTL"))],self._ser_tl)
+        self.popup(CM_T.BT_CHANGGE_TL.value,
+                   [CM_T.TL_HTL.value, CM_T.TL_LTL.value, CM_T.TL_STL.value, CM_T.TL_GTL.value],
+                   self._ser_tl)
 
     def poptheme(self):
-        self.popup((_("Change Theme")), [(_("default")), (_("monochrome")), (_("green")), (_("bright")), (_("return"))],self._ser_theme)
+        self.popup(CM_T.BT_CHANGGE_THEME.value,
+                   [CM_T.THEME_DEFAULT.value, CM_T.THEME_MONO.value, CM_T.THEME_GREEN.value,
+                    CM_T.THEME_BRIGHT.value, CM_T.RETURN.value],
+                   self._ser_theme)
 
     def poptoken(self):
-        self.popup((_("How to?\ncurrent instance:{}")).format(self.msk_.instance), [(_("Create")), (_("Select")), (_("return"))],self._ser_token)
+        self.popup(CM_T.TOKEN_HOWTO_NOWINS.value.format(self.msk_.instance),
+                   [CM_T.TOKEN_CREATE.value, CM_T.TOKEN_SELECT.value, CM_T.RETURN.value],
+                   self._ser_token)
 
-    def _ser_tl(self,arg):
-        if arg == 0:
-            # HTL
-            if self.msk_.i is not None:
-                self.msk_.tl = "HTL"
-                self._txtbxput((_("change TL:HomeTL")))
-            else:
-                self._txtbxput((_("HTL is TOKEN required")))
-        elif arg == 1:
-            # LTL
-            self.msk_.tl = "LTL"
-            self._txtbxput((_("change TL:LocalTL")))
-        elif arg == 2:
-            # STL
-            if self.msk_.i is not None:
-                self.msk_.tl = "STL"
-                self._txtbxput((_("change TL:SocialTL")))
-            else:
-                self._txtbxput((_("STL is TOKEN required")))
-        elif arg == 3:
-            # GTL
-            self.msk_.tl = "GTL"
-            self._txtbxput((_("change TL:GlobalTL")))
+    def _ser_tl(self, arg:int) -> None:
+        TLS = ("HTL", "LTL","STL", "GTL")
+        TLS_LANGED = (CM_T.TL_HTL.value, CM_T.TL_LTL.value,
+                      CM_T.TL_STL.value, CM_T.TL_GTL.value)
+        if arg == 0 or arg == 2:
+            if self.msk_.i is None:
+                self._txtbxput(CM_T.TL_TOKEN_REQUIRED.value.format(TLS_LANGED[arg]))
+                return
+        self.msk_.tl = TLS[arg]
+        self._txtbxput(CM_T.TL_CHANGED.value.format(TLS_LANGED[arg]))
 
     def _ser_theme(self,arg):
         if arg == 0:
@@ -735,11 +744,11 @@ class ConfigMenu(Frame):
     def _ser_token(self,arg):
         if arg == 0:
             # Create
-            self.popup((_("MiAuth or write TOKEN?")).format(),["MiAuth", (_("TOKEN")), (_("return"))],self._ser_token_create)
+            self.popup(CM_T.TOKEN_SEL_AUTH_OR_WRITE.value,["MiAuth", CM_T.BT_TOKEN.value, CM_T.RETURN.value],self._ser_token_create)
         elif arg == 1:
             # Select
             if len(self.msk_.mistconfig["tokens"]) == 0:
-                self.popup((_("Create TOKEN please.")).format(), [(_("ok"))])
+                self.popup(CM_T.TOKEN_SEL_CREATE_PLS.value, [CM_T.OK.value])
             else:
                 self._ser_token_search(-1)
     
@@ -755,101 +764,90 @@ class ConfigMenu(Frame):
             lens = self.screen.width//2
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
-            self.popup((_("miauth url\n\n{}\n\n")).format(url)+((_("cliped!")) if copysuccess else ""), [(_("check ok"))],self.miauth_get)
+            self.popup(CM_T.TOKEN_SEL_MIAUTH_URL.value, "\n", url, ("\n"+(CM_T.TOKEN_SEL_COPIED.value if copysuccess else "")),
+                       [CM_T.OK.value],
+                       self.miauth_get)
         elif arg == 1:
             # TOKEN
-            self._txtbxput((_("write your TOKEN")))
+            self._txtbxput(CM_T.TOKEN_WRITE_PLS.value)
             self.msk_.tmp.append("TOKEN")
             self._disables()
     
-    def _ser_token_search(self,arg):
+    def _ser_token_search(self, arg, *, point=0):
         token = self.msk_.mistconfig["tokens"]
-        button = [(_("L")), (_("R")), (_("Select")), (_("Delete")), (_("Set def")), (_("unset def"))]
-        if arg == -1:
-            # initialize
-            self.msk_.tmp.append(0)
-            mes = (_('<1/{}>\n\nSelect\nname:{}\ninstance:{}\ntoken:{}...').format(len(token),token[0]["name"],token[0]["instance"],token[0]["token"][0:8]))
-            self.popup(mes, button, self._ser_token_search)
-        elif arg == 0:
-            # L
-            num = self.msk_.tmp.pop()
-            if num == 0:
-                self.msk_.tmp.append(0)
-                headmes = (_("Too Left.\n"))
-            else:
-                num -= 1
-                self.msk_.tmp.append(num)
-                headmes = (_("Select\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, button,self._ser_token_search)
-        elif arg == 1:
-            # R
-            num = self.msk_.tmp.pop()
-            if num+1 == len(token):
-                self.msk_.tmp.append(num)
-                headmes = (_("Too Right.\n"))
-            else:
-                num += 1
-                self.msk_.tmp.append(num)
-                headmes = (_("Select\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, button,self._ser_token_search)
-        elif arg == 2:
+        button = [CM_T.TOKEN_SEARCH_LEFT.value, CM_T.TOKEN_SEARCH_RIGHT.value,
+                  CM_T.TOKEN_SEARCH_SEL.value, CM_T.TOKEN_SEARCH_DEL.value,
+                  CM_T.TOKEN_SEARCH_SET.value, CM_T.TOKEN_SEARCH_UNSET.value]
+        nowpoint = "<{}/{}>\n\n".format("{}", len(token))
+        name = CM_T.TOKEN_SEARCH_MES_NAME.value
+        instance = CM_T.TOKEN_SEARCH_MES_INSTANCE.value
+        token_ = CM_T.TOKEN_SEARCH_MES_TOKEN.value
+        headmes = CM_T.TOKEN_SEARCH_HEADMES_SEL.value
+        if arg == 2:
             # Select
-            num = self.msk_.tmp.pop()
-            userinfo = token[num]
-            self._txtbxput((_('select user:{}')).format(userinfo["name"]),(_('current instance:{}')).format(userinfo["instance"]),"")
+            userinfo = token[point]
             self.msk_.i = userinfo["token"]
             self.msk_.instance = userinfo["instance"]
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput((_("connect ok!")),"")
+                self._txtbxput(CM_T.TOKEN_SEARCH_SELECT_CONNECT_OK.value,"")
                 self.refresh_(True)
             else:
                 self.msk_.i = None
-                self._txtbxput((_("connect fail :(")),"")
+                self._txtbxput(CM_T.TOKEN_SEARCH_SELECT_CONNECT_FAIL.value,"")
+            self.current()
+            return
         elif arg == 3:
             # Delete
-            num = self.msk_.tmp[-1]
-            headmes = (_("Delete this?\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, [(_("Yes")),(_("No"))],self._ser_token_delete)
+            headmes = CM_T.TOKEN_SEARCH_HEADMES_DEL.value
+            func = self._ser_token_delete
+            button = [CM_T.OK.value, CM_T.RETURN.value]
         elif arg == 4:
             # Set
-            num = self.msk_.tmp[-1]
-            headmes = (_("set to default?\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes,[(_("Yes")),(_("No"))],self._ser_token_default)
-        elif arg == 5:
-            # Unset
-            num = self.msk_.tmp[-1]
-            if self.msk_.mistconfig["default"]["defaulttoken"] is None:
-                headmes = (_("default token is none\n"))
-            else:
-                self.msk_.mistconfig["default"]["defaulttoken"] = None
-                self.msk_.mistconfig_put()
-                headmes = (_("unset success!\n"))
-            mes = (_('<{}/{}>\n\n{}name:{}\ninstance:{}\ntoken:{}...').format(num+1,len(token),headmes,token[num]["name"],token[num]["instance"],token[num]["token"][0:8]))
-            self.popup(mes, button,self._ser_token_search)
+            headmes = CM_T.TOKEN_SEARCH_HEADMES_SET.value
+            func = self._ser_token_default
+            button = [CM_T.OK.value, CM_T.RETURN.value]
+        else:
+            if arg == 0:
+                # L
+                if point == 0:
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_LEFT.value
+                else:
+                    point -= 1
+            elif arg == 1:
+                # R
+                if point+1 == len(token):
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_RIGHT.value
+                else:
+                    point += 1
+            elif arg == 5:
+                # Unset
+                if self.msk_.mistconfig["default"]["defaulttoken"] is None:
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_NO_DEFAULT.value
+                else:
+                    self.msk_.mistconfig["default"]["defaulttoken"] = None
+                    self.msk_.mistconfig_put()
+                    headmes = CM_T.TOKEN_SEARCH_HEADMES_UNSET.value
+            func = self._ser_token_search
+        mes = (nowpoint+("\n".join((headmes, name, instance, token_)))).format(point+1, token[point]["name"], token[point]["instance"], token[point]["token"][:8])
+        self.popup(mes, button, partial(func, point=point))
 
-    def _ser_token_default(self,arg):
-        num = self.msk_.tmp[-1]
+    def _ser_token_default(self, arg, point):
         if arg == 0:
-            self.msk_.mistconfig["default"]["defaulttoken"] = num
+            self.msk_.mistconfig["default"]["defaulttoken"] = point
             self.msk_.mistconfig_put()
             self._ser_token_search(2)
         else:
             self._ser_token_search(-1)
 
-    def _ser_token_delete(self,arg):
-        num = self.msk_.tmp.pop()
+    def _ser_token_delete(self, arg, point):
         if arg == 0:
             if (deftkindex := self.msk_.mistconfig["default"]["defaulttoken"]) is not None:
-                if num < deftkindex:
+                if point < deftkindex:
                     self.msk_.mistconfig["default"]["defaulttoken"] -= 1
-                elif num == deftkindex:
+                elif point == deftkindex:
                     self.msk_.mistconfig["default"]["defaulttoken"] = None
-            self.msk_.mistconfig["tokens"].pop(num)
+            self.msk_.mistconfig["tokens"].pop(point)
             self.msk_.mistconfig_put()
             if len(self.msk_.mistconfig["tokens"]) == 0:
                 return
@@ -859,35 +857,35 @@ class ConfigMenu(Frame):
         if arg == 0:
             is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
             if is_ok:
-                text = (_("MiAuth check Success!\n"))
+                text = CM_T.MIAUTH_GET_SUCCESS.value + "\n"
                 self.msk_.reload()
                 userinfo = self.msk_.get_i()
                 if userinfo is not None:
                     name = userinfo["name"]
-                    text += (_('Hello {}')).format(name)
+                    text += CM_T.MIAUTH_HELLO_USER.value.format(name)
                 else:
-                    text += (_("fail to get userinfo :("))
-                    name = (_("fail to get"))
+                    text += CM_T.MIAUTH_FAIL_TO_GET_USER.value
+                    name = CM_T.MIAUTH_FAIL_TO_GET.value
                 userdict = {"name":name,"instance":self.msk_.instance,"token":self.msk_.i}
                 self.msk_.mistconfig["tokens"].append(userdict)
                 self.msk_.mistconfig_put()
                 self.msk_.notes = []
                 self.msk_.reacdb = None
-                self.popup(text, [(_("Ok"))], self.refresh_)
+                self.popup(text, [CM_T.OK.value], self.refresh_)
                 self.msk_.tmp.pop()
             else:
-                text = (_("MiAuth check Fail :(\ntry again?"))
-                self.popup(text, [(_("again")), (_("return"))], self.miauth_get)
+                text = CM_T.MIAUTH_CHECK_FAIL.value
+                self.popup(text, [CM_T.MIAUTH_TRY_AGAIN.value, CM_T.RETURN.value], self.miauth_get)
         else:
             self.msk_.tmp.pop()
 
     def instance_(self, select=-1):
         if select == -1:
             if self.msk_.i is not None:
-                self.popup((_("TOKEN detect!\nchange instance will delete TOKEN.\nOk?")), [(_("Ok")),(_("No"))],on_close=self.instance_)
+                self.popup(CM_T.CHANGE_INSTANCE_DETECT_TOKEN.value, [CM_T.OK.value,CM_T.RETURN.value],on_close=self.instance_)
             else:
                 self.msk_.tmp.append("INSTANCE")
-                self._txtbxput((_("input instance such as 'misskey.io' 'misskey.backspace.fm'")), (_("current instance:{}")).format(self.msk_.instance),"")
+                self._txtbxput(CM_T.CHANGE_INSTANCE_HINT.value, CM_T.CHANGE_INSTANCE_CURRENT_INSTANCE.value.format(self.msk_.instance),"")
                 self._disables()
         elif select == 0:
             self.msk_.i = None
@@ -899,40 +897,40 @@ class ConfigMenu(Frame):
             self.msk_.i = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput((_("TOKEN check OK :)")))
+                self._txtbxput(CM_T.OK_TOKEN_CHECK.value)
                 i = self.msk_.get_i()
                 if i is None:
-                    name = (_("get fail"))
-                    self._txtbxput((_("fail to get your info :(")))
+                    name = (CM_T.OK_TOKEN_FAIL_TO_GET.value)
+                    self._txtbxput(CM_T.OK_TOKEN_FAIL_TO_GET_USER.value)
                 else:
                     name = i["name"]
-                    self._txtbxput((_("Hello {}!")).format(name))
+                    self._txtbxput(CM_T.OK_TOKEN_HELLO_USER.value.format(name))
                 self.msk_.mistconfig["tokens"].append({"name":name, "instance":self.msk_.instance, "token":self.msk_.i})
                 self.msk_.mistconfig_put()
                 self.refresh_(True)
             else:
                 self.msk_.i = ""
-                self._txtbxput((_("TOKEN check fail :(")))
+                self._txtbxput(CM_T.OK_TOKEN_CHECK_FAIL.value)
         elif ok_value == "INSTANCE":
             before_instance = self.msk_.instance
             self.msk_.instance = self.txt.value
             is_ok = self.msk_.reload()
             if is_ok:
-                self._txtbxput((_("instance connected! :)")))
+                self._txtbxput(CM_T.OK_INSTANCE_CONNECT.value)
                 is_ok = self.msk_.get_instance_meta()
                 if is_ok:
                     icon_bytes = self.msk_.get_instance_icon()
                     if icon_bytes == "Error":
-                        self._txtbxput((_("error occured while get icon :(")))
+                        self._txtbxput(CM_T.OK_INSTANCE_FAIL_TO_GET_ICON.value)
                     else:
                         icon = ImageFile(icon_bytes,self.screen.height//2)
                         self._txtbxput(icon)
                 else:
-                    self._txtbxput((_("error occured while get meta :(")))
+                    self._txtbxput(CM_T.OK_INSTANCE_FAIL_TO_GET_META.value)
             else:
                 self.msk_.instance = before_instance
-                self._txtbxput((_("instance connect fail :(")))
-            self._txtbxput((_("current instance:{}")).format(self.msk_.instance),"")
+                self._txtbxput(CM_T.OK_INSTANCE_CONNECT_FAIL.value)
+            self._txtbxput(CM_T.OK_INSTANCE_CURRENT_INSTANCE.value.format(self.msk_.instance),"")
             self.refresh_(True)
         self._disables(True)
 
@@ -960,13 +958,13 @@ class ConfigMenu(Frame):
         filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
         langlst = glob.glob(filedir)
         if len(langlst) == 0:
-            self.popup(_("there is no translation files."),[_("Ok")])
+            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CN_T.OK.value])
         else:
             selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
-                selects.append(_("reset"))
-                selects.append(_("return"))
-                self.popup(_("select language"), selects, self.language_)
+                selects.append(CM_T.LANG_RESET.value)
+                selects.append(CM_T.RETURN.value)
+                self.popup(CM_T.LANG_SELECT.value, selects, self.language_)
             else:
                 if arg == len(langlst)+1:
                     return
@@ -1004,7 +1002,8 @@ class CreateNote(Frame):
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True,on_change=self.reminder)
 
         # buttons create
-        buttonnames = ((_("Note Create")), (_("hug punch")), (_("emoji")), (_("return")), (_("MoreConf")))
+        buttonnames = (CN_T.BT_NOTE_CREATE.value, CN_T.BT_HUG_PUNCH.value, CN_T.BT_EMOJI.value,
+                       CN_T.RETURN.value, CN_T.BT_MORE_CONF.value)
         on_click = (self.popcreatenote, self.hug_punch, self.emoji, self.return_, self.conf_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -1036,13 +1035,13 @@ class CreateNote(Frame):
 
     def emoji(self, arg=-1):
         if arg == -1:
-            self.popup(_("emoji select from..."), [_("deck"), _("search")], on_close=self.emoji)
+            self.popup(CN_T.EMOJI_SEL_FROM.value, [CN_T.EMOJI_SEL_FROM_DECK.value, CN_T.EMOJI_SEL_FROM_SEARCH.value], on_close=self.emoji)
         elif arg == 0:
             tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
             if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
-                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+                self.popup(CN_T.EMOJI_CREATE_DECK_PLS.value, [CN_T.OK.value])
             else:
-                self._scene.add_effect(PopupMenu(self.screen,[(_("return"), lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
+                self._scene.add_effect(PopupMenu(self.screen,[(CN_T.RETURN.value, lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
         elif arg == 1:
             self.msk_.tmp.append("crnote")
             raise NextScene("SelReaction")
@@ -1052,18 +1051,18 @@ class CreateNote(Frame):
         self.txtbx.value += f":{emoji}:"
 
     def popcreatenote(self):
-        self._scene.add_effect(PopUpDialog(self.screen,(_("Are you sure about that?")), [(_("Sure")), (_("No"))],self._ser_createnote))
+        self._scene.add_effect(PopUpDialog(self.screen,CN_T.CREATE_NOTE_ARE_YOU_SURE_ABOUT_THAT.value, [CN_T.OK.value, CN_T.RETURN.value],self._ser_createnote))
 
     def _ser_createnote(self,arg):
         if arg == 0:
             return_ = self.msk_.create_note(self.txtbx.value)
             if return_ is not None:
-                self._scene.add_effect(PopUpDialog(self.screen,(_("Create note success :)")), [(_("Ok"))],on_close=self.return_))
+                self._scene.add_effect(PopUpDialog(self.screen,CN_T.CREATE_NOTE_SUCCESS.value, [CN_T.OK.value],on_close=self.return_))
                 self.msk_.crnotetxts = ""
                 self.txtbx.value = self.msk_.crnotetxts
                 self.msk_.crnoteconf = self.msk_.constcrnoteconf.copy()
             else:
-                self._scene.add_effect(PopUpDialog(self.screen,(_("Create note fail :(")), [(_("Ok"))]))
+                self._scene.add_effect(PopUpDialog(self.screen,CN_T.CREATE_NOTE_FAIL.value, [CN_T.OK.value]))
 
     def _ser_ret(self,arg):
         if arg == 0:
@@ -1076,9 +1075,13 @@ class CreateNote(Frame):
 
     def return_(self,*char):
         if (n := self.msk_.crnoteconf)["renoteId"] is not None:
-            self.popup((_("renoteId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
+            self.popup("\n".join(CN_T.RETURN_MAIN_RENOTEID_DETECT.value,
+                                 CN_T.RETURN_MAIN_DELETE_ANNOUNCE.value,
+                                 CN_T.RETURN_MAIN_CHECK.value),[CN_T.OK.value,CN_T.RETURN.value],self._ser_ret)
         elif n["replyId"] is not None:
-            self.popup((_("replyId detect!\nif return, it will delete\n are you sure about that?")),[(_("sure")),(_("no"))],self._ser_ret)
+            self.popup("\n".join(CN_T.RETURN_MAIN_REPLYID_DETECT.value,
+                                 CN_T.RETURN_MAIN_DELETE_ANNOUNCE.value,
+                                 CN_T.RETURN_MAIN_CHECK.value),[CN_T.OK.value,CN_T.RETURN.value],self._ser_ret)
         else:
             raise NextScene("Main")
 
@@ -1104,7 +1107,8 @@ class CreateNoteConfig(Frame):
         self.txt = Text()
 
         # buttons
-        buttonnames = ((_("return")),"CW",(_("notevisibility")),(_("renoteId")),(_("replyId")),(_("OK")))
+        buttonnames = (CNC_T.RETURN.value, CNC_T.BT_CW.value, CNC_T.BT_NOTE_VISIBLE.value,
+                       CNC_T.BT_RENOTE_ID.value, CNC_T.BT_REPLY_ID.value, CNC_T.OK.value)
         onclicks = (self.return_,self.cw,self.notevisibility,self.renoteid,self.replyid,self.ok_)
         self.buttons = [Button(buttonnames[i],onclicks[i]) for i in range(len(buttonnames))]
 
@@ -1137,7 +1141,10 @@ class CreateNoteConfig(Frame):
         from misskey import enum
         if arg == -1:
             # initialize
-            self.popup(_("notevisibility"), [_("Public"),_("Home"),_("Followers"),_("return")], self.notevisibility)
+            self.popup(CNC_T.NOTE_VISIBLE_POPTXT.value, [CNC_T.NOTE_VISIBLE_PUBLIC.value,
+                                                         CNC_T.NOTE_VISIBLE_HOME.value,
+                                                         CNC_T.NOTE_VISIBLE_FOLLOWER.value,
+                                                         CNC_T.RETURN.value], self.notevisibility)
             return
         elif arg == 0:
             # Public
@@ -1169,10 +1176,10 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("Ok"))])
+                    self.popup(CNC_T.OK_RN_SHOWNOTE.value.format(note["user"]["name"],note["text"]),[CNC_T.OK.value])
                     self.msk_.crnoteconf["renoteId"] = self.txt.value
                 else:
-                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("ok"))])
+                    self.popup(CNC_T.OK_RN_SHOWNOTE_FAIL.value,[CNC_T.OK.value])
                     self.msk_.crnoteconf["renoteId"] = None
         elif ok_value == "reply":
             if self.txt.value == "":
@@ -1180,10 +1187,10 @@ class CreateNoteConfig(Frame):
             else:
                 note = self.msk_.noteshow(self.txt.value)
                 if note is not None:
-                    self.popup((_('user:{}\ntext:{}')).format(note["user"]["name"],note["text"]),[(_("ok"))])
+                    self.popup(CNC_T.OK_RP_SHOWNOTE.value.format(note["user"]["name"],note["text"]),[CNC_T.OK.value])
                     self.msk_.crnoteconf["replyId"] = self.txt.value
                 else:
-                    self.popup((_("note show fail :(\nmaybe this noteId is unavailable")),[(_("Ok"))])
+                    self.popup(CNC_T.OK_RP_SHOWNOTE_FAIL.value,[CNC_T.OK.value])
                     self.msk_.crnoteconf["replyId"] = None
         self.nowconf()
         self._disables(True)
@@ -1232,7 +1239,7 @@ class SelectReaction(Frame):
         self.lstbx = ListBox(self.screen.height-3, [], name="emojilist", on_select=self.select)
 
         # buttons create
-        buttonnames = ((_("GetDB")),(_("return")))
+        buttonnames = (SR_T.BT_GET_DB.value, SR_T.RETURN.value)
         on_click = (self.getdb,self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
@@ -1269,7 +1276,7 @@ class SelectReaction(Frame):
 
     def search(self):
         if self.msk_.reacdb is None:
-            self.lstbx.options = [((_("DB is None, Please GetDB.")),0)]
+            self.lstbx.options = [(SR_T.NO_DB.value,0)]
             self.txtbx.disabled = True
         else:
             self.lstbx.options = []
@@ -1287,24 +1294,24 @@ class SelectReaction(Frame):
         index = self.data["emojilist"]
         if index is None:
             pass
-        elif (reaction := self.lstbx.options[index][0]) == (_("DB is None, Please GetDB.")):
+        elif (reaction := self.lstbx.options[index][0]) == SR_T.NO_DB.value:
             pass
         else:
             if self.flag == "search":
                 is_create_seccess = self.msk_.create_reaction(self.noteid,f":{reaction}:")
                 if is_create_seccess:
-                    self.popup((_('Create success! :)')), [(_("Ok"))], self.return_)
+                    self.popup(SR_T.SELECT_REACTION_CREATE_SUCCESS.value, [SR_T.OK.value], self.return_)
                 else:
-                    self.popup((_("Create fail :(")), [(_("Ok"))], self.return_)
+                    self.popup(SR_T.SELECT_REACTION_CREATE_FAIL.value, [SR_T.OK.value], self.return_)
             elif self.flag == "deckadd":
                 tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
                 if not (nowtoken := self.msk_.mistconfig["tokens"][tokenindex]).get("reacdeck"):
                     nowtoken["reacdeck"] = []
                 if reaction in nowtoken["reacdeck"]:
-                    self.popup((_("this reaction already in deck")), [(_("Ok"))])
+                    self.popup(SR_T.SELECT_DECKADD_ALREADY_IN_DECK.value, [SR_T.OK.value])
                 else:
                     nowtoken["reacdeck"].append(reaction)
-                    self.popup((_("reaction added\nname:{}")).format(reaction),[(_("Ok"))])
+                    self.popup(SR_T.SELECT_DECKADD.value.format(reaction),[SR_T.OK.value])
             elif self.flag == "crnote":
                 self.msk_.crnotetxts += f":{reaction}:"
                 raise NextScene("CreateNote")
@@ -1312,9 +1319,9 @@ class SelectReaction(Frame):
     def getdb(self):
         self.msk_.get_reactiondb()
         if self.msk_.reacdb is None:
-            self.popup((_("GetDB fail :(")),[(_("Ok"))])
+            self.popup(SR_T.GETDB_FAIL,[SR_T.OK.value])
         else:
-            self.popup((_("GetDB success!")),[(_("Ok"))])
+            self.popup(SR_T.GETDB_SUCCESS,[SR_T.OK.value])
             self.search()
     
     def popup(self,txt,button,on_close=None):
@@ -1330,7 +1337,7 @@ class Notification(Frame):
         super(Notification, self).__init__(screen,
                                       screen.height,
                                       screen.width,
-                                      title=(_("Notification")),
+                                      title=NF_T.WINDOW_TITLE_NAME.value,
                                       reduce_cpu=True,
                                       can_scroll=False)
         # initialize
@@ -1341,12 +1348,13 @@ class Notification(Frame):
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
         self.txtbx.auto_scroll = False
-        self.txtbx.value = (_("Tab to change widget"))
+        self.txtbx.value = NF_T.DEAFAULT_TXTBX_VAL.value
 
         # buttons create
-        buttonnames = ((_("Get ntfy")), (_("Clear")), (_("All")), (_("Follow")),
-                       (_("Mention")), (_("Note")), (_("Reply")), (_("Quote")),
-                       (_("Select")), (_("return")))
+        buttonnames = (NF_T.BT_GET_NTFY.value, NF_T.BT_CLEAR.value, NF_T.BT_ALL.value,
+                       NF_T.BT_FOLLOW.value, NF_T.BT_MENTION.value, NF_T.BT_NOTE.value,
+                       NF_T.BT_RP.value, NF_T.BT_QT.value, NF_T.BT_SEL.value,
+                       NF_T.RETURN.value)
         on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
                     self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
                     self.select, self.return_)
@@ -1369,8 +1377,8 @@ class Notification(Frame):
         self.clear()
         ntfys = self.msk_.get_ntfy()
         if ntfys is None:
-            self._txtbxput(_("Fail to get notifications"))
-            self.popup(_("Fail to get ntfy"),[(_("Ok"))])
+            self._txtbxput(NF_T.GETNTFY_FAIL_TO_GET_TXTBX.value)
+            self.popup(NF_T.GETNTFY_FAIL_TO_GET.value,[NF_T.OK.value])
             self.ntfys = None
         else:
             checkntfytype = {"follow":[],"mention":[],"notes":{},"else":[]}
@@ -1398,28 +1406,28 @@ class Notification(Frame):
                         checkntfytype["else"].append(i)
             self.ntfys = checkntfytype
             self.inp_all()
-            self.popup(_("Success"),[(_("Ok"))])
+            self.popup(NF_T.SUCCESS.value,[NF_T.OK.value])
 
     def clear(self):
         self.txtbx.value = ""
 
     def _ser_follow(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             self.inp_follow()
 
     def _ser_mention(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             self.inp_mention()
 
     def _ser_note(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             for note in self.ntfys["notes"]:
@@ -1428,7 +1436,7 @@ class Notification(Frame):
 
     def _ser_reply(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             replys = {}
@@ -1449,12 +1457,12 @@ class Notification(Frame):
                     else:
                         username = "Deleted user?"
                         reply["user"] = {"isCat":False}
-                    self._txtbxput((_("{} was reply")).format(username), self.nyaize(reply["note"]["text"]), "")
+                    self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(reply["note"]["text"]), "")
                 self._txtbxput("-"*(self.screen.width-18))
 
     def _ser_quote(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             quotes = {}
@@ -1475,19 +1483,19 @@ class Notification(Frame):
                     else:
                         username = "Deleted user?"
                         quote["user"] = {"isCat":False}
-                    self._txtbxput((_("{} was quoted")).format(username), self.nyaize(quote["note"]["text"]), "")
+                    self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(quote["note"]["text"]), "")
                 self._txtbxput("-"*(self.screen.width-18))
 
     def inp_all(self):
         if self.ntfys == None:
-            self.popup((_("Please Get ntfy")), [(_("Ok"))])
+            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
         else:
             self.clear()
             if len(self.ntfys["follow"]) != 0:
-                self._txtbxput(_("Follow comming!"))
+                self._txtbxput(NF_T.NT_FOLLOW.value)
                 self.inp_follow()
             if len(self.ntfys["mention"]) != 0:
-                self._txtbxput(_("mention comming!"))
+                self._txtbxput(NF_T.NT_MENTION.value)
                 self.inp_mention()
             for note in self.ntfys["notes"]:
                 self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
@@ -1504,13 +1512,13 @@ class Notification(Frame):
                 username = "Deleted user?"
                 ntfy["user"] = {"isCat":False}
             if (nttype := ntfy["type"]) == "reply":
-                self._txtbxput((_("{} was reply")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+                self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
             elif nttype == "quote":
-                self._txtbxput((_("{} was quoted")).format(username), self.nyaize(ntfy["note"]["text"]), "")
+                self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
             elif nttype == "renote":
-                self._txtbxput((_("{} was renoted")).format(username))
+                self._txtbxput(NF_T.NT_RN.value.format(username))
             elif nttype == "reaction":
-                self._txtbxput((_('{} was reaction [{}]')).format(username, ntfy["reaction"]))
+                self._txtbxput(NF_T.NT_REACTION.value.format(username, ntfy["reaction"]))
         self._txtbxput("-"*(self.screen.width-18))
 
     def inp_follow(self):
@@ -1522,13 +1530,16 @@ class Notification(Frame):
             self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
 
     def select(self, arg=-1):
-        buttons = [(_("return"), lambda:None)]
+        buttons = [(NF_T.RETURN.value, lambda:None)]
         if arg == -1:
             # initialize
             if self.ntfys is None:
-                self.popup((_("Please Get ntfy")), [(_("Ok"))])
+                self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
             else:
-                self.popup(_("select from"),[_("Mention"),_("Reply"),_("Quote"),_("return")],self.select)
+                self.popup(NF_T.SELECT_SEL_FROM.value,[NF_T.BT_MENTION.value,
+                                                       NF_T.BT_RP.value,
+                                                       NF_T.BT_QT.value,
+                                                       NF_T.RETURN.value],self.select)
             return
         elif arg == 0:
             # mention
@@ -1558,11 +1569,11 @@ class Notification(Frame):
         self._scene.add_effect(PopupMenu(self.screen, buttons, self.screen.width//3, 0))
 
     def select_note(self, from_, arg):
-        poptxt = (_("Select note\n"))
+        poptxt = NF_T.SELECT_NOTE.value
         if from_ == 0:
             # mention
             note = self.ntfys["mention"][arg]
-            poptxt += _("type:mention\n")
+            poptxt += NF_T.SELECT_NOTE_TYPE_MENTION.value
         elif from_ == 1:
             # reply
             fromnote = []
@@ -1573,7 +1584,7 @@ class Notification(Frame):
                         fromnote.append(self.ntfys["notes"][ntfys]["value"])
                         replys.append(ntfy)
             note = replys[arg]
-            poptxt += _("type:reply\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
+            poptxt += NF_T.SELECT_NOTE_TYPE_RP.value.format(fromnote[arg]["id"], fromnote[arg]["text"])
         elif from_ == 2:
             # quote
             fromnote = []
@@ -1584,13 +1595,14 @@ class Notification(Frame):
                         fromnote.append(self.ntfys["notes"][ntfys]["value"])
                         quotes.append(ntfy)
             note = quotes[arg]
-            poptxt += _("type:quote\nfrom noteid:{}\n     txt:{}\n\n").format(fromnote[arg]["id"], fromnote[arg]["text"])
-        poptxt += _("name:{}\nusername:{}\n").format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
-                                                   note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
-        poptxt += _("noteid:{}\ntxt:{}\n").format(note["note"]["id"],note["note"]["text"])
+            poptxt += NF_T.SELECT_NOTE_TYPE_QT.value.format(fromnote[arg]["id"], fromnote[arg]["text"])
+        poptxt += NF_T.SELECT_NOTE_USER.value.format(note["user"]["username"] if note["user"]["name"] is None else note["user"]["name"],
+                                                     note["user"]["username"] if note["user"]["host"] is None else note["user"]["username"]+"@"+note["user"]["host"])
+        poptxt += NF_T.SELECT_NOTE_NOTE.value.format(note["note"]["id"],note["note"]["text"])
         if len(note["note"]["files"]) != 0:
-            poptxt += (_("{} files").format(len(note["note"]["files"])))
-        self.popup(poptxt, [(_("Renote")), (_("Quote")), (_("Reply")), (_("Reaction")), (_("return"))], lambda select, note_=note:self.select_do(select, note_))
+            poptxt += NF_T.SELECT_NOTE_FILES.value.format(len(note["note"]["files"]))
+        self.popup(poptxt, [NF_T.BT_RN.value, NF_T.BT_QT.value, NF_T.BT_RP.value,
+                            NF_T.BT_REACTION.value, NF_T.RETURN.value], lambda select, note_=note:self.select_do(select, note_))
 
     def select_do(self, arg, note):
         if arg == 0:
@@ -1600,7 +1612,7 @@ class Notification(Frame):
                 pass
             else:
                 text = text[:16]+"..."
-            self.popup((_('Renote this?\nnoteId:{}\nname:{}\ntext:{}')).format(note["note"]["id"],username,text), [(_("Ok")),(_("No"))],on_close=lambda arg, note_=note : self._ser_rn(arg, note_))
+            self.popup(NF_T.RN_CHECK.value.format(note["note"]["id"],username,text), [NF_T.OK.value, NF_T.RETURN.value],on_close=lambda arg, note_=note : self._ser_rn(arg, note_))
         elif arg == 1:
             # Quote
             self.msk_.crnoteconf["renoteId"] = note["note"]["id"]
@@ -1611,16 +1623,19 @@ class Notification(Frame):
             raise NextScene("CreateNote")
         elif arg == 3:
             # Reaction
-            self.popup((_("reaction from note or deck or search?")), [(_("note")), (_("deck")), (_("search")), (_("return"))], lambda arg, note_=note : self._ser_reac(arg, note_))
+            self.popup(NF_T.REACTION_FROM.value, [NF_T.REACTION_FROM_NOTE.value,
+                                                  NF_T.REACTION_FROM_DECK.value,
+                                                  NF_T.REACTION_FROM_SEARCH.value,
+                                                  NF_T.RETURN.value], lambda arg, note_=note : self._ser_reac(arg, note_))
 
     def _ser_rn(self, arg, note):
         if arg == 0:
             # renote
             createnote = self.msk_.create_renote(note["note"]["id"])
             if createnote is not None:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup(NF_T.RN_CREATE_SUCCESS.value, [NF_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup(NF_T.RN_CREATE_FAIL.value, [NF_T.OK.value])
 
     def _ser_reac(self, arg, note):
         if arg == 0:
@@ -1632,7 +1647,7 @@ class Notification(Frame):
             if self.msk_.mistconfig["tokens"][tokenindex].get("reacdeck"):
                 self._ser_reac_deck(-1, note)
             else:
-                self.popup((_("Please create reaction deck")), [(_("Ok"))])
+                self.popup(NF_T.REACTION_DECK_CREATE_PLS.value, [NF_T.OK.value])
         elif arg == 2:
             # search
             noteid = note["note"]["id"]
@@ -1641,7 +1656,7 @@ class Notification(Frame):
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self, arg, note):
-        reactions = [(_("return"), lambda: None)]
+        reactions = [(NF_T.RETURN.value, lambda: None)]
         noteid = note["note"]["id"]
         notereac = note["note"]["reactions"]
         for reac in notereac.keys():
@@ -1652,16 +1667,16 @@ class Notification(Frame):
         if arg == -1:
             # initialize
             if len(reactions) == 1:
-                self.popup(_("there is no reactions"), [_("Ok")])
+                self.popup(NF_T.REACTION_NOTE_THEREISNT.value, [NF_T.OK.value])
             else:
                 self._scene.add_effect(PopupMenu(self.screen, reactions, self.screen.width//3, 0))
         else:
             # Create reaction
             is_create_seccess = self.msk_.create_reaction(noteid, reactions[arg][0])
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup(NF_T.REACTION_CREATE_SUCCESS.value, [NF_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup(NF_T.REACTION_CREATE_FAIL.value, [NF_T.OK.value])
 
     def _ser_reac_deck(self, arg, note):
         tokenindex = [char["token"] for char in self.msk_.mistconfig["tokens"]].index(self.msk_.i)
@@ -1669,16 +1684,16 @@ class Notification(Frame):
         if arg == -1:
             # initialize
             reacmenu = [(reacdeck[i], lambda x=i, note_=note:self._ser_reac_deck(x,note_)) for i in range(len(reacdeck))]
-            reacmenu.insert(0, (_("return"), lambda: None))
+            reacmenu.insert(0, (NF_T.RETURN.value, lambda: None))
             self._scene.add_effect(PopupMenu(self.screen, reacmenu, self.screen.width//3, 0))
         else:
             # Create reaction
             noteid = note["note"]["id"]
             is_create_seccess = self.msk_.create_reaction(noteid,f":{reacdeck[arg]}:")
             if is_create_seccess:
-                self.popup((_('Create success! :)')), [(_("Ok"))])
+                self.popup(NF_T.REACTION_CREATE_SUCCESS.value, [NF_T.OK.value])
             else:
-                self.popup((_("Create fail :(")), [(_("Ok"))])
+                self.popup(NF_T.REACTION_CREATE_FAIL.value, [NF_T.OK.value])
 
     def _txtbxput(self,*arg):
         for i in arg:
