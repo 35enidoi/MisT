@@ -17,18 +17,25 @@ class NF_T(Enum):
 
     GET_NTFY_PLS = "Please Get ntfy"
 
+    FLAG_FOLLOW = "Follow"
+    FLAG_MENTION = "Mention"
+    FLAG_NOTE = "Note"
+    FLAG_RP = "Reply"
+    FLAG_QT = "Quote"
+    FLAG_RN = "Renote"
+    FLAG_REACTION = "Reaction"
+
     BT_GET_NTFY = "Get ntfy"
     BT_CLEAR = "Clear"
     BT_ALL = "All"
-    BT_FOLLOW = "Follow"
-    BT_MENTION = "Mention"
-    BT_NOTE = "Note"
-    BT_RP = "Reply"
-    BT_QT = "Quote"
+    BT_FOLLOW = FLAG_FOLLOW
+    BT_MENTION = FLAG_MENTION
+    BT_NOTE = FLAG_NOTE
+    BT_RP = FLAG_RP
+    BT_QT = FLAG_QT
+    BT_RN = FLAG_RN
+    BT_REACTION = FLAG_REACTION
     BT_SEL = "Select"
-
-    BT_RN = "Renote"
-    BT_REACTION = "Reaction"
 
     GETNTFY_FAIL_TO_GET_TXTBX = "Fail to get notifications"
     GETNTFY_FAIL_TO_GET = "Fail to get ntfy"

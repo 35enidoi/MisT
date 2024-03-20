@@ -1,7 +1,7 @@
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.renderers import ImageFile
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu, Divider
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
@@ -1333,7 +1333,7 @@ class SelectReaction(Frame):
         raise NextScene("Main")
 
 class Notification(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(Notification, self).__init__(screen,
                                       screen.height,
                                       screen.width,
@@ -1345,29 +1345,51 @@ class Notification(Frame):
         self.ntfys = None
         self.set_theme(self.msk_.theme)
 
+        # create flags
+        self.FLAG = [
+            True, # Follow
+            True, # Mention
+            True, # Note
+            True, # Reply
+            True, # Quote
+            True, # Renote
+            True, # Reaction
+            False # else(for DEBUG)
+        ]
+
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
         self.txtbx.auto_scroll = False
         self.txtbx.value = NF_T.DEAFAULT_TXTBX_VAL.value
+        self.flagbx = TextBox(len(self.FLAG)*2, as_string=True, readonly=True)
+        self.flagbx.auto_scroll = False
+        self.flagbx.disabled = True
+        self.flag_init()
 
         # buttons create
         buttonnames = (NF_T.BT_GET_NTFY.value, NF_T.BT_CLEAR.value, NF_T.BT_ALL.value,
                        NF_T.BT_FOLLOW.value, NF_T.BT_MENTION.value, NF_T.BT_NOTE.value,
-                       NF_T.BT_RP.value, NF_T.BT_QT.value, NF_T.BT_SEL.value,
-                       NF_T.RETURN.value)
-        on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
-                    self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
-                    self.select, self.return_)
+                       NF_T.BT_RP.value, NF_T.BT_QT.value, NF_T.BT_RN.value,
+                       NF_T.BT_REACTION.value, NF_T.BT_SEL.value, NF_T.RETURN.value)
+        on_click = (self.get_ntfy, self.clear, self.flag_all,
+                    lambda : self.flagger(0), lambda : self.flagger(1), lambda : self.flagger(2),
+                    lambda : self.flagger(3), lambda : self.flagger(4), lambda : self.flagger(5),
+                    lambda : self.flagger(6), self.select, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
-        layout = Layout([14,2,self.screen.width-16])
+        layout = Layout([max(map(len, buttonnames))*2+6,2,self.screen.width-max(map(len, buttonnames))*2-6])
         self.add_layout(layout)
 
         # add widget
+        # number 0 (buttons)
         for i in range(len(self.buttons)):
             layout.add_widget(self.buttons[i],0)
+        layout.add_widget(Divider(), 0)
+        layout.add_widget(self.flagbx, 0)
+        # number 1 (divider)
         layout.add_widget(VerticalDivider(self.screen.height),1)
+        # number 2 (notifications)
         layout.add_widget(self.txtbx,2)
 
         #fix
@@ -1389,145 +1411,102 @@ class Notification(Frame):
                     checkntfytype["mention"].append(i)
                 else:
                     if not i.get("note"):
-                        pass
+                        checkntfytype["else"].append(i)
+                        continue
                     elif (ntfytype == "renote") or (ntfytype == "quote"):
-                        if i["note"]["renote"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["renote"]["id"]] = {"value":i["note"]["renote"],"ntfy":[]}
-                        checkntfytype["notes"][i["note"]["renote"]["id"]]["ntfy"].append(i)
+                        noteval = i["note"]["renote"]
                     elif ntfytype == "reply":
-                        if i["note"]["reply"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["reply"]["id"]] = {"value":i["note"]["reply"],"ntfy":[]}
-                        checkntfytype["notes"][i["note"]["reply"]["id"]]["ntfy"].append(i)
+                        noteval = i["note"]["reply"]
                     elif ntfytype == "reaction":
-                        if i["note"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["id"]] = {"value":i["note"],"ntfy":[]}
-                        checkntfytype["notes"][i["note"]["id"]]["ntfy"].append(i)
+                        noteval = i["note"]
                     else:
                         checkntfytype["else"].append(i)
+                        continue
+                    if (id_ := noteval["id"]) not in checkntfytype["notes"]:
+                        checkntfytype["notes"][id_] = {"value":noteval, "ntfy":[]}
+                    if i.get("user"):
+                        if i["user"]["username"] is None:
+                            i["user"]["username"] = i["user"]["name"]
+                    else:
+                        i["user"] = {"username":"Deleted user?", "isCat":False}
+                    checkntfytype["notes"][id_]["ntfy"].append(i)
             self.ntfys = checkntfytype
             self.inp_all()
             self.popup(NF_T.SUCCESS.value,[NF_T.OK.value])
 
-    def clear(self):
+    def clear(self) -> None:
         self.txtbx.value = ""
 
-    def _ser_follow(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            self.inp_follow()
+    def flag_all(self) ->None:
+        for i in range(7):
+            self.FLAG[i] = True
+        self.flag_init()
+        self.inp_all()
 
-    def _ser_mention(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            self.inp_mention()
-
-    def _ser_note(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            for note in self.ntfys["notes"]:
-                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
-                self.inp_note(note)
-
-    def _ser_reply(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            replys = {}
-            for ntfys in self.ntfys["notes"]:
-                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
-                    if ntfy["type"] == "reply":
-                        if ntfys not in replys:
-                            replys[ntfys] = []
-                        replys[ntfys].append(ntfy)
-            for noteid in replys:
-                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
-                for reply in replys[noteid]:
-                    if reply.get("user"):
-                        if reply["user"]["name"] is None:
-                            username = reply["user"]["username"]
-                        else:
-                            username = reply["user"]["name"]
-                    else:
-                        username = "Deleted user?"
-                        reply["user"] = {"isCat":False}
-                    self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(reply["note"]["text"]), "")
-                self._txtbxput("-"*(self.screen.width-18))
-
-    def _ser_quote(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            quotes = {}
-            for ntfys in self.ntfys["notes"]:
-                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
-                    if ntfy["type"] == "quote":
-                        if ntfys not in quotes:
-                            quotes[ntfys] = []
-                        quotes[ntfys].append(ntfy)
-            for noteid in quotes:
-                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
-                for quote in quotes[noteid]:
-                    if quote.get("user"):
-                        if quote["user"]["name"] is None:
-                            username = quote["user"]["username"]
-                        else:
-                            username = quote["user"]["name"]
-                    else:
-                        username = "Deleted user?"
-                        quote["user"] = {"isCat":False}
-                    self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(quote["note"]["text"]), "")
-                self._txtbxput("-"*(self.screen.width-18))
+    def flagger(self, val:int) -> None:
+        self.FLAG[val] = not self.FLAG[val]
+        self.flag_init()
+        self.inp_all()
+    
+    def flag_init(self) -> None:
+        flagnames = (NF_T.FLAG_FOLLOW.value, NF_T.FLAG_MENTION.value, NF_T.FLAG_NOTE.value,
+                     NF_T.FLAG_RP.value, NF_T.FLAG_QT.value, NF_T.FLAG_RN.value,
+                     NF_T.FLAG_REACTION.value)
+        txts = ""
+        for i, v in zip(flagnames, self.FLAG):
+            txts += i+"\n"+str(v)+"\n"
+        self.flagbx.value = txts
 
     def inp_all(self):
         if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
+            pass
         else:
             self.clear()
-            if len(self.ntfys["follow"]) != 0:
+            if len(self.ntfys["follow"]) != 0 and self.FLAG[0]:
                 self._txtbxput(NF_T.NT_FOLLOW.value)
                 self.inp_follow()
-            if len(self.ntfys["mention"]) != 0:
+            if len(self.ntfys["mention"]) != 0 and self.FLAG[1]:
                 self._txtbxput(NF_T.NT_MENTION.value)
                 self.inp_mention()
-            for note in self.ntfys["notes"]:
-                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
-                self.inp_note(note)
+            if self.FLAG[2]:
+                for noteid, note in self.ntfys["notes"].items():
+                    self.inp_note(noteid, note)
+            if self.FLAG[7]:
+                for value in self.ntfys["else"]:
+                    self._txtbxput(value)
 
-    def inp_note(self, note):
-        for ntfy in self.ntfys["notes"][note]["ntfy"]:
-            if ntfy.get("user"):
-                if ntfy["user"]["name"] is None:
-                    username = ntfy["user"]["username"]
-                else:
-                    username = ntfy["user"]["name"]
+    def inp_note(self, noteid:str, note:dict):
+        txts = []
+        for ntfy in note["ntfy"]:
+            username = ntfy["user"]["name"]
+            if (nttype := ntfy["type"]) == "reply" and self.FLAG[3]:
+                txts.append(NF_T.NT_RP.value.format(username))
+                txts.append(self.nyaize(ntfy["note"]["text"]) if ntfy["user"]["isCat"] else ntfy["note"]["text"])
+            elif nttype == "quote" and self.FLAG[4]:
+                txts.append(NF_T.NT_QT.value.format(username))
+                txts.append(self.nyaize(ntfy["note"]["text"]) if ntfy["user"]["isCat"] else ntfy["note"]["text"])
+            elif nttype == "renote" and self.FLAG[5]:
+                txts.append(NF_T.NT_RN.value.format(username))
+            elif nttype == "reaction" and self.FLAG[6]:
+                txts.append(NF_T.NT_REACTION.value.format(username, ntfy["reaction"]))
             else:
-                username = "Deleted user?"
-                ntfy["user"] = {"isCat":False}
-            if (nttype := ntfy["type"]) == "reply":
-                self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
-            elif nttype == "quote":
-                self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
-            elif nttype == "renote":
-                self._txtbxput(NF_T.NT_RN.value.format(username))
-            elif nttype == "reaction":
-                self._txtbxput(NF_T.NT_REACTION.value.format(username, ntfy["reaction"]))
-        self._txtbxput("-"*(self.screen.width-18))
+                continue
+            txts.append("") # 改行のための空白
+        if len(txts) != 0:
+            self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(note["value"]["text"]) if note["value"]["user"]["isCat"] else note["value"]["text"]}', "\n")
+            for i in txts:
+                self._txtbxput(i)
+            self._txtbxput("-"*(self.screen.width-max(map(lambda x:len(x.text), self.buttons))*2-12))
 
     def inp_follow(self):
         for char in self.ntfys["follow"]:
             self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"],"")
+        self._txtbxput("-"*(self.screen.width-max(map(lambda x:len(x.text), self.buttons))*2-12))
 
     def inp_mention(self):
         for char in self.ntfys["mention"]:
-            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], (self.nyaize(char["note"]["text"]) if char["user"]["isCat"] else char["note"]["text"]),"")
+            self._txtbxput("-"*(self.screen.width-max(map(lambda x:len(x.text), self.buttons))*2-12))
 
     def select(self, arg=-1):
         buttons = [(NF_T.RETURN.value, lambda:None)]
