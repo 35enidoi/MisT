@@ -68,7 +68,7 @@ class MkAPIs():
         self.daemon = daemons.Ds(self, self.mistconfig)
         self._finds = self.daemon._startds()
 
-    def mistconfig_put(self,loadmode:bool=False) -> None:
+    def mistconfig_put(self, loadmode:bool=False) -> None:
         import json
         filepath = os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))
         if loadmode:
@@ -213,11 +213,11 @@ class MkAPIs():
         except exceptions.MisskeyAPIException:
             return None
 
-    def create_reaction(self, noteid, reaction) -> Union[bool, None]:
+    def create_reaction(self, noteid:str, reaction:str) -> bool:
         try:
             return self.mk.notes_reactions_create(noteid, reaction)
         except exceptions.MisskeyAPIException:
-            return None
+            return False
 
 class NoteView(Frame):
     def __init__(self, screen, msk:MkAPIs):
