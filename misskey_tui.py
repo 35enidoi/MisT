@@ -5,6 +5,8 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
+from typing import Union
+from io import BytesIO
 from functools import partial
 import os
 
@@ -34,6 +36,7 @@ class MkAPIs():
             self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"lang":self.lang,"defaulttoken":None},"tokens":[]}
             self.mistconfig_put()
         # MisT settings
+        self._window_hundler = ()
         self.tmp = []
         self.notes = []
         self.nowpoint = 0
@@ -65,7 +68,7 @@ class MkAPIs():
         self.daemon = daemons.Ds(self, self.mistconfig)
         self._finds = self.daemon._startds()
 
-    def mistconfig_put(self,loadmode=False):
+    def mistconfig_put(self,loadmode:bool=False) -> None:
         import json
         filepath = os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))
         if loadmode:
@@ -75,7 +78,7 @@ class MkAPIs():
             with open(filepath, "w") as f:
                 f.write(json.dumps(self.mistconfig))
 
-    def init_translation(self):
+    def init_translation(self) -> None:
         import gettext
         # 翻訳ファイルを配置するディレクトリ
         path_to_locale_dir = os.path.abspath(
@@ -102,7 +105,7 @@ class MkAPIs():
         # Pythonの組み込みグローバル領域に_という関数を束縛する
         translater.install()
 
-    def reload(self):
+    def reload(self) -> bool:
         bef_mk = self.mk
         try:
             self.mk=Misskey(self.instance,self.i)
@@ -114,19 +117,19 @@ class MkAPIs():
             self.mk = bef_mk
             return False
 
-    def miauth_load(self):
+    def miauth_load(self) -> MiAuth:
         permissions = ["read:account","write:account","read:messaging","write:messaging","read:notifications",
                        "write:notifications","read:reactions","write:reactions","write:notes"]
         return MiAuth(self.instance,name="MisT",permission=permissions)
 
-    def miauth_check(self,mia):
+    def miauth_check(self, mia:MiAuth) -> bool:
         try:
             self.i = mia.check()
             return True
         except (exceptions.MisskeyMiAuthFailedException, HTTPError):
             return False
 
-    def get_i(self):
+    def get_i(self) -> Union[dict, None]:
         try:
             return self.mk.i()
         except (exceptions.MisskeyAPIException, ConnectionError):
@@ -148,13 +151,13 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
-    def get_ntfy(self):
+    def get_ntfy(self) -> Union[dict, None]:
         try:
             return self.mk.i_notifications(100)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
-    def get_reactiondb(self):
+    def get_reactiondb(self) -> None:
         import requests
         import json
         try:
@@ -169,34 +172,33 @@ class MkAPIs():
         except ConnectTimeout:
             self.reacdb = None
 
-    def noteshow(self,noteid):
+    def noteshow(self, noteid:str) -> Union[dict, None]:
         try:
             return self.mk.notes_show(noteid)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
-    def get_instance_meta(self):
+    def get_instance_meta(self) -> bool:
         try:
             self.meta = self.mk.meta()
             return True
         except (exceptions.MisskeyAPIException, ConnectTimeout):
             return False
 
-    def get_instance_icon(self):
+    def get_instance_icon(self) -> Union[BytesIO, None]:
         import requests
         try:
             iconurl = self.meta["iconUrl"]
             returns = requests.get(iconurl)
             if returns.status_code == 200:
-                import io
-                icon = io.BytesIO(returns.content)
+                icon = BytesIO(returns.content)
                 return icon
             else:
-                return "Error"
+                return None
         except ConnectTimeout:
-            return "Error"
+            return None
 
-    def create_note(self, text):
+    def create_note(self, text:str) -> Union[dict, None]:
         try:
             return self.mk.notes_create(text, self.crnoteconf["CW"],
                                         renote_id=self.crnoteconf["renoteId"],
@@ -205,13 +207,13 @@ class MkAPIs():
         except exceptions.MisskeyAPIException:
             return None
 
-    def create_renote(self, renoteid):
+    def create_renote(self, renoteid) -> Union[dict, None]:
         try:
             return self.mk.notes_create(renote_id=renoteid)
         except exceptions.MisskeyAPIException:
             return None
 
-    def create_reaction(self, noteid, reaction):
+    def create_reaction(self, noteid, reaction) -> Union[bool, None]:
         try:
             return self.mk.notes_reactions_create(noteid, reaction)
         except exceptions.MisskeyAPIException:
@@ -588,6 +590,9 @@ class ConfigMenu(Frame):
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
 
+        # ok values hundler
+        self.ok_value_hundler = ""
+
         # txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         self.txt = Text()
@@ -848,7 +853,7 @@ class ConfigMenu(Frame):
                 return
         self._ser_token_search(-1)
 
-    def miauth_get(self,arg):
+    def miauth_get(self, url, arg):
         if arg == 0:
             is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
             if is_ok:
@@ -915,7 +920,7 @@ class ConfigMenu(Frame):
                 is_ok = self.msk_.get_instance_meta()
                 if is_ok:
                     icon_bytes = self.msk_.get_instance_icon()
-                    if icon_bytes == "Error":
+                    if icon_bytes == None:
                         self._txtbxput(CM_T.OK_INSTANCE_FAIL_TO_GET_ICON.value)
                     else:
                         icon = ImageFile(icon_bytes,self.screen.height//2)
