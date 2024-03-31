@@ -756,17 +756,17 @@ class ConfigMenu(Frame):
         if arg == 0:
             from util import pypcopy, webshow
             # MiAuth
-            self.msk_.tmp.append(self.msk_.miauth_load())
-            url = self.msk_.tmp[-1].generate_url()
+            mia = self.msk_.miauth_load()
+            url = mia.generate_url()
             webshow(url)
             copysuccess = pypcopy(url)
             space = "      \n      "
             lens = self.screen.width//2
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
-            self.popup(CM_T.TOKEN_SEL_MIAUTH_URL.value, "\n", url, ("\n"+(CM_T.TOKEN_SEL_COPIED.value if copysuccess else "")),
+            self.popup(CM_T.TOKEN_SEL_MIAUTH_URL.value + "\n" + url + ("\n"+(CM_T.TOKEN_SEL_COPIED.value if copysuccess else "")),
                        [CM_T.OK.value],
-                       self.miauth_get)
+                       partial(self.miauth_get, mia))
         elif arg == 1:
             # TOKEN
             self._txtbxput(CM_T.TOKEN_WRITE_PLS.value)
@@ -853,9 +853,9 @@ class ConfigMenu(Frame):
                 return
         self._ser_token_search(-1)
 
-    def miauth_get(self, url, arg):
+    def miauth_get(self, mia:MiAuth, arg):
         if arg == 0:
-            is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
+            is_ok = self.msk_.miauth_check(mia)
             if is_ok:
                 text = CM_T.MIAUTH_GET_SUCCESS.value + "\n"
                 self.msk_.reload()
@@ -872,12 +872,9 @@ class ConfigMenu(Frame):
                 self.msk_.notes = []
                 self.msk_.reacdb = None
                 self.popup(text, [CM_T.OK.value], self.refresh_)
-                self.msk_.tmp.pop()
             else:
                 text = CM_T.MIAUTH_CHECK_FAIL.value
-                self.popup(text, [CM_T.MIAUTH_TRY_AGAIN.value, CM_T.RETURN.value], self.miauth_get)
-        else:
-            self.msk_.tmp.pop()
+                self.popup(text, [CM_T.MIAUTH_TRY_AGAIN.value, CM_T.RETURN.value], partial(self.miauth_get, mia))
 
     def instance_(self, select=-1):
         if select == -1:
