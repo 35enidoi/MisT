@@ -5,7 +5,7 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, Ver
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
-from typing import Union
+from typing import Union, Any
 from io import BytesIO
 from functools import partial
 import os
@@ -13,6 +13,9 @@ import os
 from textenums import *
 
 class MkAPIs():
+    class WindowHundlerError(Exception):
+        pass
+
     def __init__(self) -> None:
         # version
         # syoumi tekitouni ageteru noha naisyo
@@ -36,8 +39,7 @@ class MkAPIs():
             self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"lang":self.lang,"defaulttoken":None},"tokens":[]}
             self.mistconfig_put()
         # MisT settings
-        self._window_hundler = ()
-        self.tmp = []
+        self.__window_hundler:Union[tuple[str, tuple[Any]], tuple[()]] = tuple()
         self.notes = []
         self.nowpoint = 0
         self.reacdb = None
@@ -67,6 +69,23 @@ class MkAPIs():
         # daemons initalize
         self.daemon = daemons.Ds(self, self.mistconfig)
         self._finds = self.daemon._startds()
+
+    def window_hundler_set(self, targetscene:str, *args:Any) -> None:
+        if self.__window_hundler  == ():
+            self.__window_hundler = (targetscene, args)
+        else:
+            raise self.WindowHundlerError("Window hundler not empty")
+    
+    def window_hundler_get(self, _scn:Scene) -> tuple[Any]:
+        if self.__window_hundler != ():
+            if _scn.name == self.__window_hundler[0]:
+                ret = self.__window_hundler[1]
+                self.__window_hundler = ()
+                return ret
+            else:
+                raise self.WindowHundlerError(f"Scene name `{_scn.name}` is not target scene `{self.__window_hundler[0]}`")
+        else:
+            raise self.WindowHundlerError("Window hundler empty")
 
     def mistconfig_put(self, loadmode:bool=False) -> None:
         import json
@@ -459,8 +478,7 @@ class NoteView(Frame):
                     noteid = noteval["id"]
             else:
                 noteid = noteval["id"]
-            self.msk_.tmp.append(noteid)
-            self.msk_.tmp.append("searchmode")
+            self.msk_.window_hundler_set("SelReaction", "searchmode", noteid)
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self,arg=-1):
@@ -680,7 +698,7 @@ class ConfigMenu(Frame):
                 self.reactiondel(-1)
         elif arg == 2:
             # add deck
-            self.msk_.tmp.append("deck")
+            self.msk_.window_hundler_set("SelReaction", "deck")
             raise NextScene("SelReaction")
     
     def reactiondel(self, arg):
@@ -1041,7 +1059,7 @@ class CreateNote(Frame):
             else:
                 self._scene.add_effect(PopupMenu(self.screen,[(CN_T.RETURN.value, lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
         elif arg == 1:
-            self.msk_.tmp.append("crnote")
+            self.msk_.window_hundler_set("SelReaction", "crnote")
             raise NextScene("SelReaction")
 
     def put_emoji(self, arg):
@@ -1262,20 +1280,14 @@ class SelectReaction(Frame):
         self.fix()
 
     def load(self):
-        if len(self.msk_.tmp) != 0:
-            if (tmpval := self.msk_.tmp[-1]) == "searchmode":
-                self.msk_.tmp.pop()
-                self.flag = "search"
-                self.noteid = self.msk_.tmp.pop()
-            elif tmpval == "deck":
-                self.msk_.tmp.pop()
-                self.flag = "deckadd"
-            elif tmpval == "crnote":
-                self.flag = self.msk_.tmp.pop()
-            else:
-                self.flag = ""
-        else:
-            self.flag = ""
+        tmpval = self.msk_.window_hundler_get(self._scene)
+        if tmpval[0] == "searchmode":
+            self.flag = "search"
+            self.noteid = tmpval[1]
+        elif tmpval[0] == "deck":
+            self.flag = "deckadd"
+        elif tmpval[0] == "crnote":
+            self.flag = "createnote"
 
     def search(self):
         if self.msk_.reacdb is None:
@@ -1315,7 +1327,7 @@ class SelectReaction(Frame):
                 else:
                     nowtoken["reacdeck"].append(reaction)
                     self.popup(SR_T.SELECT_DECKADD.value.format(reaction),[SR_T.OK.value])
-            elif self.flag == "crnote":
+            elif self.flag == "createnote":
                 self.msk_.crnotetxts += f":{reaction}:"
                 raise NextScene("CreateNote")
 
@@ -1633,8 +1645,7 @@ class Notification(Frame):
         elif arg == 2:
             # search
             noteid = note["note"]["id"]
-            self.msk_.tmp.append(noteid)
-            self.msk_.tmp.append("searchmode")
+            self.msk_.window_hundler_set("SelReaction", "searchmode", noteid)
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self, arg, note):
