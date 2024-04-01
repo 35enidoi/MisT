@@ -21,23 +21,7 @@ class MkAPIs():
         # syoumi tekitouni ageteru noha naisyo
         self.version = 0.4
         # mistconfig load
-        if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
-            self.mistconfig_put(True)
-            if self.mistconfig["version"] < self.version:
-                self.mistconfig["version"] = self.version
-                if not self.mistconfig.get("default"):
-                    self.mistconfig["default"] = {"theme":"default","lang":None,"defaulttoken":None}
-                self.lang = self.mistconfig["default"].get("lang")
-                self.theme = self.mistconfig["default"]["theme"]
-                self.mistconfig_put()
-            else:
-                self.lang = self.mistconfig["default"].get("lang")
-                self.theme = self.mistconfig["default"]["theme"]
-        else:
-            self.lang = None
-            self.theme = "default"
-            self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"lang":self.lang,"defaulttoken":None},"tokens":[]}
-            self.mistconfig_put()
+        self._mistconfig_init()
         # MisT settings
         self.__window_hundler:Union[tuple[str, tuple[Any]], tuple[()]] = tuple()
         self.notes = []
@@ -49,16 +33,7 @@ class MkAPIs():
         self.constcrnoteconf = self.crnoteconf.copy()
         self.init_translation()
         # Misskey py settings
-        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
-            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
-                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
-                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
-            else:
-                self.i = None
-                self.instance = "misskey.io"
-        else:
-            self.i = None
-            self.instance = "misskey.io"
+        self._misskeypy_init()
         self.mk = None
         self.tl = "LTL"
         is_ok = self.reload()
@@ -123,6 +98,49 @@ class MkAPIs():
 
         # Pythonの組み込みグローバル領域に_という関数を束縛する
         translater.install()
+
+    def _mistconfig_init(self) -> None:
+        if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
+            # mistconfigがあったら、まずロード
+            self.mistconfig_put(True)
+            if self.mistconfig["version"] < self.version:
+                # バージョンが下なら、mistconfigのバージョン上げ
+                self.mistconfig["version"] = self.version
+                # もしdefaultがなければ作る
+                # v0.43で廃止予定
+                if not self.mistconfig.get("default"):
+                    self.mistconfig["default"] = {"theme":"default","lang":None,"defaulttoken":None}
+                # 保存
+                self.mistconfig_put()
+            self.lang = self.mistconfig["default"].get("lang")
+            self.theme = self.mistconfig["default"]["theme"]
+        else:
+            # mistconfig無ければ
+            self.lang = None
+            self.theme = "default"
+            self.mistconfig = {"version":self.version,
+                               "default":{"theme":self.theme,
+                                          "lang":self.lang,
+                                          "defaulttoken":None},
+                                "tokens":[]}
+            # 保存
+            self.mistconfig_put()
+
+    def _misskeypy_init(self) -> None:
+        __DEFAULT_INSTANCE = "misskey.io"
+        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
+            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
+                # defaultがあるとき
+                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
+                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
+            else:
+                # defaultがないとき
+                self.i = None
+                self.instance = __DEFAULT_INSTANCE
+        else:
+            # defaultがないとき
+            self.i = None
+            self.instance = __DEFAULT_INSTANCE
 
     def reload(self) -> bool:
         bef_mk = self.mk
