@@ -244,7 +244,7 @@ class MkAPIs():
         except exceptions.MisskeyAPIException:
             return None
 
-    def create_renote(self, renoteid) -> Union[dict, None]:
+    def create_renote(self, renoteid:str) -> Union[dict, None]:
         try:
             return self.mk.notes_create(renote_id=renoteid)
         except exceptions.MisskeyAPIException:
