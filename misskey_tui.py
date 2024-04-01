@@ -956,7 +956,7 @@ class ConfigMenu(Frame):
         filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
         langlst = glob.glob(filedir)
         if len(langlst) == 0:
-            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CN_T.OK.value])
+            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CM_T.OK.value])
         else:
             selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
@@ -1322,9 +1322,9 @@ class SelectReaction(Frame):
     def getdb(self):
         self.msk_.get_reactiondb()
         if self.msk_.reacdb is None:
-            self.popup(SR_T.GETDB_FAIL,[SR_T.OK.value])
+            self.popup(SR_T.GETDB_FAIL.value,[SR_T.OK.value])
         else:
-            self.popup(SR_T.GETDB_SUCCESS,[SR_T.OK.value])
+            self.popup(SR_T.GETDB_SUCCESS.value,[SR_T.OK.value])
             self.search()
     
     def popup(self,txt,button,on_close=None):
