@@ -1,0 +1,696 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2024-02-04 03:03+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+msgid "Quit"
+msgstr "81 117 105 116"
+
+msgid "Move L"
+msgstr "77 111 118 101 32 76"
+
+msgid "Move R"
+msgstr "77 111 118 101 32 82"
+
+msgid "Note Get"
+msgstr "78 111 116 101 32 71 101 116"
+
+msgid "Noteupdate"
+msgstr "78 111 116 101 117 112 100 97 116 101"
+
+msgid "More"
+msgstr "77 111 114 101"
+
+msgid "Config"
+msgstr "67 111 110 102 105 103"
+
+msgid ""
+"connect failed.\n"
+"Please Instance recreate."
+msgstr ""
+"99 111 110 110 101 99 116 32 102 97 105 108 101 100 46 \n"
+" 80 108 101 97 115 101 32 73 110 115 116 97 110 99 101 32 114 101 99 114 101 97 116 101 46"
+
+msgid "Ok"
+msgstr "79 107"
+
+msgid "latest"
+msgstr "108 97 116 101 115 116"
+
+msgid "note get from"
+msgstr "110 111 116 101 32 103 101 116 32 102 114 111 109"
+
+msgid "since"
+msgstr "115 105 110 99 101"
+
+msgid "until"
+msgstr "117 110 116 105 108"
+
+msgid "return"
+msgstr "114 101 116 117 114 110"
+
+msgid "get note please(latest)"
+msgstr ""
+"103 101 116 32 110 111 116 101 32 112 108 101 97 115 101 40 108 97 116 101 "
+"115 116 41"
+
+msgid "something occured"
+msgstr "115 111 109 101 116 104 105 110 103 32 111 99 99 117 114 101 100"
+
+msgid "success"
+msgstr "115 117 99 99 101 115 115"
+
+msgid "or welcome to MisT!"
+msgstr "111 114 32 119 101 108 99 111 109 101 32 116 111 32 77 105 115 84 33"
+
+msgid "something occured while noteget."
+msgstr ""
+"115 111 109 101 116 104 105 110 103 32 111 99 99 117 114 101 100 32 119 104 "
+"105 108 101 32 110 111 116 101 103 101 116 46"
+
+msgid "Tab to change widget"
+msgstr ""
+"84 97 98 32 116 111 32 99 104 97 110 103 101 32 119 105 100 103 101 116"
+
+msgid "{} files"
+msgstr "{} 32 102 105 108 101 115"
+
+msgid "?"
+msgstr "63"
+
+msgid "Create Note"
+msgstr "67 114 101 97 116 101 32 78 111 116 101"
+
+msgid "Renote"
+msgstr "82 101 110 111 116 101"
+
+msgid "Notification"
+msgstr "78 111 116 105 102 105 99 97 116 105 111 110"
+
+msgid "Reply"
+msgstr "82 101 112 108 121"
+
+msgid "Reaction"
+msgstr "82 101 97 99 116 105 111 110"
+
+msgid "Quit?"
+msgstr "81 117 105 116 63"
+
+msgid "yes"
+msgstr "121 101 115"
+
+msgid "no"
+msgstr "110 111"
+
+msgid "Please Note Get"
+msgstr "80 108 101 97 115 101 32 78 111 116 101 32 71 101 116"
+
+msgid "Renote or Quote?"
+msgstr "82 101 110 111 116 101 32 111 114 32 81 117 111 116 101 63"
+
+msgid "Return"
+msgstr "82 101 116 117 114 110"
+
+msgid "Quote"
+msgstr "81 117 111 116 101"
+
+msgid "deck"
+msgstr "100 101 99 107"
+
+msgid "search"
+msgstr "115 101 97 114 99 104"
+
+msgid "note"
+msgstr "110 111 116 101"
+
+msgid "reaction from note or deck or search?"
+msgstr ""
+"114 101 97 99 116 105 111 110 32 102 114 111 109 32 110 111 116 101 32 111 "
+"114 32 100 101 99 107 32 111 114 32 115 101 97 114 99 104 63"
+
+msgid "Please create reaction deck"
+msgstr ""
+"80 108 101 97 115 101 32 99 114 101 97 116 101 32 114 101 97 99 116 105 111 "
+"110 32 100 101 99 107"
+
+msgid "there is no reactions"
+msgstr ""
+"116 104 101 114 101 32 105 115 32 110 111 32 114 101 97 99 116 105 111 110 "
+"115"
+
+msgid "Create success! :)"
+msgstr "67 114 101 97 116 101 32 115 117 99 99 101 115 115 33 32 58 41"
+
+msgid "Create fail :("
+msgstr "67 114 101 97 116 101 32 102 97 105 108 32 58 40"
+
+msgid "No"
+msgstr "78 111"
+
+msgid ""
+"Renote this?\n"
+"noteId:{}\n"
+"name:{}\n"
+"text:{}"
+msgstr ""
+"82 101 110 111 116 101 32 116 104 105 115 63 \n"
+" 110 111 116 101 73 100 58 {} \n"
+" 110 97 109 101 58 {} \n"
+" 116 101 120 116 58 {}"
+
+msgid "Reaction deck"
+msgstr "82 101 97 99 116 105 111 110 32 100 101 99 107"
+
+msgid "Change TL"
+msgstr "67 104 97 110 103 101 32 84 76"
+
+msgid "Change Theme"
+msgstr "67 104 97 110 103 101 32 84 104 101 109 101"
+
+msgid "Current"
+msgstr "67 117 114 114 101 110 116"
+
+msgid "Instance"
+msgstr "73 110 115 116 97 110 99 101"
+
+msgid "Version"
+msgstr "86 101 114 115 105 111 110"
+
+msgid "TOKEN"
+msgstr "84 79 75 69 78"
+
+msgid "Language"
+msgstr "76 97 110 103 117 97 103 101"
+
+msgid "Refresh"
+msgstr "82 101 102 114 101 115 104"
+
+msgid "OK"
+msgstr "79 75"
+
+msgid "Clear"
+msgstr "67 108 101 97 114"
+
+msgid "write by @iodine53@misskey.io"
+msgstr ""
+"119 114 105 116 101 32 98 121 32 64 105 111 100 105 110 101 53 51 64 109 105"
+" 115 115 107 101 121 46 105 111"
+
+msgid "Instance:{}"
+msgstr "73 110 115 116 97 110 99 101 58 {}"
+
+msgid "TOKEN:None"
+msgstr "84 79 75 69 78 58 78 111 110 101"
+
+msgid " name:{}"
+msgstr "32 110 97 109 101 58 {}"
+
+msgid " username:{}"
+msgstr "32 117 115 101 114 110 97 109 101 58 {}"
+
+msgid "TOKEN:Available"
+msgstr "84 79 75 69 78 58 65 118 97 105 108 97 98 108 101"
+
+msgid "fail to get userinfo :("
+msgstr ""
+"102 97 105 108 32 116 111 32 103 101 116 32 117 115 101 114 105 110 102 111 "
+"32 58 40"
+
+msgid "Please set TOKEN"
+msgstr "80 108 101 97 115 101 32 115 101 116 32 84 79 75 69 78"
+
+msgid "add deck"
+msgstr "97 100 100 32 100 101 99 107"
+
+msgid "check deck"
+msgstr "99 104 101 99 107 32 100 101 99 107"
+
+msgid "check deck or add deck?"
+msgstr ""
+"99 104 101 99 107 32 100 101 99 107 32 111 114 32 97 100 100 32 100 101 99 "
+"107 63"
+
+msgid "del deck"
+msgstr "100 101 108 32 100 101 99 107"
+
+msgid "GTL"
+msgstr "71 84 76"
+
+msgid "HTL"
+msgstr "72 84 76"
+
+msgid "LTL"
+msgstr "76 84 76"
+
+msgid "STL"
+msgstr "83 84 76"
+
+msgid "bright"
+msgstr "98 114 105 103 104 116"
+
+msgid "default"
+msgstr "100 101 102 97 117 108 116"
+
+msgid "green"
+msgstr "103 114 101 101 110"
+
+msgid "monochrome"
+msgstr "109 111 110 111 99 104 114 111 109 101"
+
+msgid "Create"
+msgstr "67 114 101 97 116 101"
+
+msgid ""
+"How to?\n"
+"current instance:{}"
+msgstr ""
+"72 111 119 32 116 111 63 \n"
+" 99 117 114 114 101 110 116 32 105 110 115 116 97 110 99 101 58 {}"
+
+msgid "Select"
+msgstr "83 101 108 101 99 116"
+
+msgid "change TL:HomeTL"
+msgstr "99 104 97 110 103 101 32 84 76 58 72 111 109 101 84 76"
+
+msgid "HTL is TOKEN required"
+msgstr ""
+"72 84 76 32 105 115 32 84 79 75 69 78 32 114 101 113 117 105 114 101 100"
+
+msgid "change TL:LocalTL"
+msgstr "99 104 97 110 103 101 32 84 76 58 76 111 99 97 108 84 76"
+
+msgid "change TL:SocialTL"
+msgstr "99 104 97 110 103 101 32 84 76 58 83 111 99 105 97 108 84 76"
+
+msgid "STL is TOKEN required"
+msgstr ""
+"83 84 76 32 105 115 32 84 79 75 69 78 32 114 101 113 117 105 114 101 100"
+
+msgid "change TL:GlobalTL"
+msgstr "99 104 97 110 103 101 32 84 76 58 71 108 111 98 97 108 84 76"
+
+msgid "MiAuth or write TOKEN?"
+msgstr ""
+"77 105 65 117 116 104 32 111 114 32 119 114 105 116 101 32 84 79 75 69 78 63"
+
+msgid "Create TOKEN please."
+msgstr "67 114 101 97 116 101 32 84 79 75 69 78 32 112 108 101 97 115 101 46"
+
+msgid "ok"
+msgstr "111 107"
+
+msgid "check ok"
+msgstr "99 104 101 99 107 32 111 107"
+
+msgid "cliped!"
+msgstr "99 108 105 112 101 100 33"
+
+msgid ""
+"miauth url\n"
+"\n"
+"{}\n"
+"\n"
+msgstr ""
+"109 105 97 117 116 104 32 117 114 108 \n"
+" \n"
+" {} \n"
+" \n"
+
+msgid "write your TOKEN"
+msgstr "119 114 105 116 101 32 121 111 117 114 32 84 79 75 69 78"
+
+msgid "Delete"
+msgstr "68 101 108 101 116 101"
+
+msgid "L"
+msgstr "76"
+
+msgid "R"
+msgstr "82"
+
+msgid "Set def"
+msgstr "83 101 116 32 100 101 102"
+
+msgid "unset def"
+msgstr "117 110 115 101 116 32 100 101 102"
+
+msgid ""
+"<1/{}>\n"
+"\n"
+"Select\n"
+"name:{}\n"
+"instance:{}\n"
+"token:{}..."
+msgstr ""
+"60 49 47 {} 62 \n"
+" \n"
+" 83 101 108 101 99 116 \n"
+" 110 97 109 101 58 {} \n"
+" 105 110 115 116 97 110 99 101 58 {} \n"
+" 116 111 107 101 110 58 {} 46 46 46"
+
+msgid "Too Left.\n"
+msgstr "84 111 111 32 76 101 102 116 46 \n"
+
+msgid "Select\n"
+msgstr "83 101 108 101 99 116 \n"
+
+msgid ""
+"<{}/{}>\n"
+"\n"
+"{}name:{}\n"
+"instance:{}\n"
+"token:{}..."
+msgstr ""
+"60 {} 47 {} 62 \n"
+" \n"
+" {} 110 97 109 101 58 {} \n"
+" 105 110 115 116 97 110 99 101 58 {} \n"
+" 116 111 107 101 110 58 {} 46 46 46"
+
+msgid "Too Right.\n"
+msgstr "84 111 111 32 82 105 103 104 116 46 \n"
+
+msgid "select user:{}"
+msgstr "115 101 108 101 99 116 32 117 115 101 114 58 {}"
+
+msgid "current instance:{}"
+msgstr "99 117 114 114 101 110 116 32 105 110 115 116 97 110 99 101 58 {}"
+
+msgid "connect ok!"
+msgstr "99 111 110 110 101 99 116 32 111 107 33"
+
+msgid "connect fail :("
+msgstr "99 111 110 110 101 99 116 32 102 97 105 108 32 58 40"
+
+msgid "Delete this?\n"
+msgstr "68 101 108 101 116 101 32 116 104 105 115 63 \n"
+
+msgid "Yes"
+msgstr "89 101 115"
+
+msgid "set to default?\n"
+msgstr "115 101 116 32 116 111 32 100 101 102 97 117 108 116 63 \n"
+
+msgid "default token is none\n"
+msgstr ""
+"100 101 102 97 117 108 116 32 116 111 107 101 110 32 105 115 32 110 111 110 "
+"101 \n"
+
+msgid "unset success!\n"
+msgstr "117 110 115 101 116 32 115 117 99 99 101 115 115 33 \n"
+
+msgid "MiAuth check Success!\n"
+msgstr ""
+"77 105 65 117 116 104 32 99 104 101 99 107 32 83 117 99 99 101 115 115 33 \n"
+
+msgid "Hello {}"
+msgstr "72 101 108 108 111 32 {}"
+
+msgid "fail to get"
+msgstr "102 97 105 108 32 116 111 32 103 101 116"
+
+msgid ""
+"MiAuth check Fail :(\n"
+"try again?"
+msgstr ""
+"77 105 65 117 116 104 32 99 104 101 99 107 32 70 97 105 108 32 58 40 \n"
+" 116 114 121 32 97 103 97 105 110 63"
+
+msgid "again"
+msgstr "97 103 97 105 110"
+
+msgid ""
+"TOKEN detect!\n"
+"change instance will delete TOKEN.\n"
+"Ok?"
+msgstr ""
+"84 79 75 69 78 32 100 101 116 101 99 116 33 \n"
+" 99 104 97 110 103 101 32 105 110 115 116 97 110 99 101 32 119 105 108 108 32 100 101 108 101 116 101 32 84 79 75 69 78 46 \n"
+" 79 107 63"
+
+msgid "input instance such as 'misskey.io' 'misskey.backspace.fm'"
+msgstr ""
+"105 110 112 117 116 32 105 110 115 116 97 110 99 101 32 115 117 99 104 32 97"
+" 115 32 39 109 105 115 115 107 101 121 46 105 111 39 32 39 109 105 115 115 "
+"107 101 121 46 98 97 99 107 115 112 97 99 101 46 102 109 39"
+
+msgid "TOKEN check OK :)"
+msgstr "84 79 75 69 78 32 99 104 101 99 107 32 79 75 32 58 41"
+
+msgid "get fail"
+msgstr "103 101 116 32 102 97 105 108"
+
+msgid "fail to get your info :("
+msgstr ""
+"102 97 105 108 32 116 111 32 103 101 116 32 121 111 117 114 32 105 110 102 "
+"111 32 58 40"
+
+msgid "Hello {}!"
+msgstr "72 101 108 108 111 32 {} 33"
+
+msgid "TOKEN check fail :("
+msgstr "84 79 75 69 78 32 99 104 101 99 107 32 102 97 105 108 32 58 40"
+
+msgid "instance connected! :)"
+msgstr ""
+"105 110 115 116 97 110 99 101 32 99 111 110 110 101 99 116 101 100 33 32 58 "
+"41"
+
+msgid "error occured while get icon :("
+msgstr ""
+"101 114 114 111 114 32 111 99 99 117 114 101 100 32 119 104 105 108 101 32 "
+"103 101 116 32 105 99 111 110 32 58 40"
+
+msgid "error occured while get meta :("
+msgstr ""
+"101 114 114 111 114 32 111 99 99 117 114 101 100 32 119 104 105 108 101 32 "
+"103 101 116 32 109 101 116 97 32 58 40"
+
+msgid "instance connect fail :("
+msgstr ""
+"105 110 115 116 97 110 99 101 32 99 111 110 110 101 99 116 32 102 97 105 108"
+" 32 58 40"
+
+msgid "there is no translation files."
+msgstr ""
+"116 104 101 114 101 32 105 115 32 110 111 32 116 114 97 110 115 108 97 116 "
+"105 111 110 32 102 105 108 101 115 46"
+
+msgid "reset"
+msgstr "114 101 115 101 116"
+
+msgid "select language"
+msgstr "115 101 108 101 99 116 32 108 97 110 103 117 97 103 101"
+
+msgid "MoreConf"
+msgstr "77 111 114 101 67 111 110 102"
+
+msgid "Note Create"
+msgstr "78 111 116 101 32 67 114 101 97 116 101"
+
+msgid "emoji"
+msgstr "101 109 111 106 105"
+
+msgid "hug punch"
+msgstr "104 117 103 32 112 117 110 99 104"
+
+msgid "emoji select from..."
+msgstr ""
+"101 109 111 106 105 32 115 101 108 101 99 116 32 102 114 111 109 46 46 46"
+
+msgid "Are you sure about that?"
+msgstr ""
+"65 114 101 32 121 111 117 32 115 117 114 101 32 97 98 111 117 116 32 116 104"
+" 97 116 63"
+
+msgid "Sure"
+msgstr "83 117 114 101"
+
+msgid "Create note success :)"
+msgstr ""
+"67 114 101 97 116 101 32 110 111 116 101 32 115 117 99 99 101 115 115 32 58 "
+"41"
+
+msgid "Create note fail :("
+msgstr "67 114 101 97 116 101 32 110 111 116 101 32 102 97 105 108 32 58 40"
+
+msgid ""
+"renoteId detect!\n"
+"if return, it will delete\n"
+" are you sure about that?"
+msgstr ""
+"114 101 110 111 116 101 73 100 32 100 101 116 101 99 116 33 \n"
+" 105 102 32 114 101 116 117 114 110 44 32 105 116 32 119 105 108 108 32 100 101 108 101 116 101 \n"
+" 32 97 114 101 32 121 111 117 32 115 117 114 101 32 97 98 111 117 116 32 116 104 97 116 63"
+
+msgid "sure"
+msgstr "115 117 114 101"
+
+msgid ""
+"replyId detect!\n"
+"if return, it will delete\n"
+" are you sure about that?"
+msgstr ""
+"114 101 112 108 121 73 100 32 100 101 116 101 99 116 33 \n"
+" 105 102 32 114 101 116 117 114 110 44 32 105 116 32 119 105 108 108 32 100 101 108 101 116 101 \n"
+" 32 97 114 101 32 121 111 117 32 115 117 114 101 32 97 98 111 117 116 32 116 104 97 116 63"
+
+msgid "renoteId"
+msgstr "114 101 110 111 116 101 73 100"
+
+msgid "replyId"
+msgstr "114 101 112 108 121 73 100"
+
+msgid "notevisibility"
+msgstr "110 111 116 101 118 105 115 105 98 105 108 105 116 121"
+
+msgid "Followers"
+msgstr "70 111 108 108 111 119 101 114 115"
+
+msgid "Home"
+msgstr "72 111 109 101"
+
+msgid "Public"
+msgstr "80 117 98 108 105 99"
+
+msgid ""
+"user:{}\n"
+"text:{}"
+msgstr ""
+"117 115 101 114 58 {} \n"
+" 116 101 120 116 58 {}"
+
+msgid ""
+"note show fail :(\n"
+"maybe this noteId is unavailable"
+msgstr ""
+"110 111 116 101 32 115 104 111 119 32 102 97 105 108 32 58 40 \n"
+" 109 97 121 98 101 32 116 104 105 115 32 110 111 116 101 73 100 32 105 115 32 117 110 97 118 97 105 108 97 98 108 101"
+
+msgid "GetDB"
+msgstr "71 101 116 68 66"
+
+msgid "DB is None, Please GetDB."
+msgstr ""
+"68 66 32 105 115 32 78 111 110 101 44 32 80 108 101 97 115 101 32 71 101 116"
+" 68 66 46"
+
+msgid "this reaction already in deck"
+msgstr ""
+"116 104 105 115 32 114 101 97 99 116 105 111 110 32 97 108 114 101 97 100 "
+"121 32 105 110 32 100 101 99 107"
+
+msgid ""
+"reaction added\n"
+"name:{}"
+msgstr ""
+"114 101 97 99 116 105 111 110 32 97 100 100 101 100 \n"
+" 110 97 109 101 58 {}"
+
+msgid "GetDB fail :("
+msgstr "71 101 116 68 66 32 102 97 105 108 32 58 40"
+
+msgid "GetDB success!"
+msgstr "71 101 116 68 66 32 115 117 99 99 101 115 115 33"
+
+msgid "All"
+msgstr "65 108 108"
+
+msgid "Follow"
+msgstr "70 111 108 108 111 119"
+
+msgid "Get ntfy"
+msgstr "71 101 116 32 110 116 102 121"
+
+msgid "Note"
+msgstr "78 111 116 101"
+
+msgid "Mention"
+msgstr "77 101 110 116 105 111 110"
+
+msgid "Fail to get notifications"
+msgstr ""
+"70 97 105 108 32 116 111 32 103 101 116 32 110 111 116 105 102 105 99 97 116"
+" 105 111 110 115"
+
+msgid "Fail to get ntfy"
+msgstr "70 97 105 108 32 116 111 32 103 101 116 32 110 116 102 121"
+
+msgid "Success"
+msgstr "83 117 99 99 101 115 115"
+
+msgid "Please Get ntfy"
+msgstr "80 108 101 97 115 101 32 71 101 116 32 110 116 102 121"
+
+msgid "{} was reply"
+msgstr "{} 32 119 97 115 32 114 101 112 108 121"
+
+msgid "{} was quoted"
+msgstr "{} 32 119 97 115 32 113 117 111 116 101 100"
+
+msgid "Follow comming!"
+msgstr "70 111 108 108 111 119 32 99 111 109 109 105 110 103 33"
+
+msgid "mention comming!"
+msgstr "109 101 110 116 105 111 110 32 99 111 109 109 105 110 103 33"
+
+msgid "{} was renoted"
+msgstr "{} 32 119 97 115 32 114 101 110 111 116 101 100"
+
+msgid "{} was reaction [{}]"
+msgstr "{} 32 119 97 115 32 114 101 97 99 116 105 111 110 32 91 {} 93"
+
+msgid "select from"
+msgstr "115 101 108 101 99 116 32 102 114 111 109"
+
+msgid "Select note\n"
+msgstr "83 101 108 101 99 116 32 110 111 116 101 \n"
+
+msgid "type:mention\n"
+msgstr "116 121 112 101 58 109 101 110 116 105 111 110 \n"
+
+msgid ""
+"type:reply\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
+msgstr ""
+"116 121 112 101 58 114 101 112 108 121 \n"
+" 102 114 111 109 32 110 111 116 101 105 100 58 {} \n"
+" 32 32 32 32 32 116 120 116 58 {} \n"
+" \n"
+
+msgid ""
+"type:quote\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
+msgstr ""
+"116 121 112 101 58 113 117 111 116 101 \n"
+" 102 114 111 109 32 110 111 116 101 105 100 58 {} \n"
+" 32 32 32 32 32 116 120 116 58 {} \n"
+" \n"
+
+msgid ""
+"name:{}\n"
+"username:{}\n"
+msgstr ""
+"110 97 109 101 58 {} \n"
+" 117 115 101 114 110 97 109 101 58 {} \n"
+
+msgid ""
+"noteid:{}\n"
+"txt:{}\n"
+msgstr ""
+"110 111 116 101 105 100 58 {} \n"
+" 116 120 116 58 {} \n"
