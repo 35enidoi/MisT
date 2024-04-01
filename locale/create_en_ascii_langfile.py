@@ -18,8 +18,8 @@ for entry in [e for e in ps if not e.obsolete]:
 # for entry in [e for e in newpo if not e.obsolete]:
 #     print(entry.msgid, entry.msgstr)
 
-if not os.path.isdir(getpath("en_ORD/LC_MESSAGES")):
-    os.mkdir(getpath("en_ORD"))
-    os.mkdir(getpath("en_ORD/LC_MESSAGES"))
-newpo.save(getpath("en_ORD/LC_MESSAGES/messages.po"))
-newpo.save_as_mofile(getpath("en_ORD/LC_MESSAGES/messages.mo"))
+if not os.path.isdir(getpath("en_ASCII/LC_MESSAGES")):
+    os.mkdir(getpath("en_ASCII"))
+    os.mkdir(getpath("en_ASCII/LC_MESSAGES"))
+newpo.save(getpath("en_ASCII/LC_MESSAGES/messages.po"))
+newpo.save_as_mofile(getpath("en_ASCII/LC_MESSAGES/messages.mo"))
