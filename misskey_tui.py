@@ -770,7 +770,7 @@ class ConfigMenu(Frame):
         elif arg == 1:
             # TOKEN
             self._txtbxput(CM_T.TOKEN_WRITE_PLS.value)
-            self.msk_.tmp.append("TOKEN")
+            self.ok_value_hundler = "TOKEN"
             self._disables()
     
     def _ser_token_search(self, arg, *, point=0):
@@ -881,7 +881,7 @@ class ConfigMenu(Frame):
             if self.msk_.i is not None:
                 self.popup(CM_T.CHANGE_INSTANCE_DETECT_TOKEN.value, [CM_T.OK.value,CM_T.RETURN.value],on_close=self.instance_)
             else:
-                self.msk_.tmp.append("INSTANCE")
+                self.ok_value_hundler = "INSTANCE"
                 self._txtbxput(CM_T.CHANGE_INSTANCE_HINT.value, CM_T.CHANGE_INSTANCE_CURRENT_INSTANCE.value.format(self.msk_.instance),"")
                 self._disables()
         elif select == 0:
@@ -889,7 +889,8 @@ class ConfigMenu(Frame):
             self.instance_()
 
     def ok_(self):
-        ok_value = self.msk_.tmp.pop()
+        ok_value = self.ok_value_hundler
+        self.ok_value_hundler = ""
         if ok_value == "TOKEN":
             self.msk_.i = self.txt.value
             is_ok = self.msk_.reload()
@@ -1099,6 +1100,9 @@ class CreateNoteConfig(Frame):
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
 
+        # ok values hundler
+        self.ok_value_hundler = ""
+
         # txt create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         self.txt = Text()
@@ -1130,7 +1134,7 @@ class CreateNoteConfig(Frame):
         self.fix()
     
     def cw(self):
-        self.msk_.tmp.append("cw")
+        self.ok_value_hundler = "CW"
         self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
         self._disables()
 
@@ -1155,19 +1159,21 @@ class CreateNoteConfig(Frame):
         self.nowconf()
 
     def renoteid(self):
-        self.msk_.tmp.append("renote")
+        self.ok_value_hundler = "RENOTE"
         self.txt.value = "" if self.msk_.crnoteconf["renoteId"] is None else self.msk_.crnoteconf["renoteId"]
         self._disables()
 
     def replyid(self):
-        self.msk_.tmp.append("reply")
+        self.ok_value_hundler = "REPLY"
         self.txt.value = "" if self.msk_.crnoteconf["replyId"] is None else self.msk_.crnoteconf["replyId"]
         self._disables()
 
     def ok_(self):
-        if (ok_value := self.msk_.tmp.pop()) == "cw":
+        ok_value = self.ok_value_hundler
+        self.ok_value_hundler = ""
+        if ok_value == "CW":
             self.msk_.crnoteconf["CW"] = None if self.txt.value == "" else self.txt.value
-        elif ok_value == "renote":
+        elif ok_value == "RENOTE":
             if self.txt.value == "":
                 self.msk_.crnoteconf["renoteId"] = None
             else:
@@ -1178,7 +1184,7 @@ class CreateNoteConfig(Frame):
                 else:
                     self.popup(CNC_T.OK_RN_SHOWNOTE_FAIL.value,[CNC_T.OK.value])
                     self.msk_.crnoteconf["renoteId"] = None
-        elif ok_value == "reply":
+        elif ok_value == "REPLY":
             if self.txt.value == "":
                 self.msk_.crnoteconf["replyId"] = None
             else:
