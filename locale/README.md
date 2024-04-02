@@ -1,15 +1,49 @@
 # 翻訳を作成するには
 
-## メインプログラムから翻訳したい文字列を抽出
+> [!WARNING]  
+polibというライブラリが必要です。
 
-* まずはメインプログラムで翻訳したい文字列の前後を _ でマーキングする。例: "translate me!" を　(_("translate me!") のようにマーキング。その後、pygettextで翻訳したい文字列をメインプログラムから抽出する。
+## メインプログラムから翻訳したい文字列を別ファイルに移動
 
+1. まず、メインプログラムで翻訳する文字のあるシーン別に`textenum`ディレクトリに`<scenename>_txts.py`として作成。  
+    1. 別に`<scenename>_txts.py`として作らなくても名前は適当で大丈夫ですが、その方が統一感あるのでできるだけそうしてください。
+
+2. 次に、そのpythonプログラム内にクラスを作成。
+    1. 名前は何でもよいですが、シーンの名前がわかりやすい、それでいて少ない文字列にした方が良いです。例えば、`CreateNote`シーンであれば`CN_T`です。
+    2. このクラスには`Enum`を継承させてください。
+    3. また、下の関数をクラス内に**必ず**作ってください。(コピーすればよいです。)
+    ```py
+    def __getattribute__(self, __name: str) -> Any:
+        if __name == "value":
+            return _(super().__getattribute__(__name))
+        return super().__getattribute__(__name)
+    ```
+    4. `textenums/__init__.py`にこのクラスを`import`する文を追加してください。じゃないと使えません。
+
+3. 翻訳する文字を変数としてこのクラス内に置いていく
+    1. 翻訳する文字を`Enum`として使うからです。
+    2. 例:
+    ```
+    HONI = "honi"
+    ```
+
+4. 文字をこのクラスから変数を通して`.value`で受け取る
+    1. **絶対**に`.value`を付けて受け取ってください。動きません。
+    2. 例:(翻訳対象の文字をクラス`EXAMPLE_T`に`HONYAKU_TXT`として変数を定義した場合)  
+    ```
+    EXAMPLE_T.HONYAKU_TXT.value
+    ```
+
+## potファイル更新
+この`README.md`のあるファイル`locale`内にあるスクリプト`gettext_fromtextenum.py`を用いる。  
+
+使い方は簡単。
 ```
-python pygettext.py -d messages -p ../locale/ ../misskey_tui.py
+python gettext_fromtextenum.py
 ```
+これを実行するだけ。  
 
-* このときメインプログラムのすべてのf文字列はf'Hey {username},' から (_('Hey {},').format(username)の形式に変更しなければならない。
-
+あとは変更点が表示されるので確認しながら`yes`あるいは`y`と入力してれば`messages.pot`が更新される。
 
 ## 翻訳作業
 
