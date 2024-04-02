@@ -13,13 +13,14 @@ import os
 from textenums import *
 
 class MkAPIs():
+    # version
+    # syoumi tekitouni ageteru noha naisyo
+    version = 0.4
+
     class WindowHundlerError(Exception):
         pass
 
     def __init__(self) -> None:
-        # version
-        # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.4
         # mistconfig load
         self._mistconfig_init()
         # MisT settings
