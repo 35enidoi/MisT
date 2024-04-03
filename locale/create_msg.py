@@ -53,7 +53,7 @@ diff = diff_chacker({i.msgid:i.msgstr for i in po}, {i.msgid:i.msgstr for i in p
 if diff["delete"] != {}:
     print("potファイル内にない以下のidを削除します:\n"+"\n".join(map(repr, diff["delete"].keys()))+"\n\n")
     for i in diff["delete"].keys():
-        po.pop([r.msgid for r in po].index(i))
+        po.remove(po.find(i))
 if diff["add"] != {}:
     print("翻訳できる文字を検出！\n翻訳作業に入ります...")
     for i in reversed(range(len(diff["add"]))):

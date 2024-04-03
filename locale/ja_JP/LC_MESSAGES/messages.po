@@ -533,10 +533,6 @@ msgstr ""
 msgid "Hello {}"
 msgstr "こんにちは、{}"
 
-#: misskey_tui.py:780
-msgid "fail to get userinfo :("
-msgstr "ユーザー情報の取得に失敗しました"
-
 #: misskey_tui.py:781
 msgid "fail to get"
 msgstr "取得に失敗しました"
@@ -570,10 +566,6 @@ msgstr "インスタンス"
 #: misskey_tui.py:801
 msgid "input instance such as 'misskey.io' 'misskey.backspace.fm'"
 msgstr "'misskey.io'や'misskey.backspace.fm'のようにインスタンスを入力してください"
-
-#: misskey_tui.py:801 misskey_tui.py:846
-msgid "current instance:{}"
-msgstr "いまのインスタンス:{}"
 
 #: misskey_tui.py:813
 msgid "TOKEN check OK :)"
