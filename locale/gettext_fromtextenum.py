@@ -11,8 +11,8 @@ from datetime import datetime
 from os import path as os_path
 import polib
 
-# デバッグ用のpprintのimport
-from pprint import pprint
+# # デバッグ用のpprintのimport
+# from pprint import pprint
 
 def get_path(target_name:str) -> str:
     """相対パスから絶対パス作る奴"""
