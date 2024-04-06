@@ -4,544 +4,189 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2023-12-02 23:45+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Project-Id-Version: MisT 0.4\n"
+"POT-Creation-Date: 2024-04-03 01:28:46.533837+09:00\n"
+"PO-Revision-Date: 2024-04-04 02:39:12.908078+09:00\n"
+"Last-Translator: iodine53\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: pygettext.py 1.5\n"
+"Generated-By: gettext_fromtextenum.py 1.0\n"
 
+#, CM_T.CURRENT_NAME
+msgid " name:{}"
+msgstr " 名前:{}"
 
-#: misskey_tui.py:205
-msgid "Quit"
-msgstr "終了"
+#, CM_T.CURRENT_USER_NAME
+msgid " username:{}"
+msgstr " ユーザー名:{}"
 
-#: misskey_tui.py:205 misskey_tui.py:225
-msgid "Move L"
-msgstr "左へ移動"
-
-#: misskey_tui.py:205 misskey_tui.py:226
-msgid "Move R"
-msgstr "右へ移動"
-
-#: misskey_tui.py:206
-msgid "Note Get"
-msgstr "ノート取得"
-
-#: misskey_tui.py:206 misskey_tui.py:232
-msgid "More"
-msgstr "その他"
-
-#: misskey_tui.py:206 misskey_tui.py:233
-msgid "Noteupdate"
-msgstr "ノート更新"
-
-#: misskey_tui.py:207
-msgid "Config"
-msgstr "設定"
-
-#: misskey_tui.py:250
-msgid ""
-"connect failed.\n"
-"Please Instance recreate."
-msgstr ""
-"接続に失敗しました。\n"
-"インスタンスを再生成してください。"
-
-#: misskey_tui.py:250 misskey_tui.py:261 misskey_tui.py:365 misskey_tui.py:371
-#: misskey_tui.py:385 misskey_tui.py:399 misskey_tui.py:424 misskey_tui.py:426
-#: misskey_tui.py:446 misskey_tui.py:470 misskey_tui.py:472 misskey_tui.py:567
-#: misskey_tui.py:574 misskey_tui.py:787 misskey_tui.py:798 misskey_tui.py:926
-#: misskey_tui.py:931 misskey_tui.py:1146 misskey_tui.py:1148
-#: misskey_tui.py:1154 misskey_tui.py:1157 misskey_tui.py:1162
-#: misskey_tui.py:1164 misskey_tui.py:1215 misskey_tui.py:1272
-msgid "Ok"
-msgstr "OK"
-
-#: misskey_tui.py:252
-msgid "latest"
-msgstr "最新"
-
-#: misskey_tui.py:252
-msgid "note get from"
-msgstr "からノートを取得"
-
-#: misskey_tui.py:252
-msgid "since"
-msgstr "から"
-
-#: misskey_tui.py:252
-msgid "until"
-msgstr "まで"
-
-#: misskey_tui.py:252 misskey_tui.py:353 misskey_tui.py:387 misskey_tui.py:562
-#: misskey_tui.py:602 misskey_tui.py:605 misskey_tui.py:649 misskey_tui.py:791
-#: misskey_tui.py:892 misskey_tui.py:972 misskey_tui.py:1083
-#: misskey_tui.py:1193
-msgid "return"
-msgstr "戻る"
-
-#: misskey_tui.py:261
-msgid "get note please(latest)"
-msgstr "最新のノートを取得してください"
-
-#: misskey_tui.py:277
-msgid "success"
-msgstr "成功"
-
-#: misskey_tui.py:279
-msgid "something occured"
-msgstr "何かが起きました。"
-
-#: misskey_tui.py:292
-msgid "or welcome to MisT!"
-msgstr "MisTへようこそ"
-
-#: misskey_tui.py:292
-msgid "something occured while noteget."
-msgstr "ノート取得時に何かが起きました。"
-
-#: ../misskey_tui.py:377 ../misskey_tui.py:1554
-msgid "{} files"
-msgstr "{}個のファイル"
-
-#: misskey_tui.py:353
+#, NV_T.MORE_POPTXT
 msgid "?"
 msgstr "どうしますか?"
 
-#: misskey_tui.py:353
-msgid "Create Note"
-msgstr "ノート作成"
+#, NF_T.BT_ALL
+msgid "All"
+msgstr "すべて"
 
-#: misskey_tui.py:353
-msgid "Reaction"
-msgstr "リアクション"
+#, CN_T.CREATE_NOTE_ARE_YOU_SURE_ABOUT_THAT
+msgid "Are you sure about that?"
+msgstr "よろしいですか?"
 
-#: misskey_tui.py:353
-msgid "Reply"
-msgstr "リプライ"
+#, CNC_T.BT_CW
+msgid "CW"
+msgstr "CW"
 
-#: misskey_tui.py:353 misskey_tui.py:367
-msgid "Renote"
-msgstr "リノート"
-
-#: misskey_tui.py:353 misskey_tui.py:1180
-msgid "Notification"
-msgstr "通知"
-
-#: misskey_tui.py:356
-msgid "Quit?"
-msgstr "やめますか?"
-
-#: misskey_tui.py:356
-msgid "yes"
-msgstr "はい"
-
-#: misskey_tui.py:356 misskey_tui.py:944 misskey_tui.py:946
-msgid "no"
-msgstr "いいえ"
-
-#: misskey_tui.py:365 misskey_tui.py:371 misskey_tui.py:385
-msgid "Please Note Get"
-msgstr "ノートを取得してください"
-
-#: misskey_tui.py:367
-msgid "Quote"
-msgstr "引用"
-
-#: misskey_tui.py:367
-msgid "Renote or Quote?"
-msgstr "リノートもしくは引用しますか?"
-
-#: misskey_tui.py:367 misskey_tui.py:504
-msgid "Return"
-msgstr "戻る"
-
-#: misskey_tui.py:387
-msgid "deck"
-msgstr "デッキ"
-
-#: ../misskey_tui.py:420 ../misskey_tui.py:1576
-msgid "note"
-msgstr "ノート"
-
-#: misskey_tui.py:387
-msgid "reaction from note or deck or search?"
-msgstr "デッキにしますか?検索しますか?あるいはノートについている物から？"
-
-#: misskey_tui.py:387
-msgid "search"
-msgstr "検索"
-
-#: misskey_tui.py:399 misskey_tui.py:567 misskey_tui.py:574
-msgid "Please create reaction deck"
-msgstr "リアクションデッキを作成してください"
-
-#: ../misskey_tui.py:469 ../misskey_tui.py:1617
-msgid "there is no reactions"
-msgstr "ノートにリアクションがついていません"
-
-#: misskey_tui.py:424 misskey_tui.py:470 misskey_tui.py:1146
-msgid "Create success! :)"
-msgstr "作成に成功しました!"
-
-#: misskey_tui.py:426 misskey_tui.py:472 misskey_tui.py:1148
-msgid "Create fail :("
-msgstr "作成に失敗しました!"
-
-#: misskey_tui.py:446
-msgid ""
-"Renote this?\n"
-"noteId:{}\n"
-"name:{}\n"
-"text:{}"
-msgstr ""
-"こちらをリノートしますか?"
-"リノートID:{}\n"
-"名前:{}\n"
-"テキスト:{}"
-
-#: misskey_tui.py:446 misskey_tui.py:727 misskey_tui.py:733 misskey_tui.py:798
-#: misskey_tui.py:920
-msgid "No"
-msgstr "いいえ"
-
-#: misskey_tui.py:504
-msgid "Reaction deck"
-msgstr "リアクションデッキ"
-
-#: misskey_tui.py:504 misskey_tui.py:599
+#, CM_T.BT_CHANGGE_TL
 msgid "Change TL"
 msgstr "TL変更"
 
-#: misskey_tui.py:504 misskey_tui.py:602
+#, CM_T.BT_CHANGGE_THEME
 msgid "Change Theme"
 msgstr "テーマ変更"
 
-#: misskey_tui.py:505
-msgid "Current"
-msgstr "ステータス"
-
-#: misskey_tui.py:505
-msgid "Instance"
-msgstr "インスタンス"
-
-#: misskey_tui.py:505
-msgid "Version"
-msgstr "バージョン"
-
-#: misskey_tui.py:505 misskey_tui.py:649 misskey_tui.py:673
-msgid "TOKEN"
-msgstr "トークン"
-
-#: misskey_tui.py:506
+#, CM_T.BT_CLR, NF_T.BT_CLEAR
 msgid "Clear"
 msgstr "クリア"
 
-#: ../misskey_tui.py:542
-msgid "Language"
-msgstr "言語"
+#, NV_T.BT_CFG
+msgid "Config"
+msgstr "設定"
 
-#: misskey_tui.py:506
-msgid "Refresh"
-msgstr "更新"
-
-#: misskey_tui.py:506 misskey_tui.py:560 misskey_tui.py:972
-msgid "OK"
-msgstr "OK"
-
-#: misskey_tui.py:534
-msgid "write by @iodine53@misskey.io"
-msgstr "@iodine53@misskey.ioによって製作"
-
-#: misskey_tui.py:537
-msgid "Instance:{}"
-msgstr "インスタンス:{}"
-
-#: misskey_tui.py:539
-msgid "TOKEN:None"
-msgstr "トークン:なし"
-
-#: misskey_tui.py:543, 545
-msgid "TOKEN:Available"
-msgstr "トークン:選択可能"
-
-msgid ' name:{}'
-msgstr ' 名前:{}'
-
-msgid ' username:{}'
-msgstr ' ユーザー名:{}'
-
-# misskey_tui.py:545
-msgid "fail to get userinfo :("
-msgstr "ユーザー情報の取得に失敗"
-
-#: misskey_tui.py:560
-msgid "Please set TOKEN"
-msgstr "トークンを設定してください。"
-
-#: misskey_tui.py:562
-msgid "add deck"
-msgstr "デッキを追加"
-
-#: misskey_tui.py:562
-msgid "check deck"
-msgstr "デッキを確認"
-
-#: misskey_tui.py:562
-msgid "check deck or add deck?"
-msgstr "デッキを確認もしくは追加しますか?"
-
-#: misskey_tui.py:562
-msgid "del deck"
-msgstr "デッキを削除"
-
-#: misskey_tui.py:599
-msgid "GTL"
-msgstr "グローバルタイムライン"
-
-#: misskey_tui.py:599
-msgid "HTL"
-msgstr "ホームタイムライン"
-
-#: misskey_tui.py:599
-msgid "LTL"
-msgstr "ローカルタイムライン"
-
-#: misskey_tui.py:599
-msgid "STL"
-msgstr "ソーシャルタイムライン"
-
-#: misskey_tui.py:602 misskey_tui.py:633
-msgid "default"
-msgstr "デフォルト"
-
-#: misskey_tui.py:602 misskey_tui.py:635
-msgid "monochrome"
-msgstr "モノクロ"
-
-#: misskey_tui.py:602 misskey_tui.py:637
-msgid "green"
-msgstr "グリーン"
-
-#: misskey_tui.py:602 misskey_tui.py:639
-msgid "bright"
-msgstr "ブライト"
-
-#: misskey_tui.py:605
+#, CM_T.TOKEN_CREATE
 msgid "Create"
 msgstr "作成"
 
-#: misskey_tui.py:605
-msgid ""
-"How to?\ncurrent instance:{}"
-msgstr ""
-"どうしますか?\nいまのインスタンス:{}"
+#, NV_T.MORE_CREATE_NOTE
+msgid "Create Note"
+msgstr "ノート作成"
 
-#: misskey_tui.py:605 misskey_tui.py:678
-msgid "Select"
-msgstr "選択"
-
-#: misskey_tui.py:612
-msgid "change TL:HomeTL"
-msgstr "TLを変更:ホームタイムライン"
-
-#: misskey_tui.py:614
-msgid "HTL is TOKEN required"
-msgstr "ホームタイムラインにはトークンが必要です"
-
-#: misskey_tui.py:618
-msgid "change TL:LocalTL"
-msgstr "TLを変更:ローカルタイムライン"
-
-#: misskey_tui.py:623
-msgid "change TL:SocialTL"
-msgstr "TLを変更:ソーシャルタイムライン"
-
-#: misskey_tui.py:625
-msgid "STL is TOKEN required"
-msgstr "ソーシャルタイムラインにはトークンが必要です"
-
-#: misskey_tui.py:629
-msgid "change TL:GlobalTL"
-msgstr "TLを変更:グローバルタイムライン"
-
-#: misskey_tui.py:644 misskey_tui.py:866
-msgid "self error"
-msgstr "self エラー"
-
-#: misskey_tui.py:649
-msgid "MiAuth or write TOKEN?"
-msgstr "MiAuthにしますか?それともトークンを入力しますか?"
-
-#: misskey_tui.py:653
+#, CM_T.TOKEN_SEL_CREATE_PLS
 msgid "Create TOKEN please."
 msgstr "トークンを作成してください。"
 
-#: misskey_tui.py:653 misskey_tui.py:1020 misskey_tui.py:1023
-#: misskey_tui.py:1031 misskey_tui.py:1034
-msgid "ok"
-msgstr "OK"
+#, SR_T.SELECT_REACTION_CREATE_FAIL, NF_T.RN_CREATE_FAIL
+msgid "Create fail :("
+msgstr "作成に失敗しました!"
 
-#: misskey_tui.py:669
-msgid "check ok"
-msgstr "確認"
+#, CN_T.CREATE_NOTE_FAIL
+msgid "Create note fail :("
+msgstr "ノート作成に失敗"
 
-#: misskey_tui.py:669
-msgid "cliped!"
-msgstr "クリップボードに保存しました!"
+#, CN_T.CREATE_NOTE_SUCCESS
+msgid "Create note success :)"
+msgstr "ノート作成に成功"
 
-#: misskey_tui.py:669
-msgid ""
-"miauth url\n"
-"\n"
-"{}\n"
-"\n"
-msgstr ""
-"miauth url\n"
-"\n"
-"{}\n"
-"\n"
+#, SR_T.SELECT_REACTION_CREATE_SUCCESS, NF_T.RN_CREATE_SUCCESS
+msgid "Create success! :)"
+msgstr "作成に成功しました!"
 
-#: misskey_tui.py:672
-msgid "write your TOKEN"
-msgstr "トークンを入力してください"
+#, CM_T.BT_CURRENT
+msgid "Current"
+msgstr "ステータス"
 
-#: misskey_tui.py:678
+#, SR_T.NO_DB
+msgid "DB is None, Please GetDB."
+msgstr "データがありません。データを取得してください。"
+
+#, CM_T.TOKEN_SEARCH_DEL
 msgid "Delete"
 msgstr "削除"
 
-#: misskey_tui.py:678
-msgid "L"
-msgstr "左"
+#, CM_T.TOKEN_SEARCH_HEADMES_DEL
+msgid "Delete this?"
+msgstr "削除しますか？"
 
-#: misskey_tui.py:678
-msgid "R"
-msgstr "右"
+#, NF_T.GETNTFY_FAIL_TO_GET_TXTBX
+msgid "Fail to get notifications"
+msgstr "通知の取得に失敗しました"
 
-#: misskey_tui.py:678
-msgid "Set def"
-msgstr "デフォルトを設定"
+#, NF_T.GETNTFY_FAIL_TO_GET
+msgid "Fail to get ntfy"
+msgstr "通知の取得に失敗しました"
 
-#: misskey_tui.py:678
-msgid "unset def"
-msgstr "デフォルトを解除"
+#, NF_T.FLAG_FOLLOW
+msgid "Follow"
+msgstr "フォロー"
 
-#: misskey_tui.py:682
-msgid ""
-"<1/{}>\n"
-"\n"
-"Select\n"
-"name:{}\n"
-"instance:{}\n"
-"token:{}..."
-msgstr ""
-"<1/{}>\n"
-"\n"
-"選択\n"
-"名前:{}\n"
-"インスタンス:{}\n"
-"トークン:{}..."
+#, NF_T.NT_FOLLOW
+msgid "Follow comming!"
+msgstr "フォローされました!"
 
-#: misskey_tui.py:689
-msgid ""
-"Too Left.\n"
-msgstr ""
-"左に寄り過ぎです\n"
+#, CNC_T.NOTE_VISIBLE_FOLLOWER
+msgid "Followers"
+msgstr "フォロワー"
 
-#: misskey_tui.py:693 misskey_tui.py:705
-msgid ""
-"Select\n"
-msgstr ""
-"選択\n"
+#, CM_T.TL_GTL
+msgid "GTL"
+msgstr "グローバルタイムライン"
 
-#: misskey_tui.py:694 misskey_tui.py:706 misskey_tui.py:726 misskey_tui.py:732
-#: misskey_tui.py:743
-msgid ""
-"<{}/{}>\n"
-"\n"
-"{}name:{}\n"
-"instance:{}\n"
-"token:{}..."
-msgstr ""
-"<{}/{}>\n"
-"\n"
-"{}名前:{}\n"
-"インスタンス:{}\n"
-"トークン:{}..."
+#, NF_T.BT_GET_NTFY
+msgid "Get ntfy"
+msgstr "通知を取得"
 
-#: misskey_tui.py:701
-msgid ""
-"Too Right.\n"
-msgstr ""
-"右に寄りすぎです\n"
+#, SR_T.BT_GET_DB
+msgid "GetDB"
+msgstr "データを取得"
 
-#: misskey_tui.py:712
-msgid "current instance:{}"
-msgstr "いまのインスタンス:{}"
+#, SR_T.GETDB_FAIL
+msgid "GetDB fail :("
+msgstr "データの取得に失敗しました"
 
-#: misskey_tui.py:712
-msgid "select user:{}"
-msgstr "ユーザーを選択:{}"
+#, SR_T.GETDB_SUCCESS
+msgid "GetDB success!"
+msgstr "データの取得に成功しました"
 
-#: misskey_tui.py:717
-msgid "connect ok!"
-msgstr "接続完了!"
+#, CM_T.TL_HTL
+msgid "HTL"
+msgstr "ホームタイムライン"
 
-#: misskey_tui.py:721
-msgid "connect fail :("
-msgstr "接続失敗!"
-
-#: misskey_tui.py:725
-msgid ""
-"Delete this?\n"
-msgstr ""
-"削除しますか?\n"
-
-#: misskey_tui.py:727 misskey_tui.py:733
-msgid "Yes"
-msgstr "はい"
-
-#: misskey_tui.py:736
-msgid ""
-"set to default?\n"
-msgstr ""
-"デフォルトに設定しますか?\n"
-
-#: misskey_tui.py:738
-msgid ""
-"default token is none\n"
-msgstr ""
-"デフォルトのトークンがありません\n"
-
-#: misskey_tui.py:742
-msgid ""
-"unset success!\n"
-msgstr ""
-"解除成功!\n"
-
-#: misskey_tui.py:773
-msgid ""
-"MiAuth check Success!\n"
-msgstr ""
-"MiAuthの確認に成功!"
-
-#: misskey_tui.py:778
+#, CM_T.MIAUTH_HELLO_USER
 msgid "Hello {}"
 msgstr "こんにちは、{}"
 
-#: misskey_tui.py:780
-msgid "fail to get userinfo :("
-msgstr "ユーザー情報の取得に失敗しました"
+#, CNC_T.NOTE_VISIBLE_HOME
+msgid "Home"
+msgstr "ホーム"
 
-#: misskey_tui.py:781
-msgid "fail to get"
-msgstr "取得に失敗しました"
+#, CM_T.TOKEN_HOWTO_NOWINS
+msgid ""
+"How to?\n"
+"current instance:{}"
+msgstr ""
+"どうしますか?\n"
+"いまのインスタンス:{}"
 
-#: misskey_tui.py:790
+#, CM_T.BT_INSTANCE
+msgid "Instance"
+msgstr "インスタンス"
+
+#, CM_T.CURRENT_INSTANCE
+msgid "Instance:{}"
+msgstr "インスタンス:{}"
+
+#, CM_T.TOKEN_SEARCH_LEFT
+msgid "L"
+msgstr "左"
+
+#, CM_T.TL_LTL
+msgid "LTL"
+msgstr "ローカルタイムライン"
+
+#, CM_T.BT_LANG
+msgid "Language"
+msgstr "言語"
+
+#, NF_T.FLAG_MENTION
+msgid "Mention"
+msgstr "メンション"
+
+#, CM_T.TOKEN_SEL_MIAUTH_URL
+msgid "MiAuth URL"
+msgstr "MiAuth URL"
+
+#, CM_T.MIAUTH_CHECK_FAIL
 msgid ""
 "MiAuth check Fail :(\n"
 "try again?"
@@ -549,197 +194,362 @@ msgstr ""
 "MiAuthの確認に失敗しました\n"
 "再試行しますか?"
 
-#: misskey_tui.py:791
-msgid "again"
-msgstr "再試行"
+#, CM_T.MIAUTH_GET_SUCCESS
+msgid "MiAuth check Success!"
+msgstr "MiAuthの認証に成功！"
 
-#: misskey_tui.py:798
+#, CM_T.TOKEN_SEL_AUTH_OR_WRITE
+msgid "MiAuth or write TOKEN?"
+msgstr "MiAuthにしますか?それともトークンを入力しますか?"
+
+#, NV_T.BT_MORE
+msgid "More"
+msgstr "その他"
+
+#, CN_T.BT_MORE_CONF
+msgid "MoreConf"
+msgstr "もっと設定"
+
+#, NV_T.BT_MOVE_L
+msgid "Move L"
+msgstr "左へ移動"
+
+#, NV_T.BT_MOVE_R
+msgid "Move R"
+msgstr "右へ移動"
+
+#, NF_T.FLAG_NOTE
+msgid "Note"
+msgstr "ノート"
+
+#, CN_T.BT_NOTE_CREATE
+msgid "Note Create"
+msgstr "ノート作成"
+
+#, NV_T.BT_NOTE_GET
+msgid "Note Get"
+msgstr "ノート取得"
+
+#, NV_T.BT_NOTE_UP
+msgid "Noteupdate"
+msgstr "ノート更新"
+
+#, NV_T.MOREE_NOTIFI, NF_T.WINDOW_TITLE_NAME
+msgid "Notification"
+msgstr "通知"
+
+#, NV_T.OK, CM_T.OK, CN_T.OK, CNC_T.OK, SR_T.OK, NF_T.OK
+msgid "Ok"
+msgstr "OK"
+
+#, NF_T.GET_NTFY_PLS
+msgid "Please Get ntfy"
+msgstr "通知を取得してください"
+
+#, NV_T.MORE_SEL_GET_NOTE_PLS
+msgid "Please Note Get"
+msgstr "ノートを取得してください"
+
+#, NV_T.SEL_REAC_FROM_DECK_NODECK, CM_T.REAK_DECK_CREATE_DECK_PLS, CN_T.EMOJI_CREATE_DECK_PLS, NF_T.REACTION_DECK_CREATE_PLS
+msgid "Please create reaction deck"
+msgstr "リアクションデッキを作成してください"
+
+#, CM_T.REAC_DECK_SET_TOKEN_PLS
+msgid "Please set TOKEN"
+msgstr "トークンを設定してください。"
+
+#, CNC_T.NOTE_VISIBLE_PUBLIC
+msgid "Public"
+msgstr "パブリック"
+
+#, NV_T.BT_QUIT
+msgid "Quit"
+msgstr "終了"
+
+#, NV_T.QUIT
+msgid "Quit?"
+msgstr "やめますか?"
+
+#, NV_T.MORE_SEL_QT, NF_T.FLAG_QT
+msgid "Quote"
+msgstr "引用"
+
+#, CM_T.TOKEN_SEARCH_RIGHT
+msgid "R"
+msgstr "右"
+
+#, NV_T.MORE_REACTION, NF_T.FLAG_REACTION
+msgid "Reaction"
+msgstr "リアクション"
+
+#, CM_T.BT_REAC_DECK
+msgid "Reaction deck"
+msgstr "リアクションデッキ"
+
+#, CM_T.BT_REFRESH
+msgid "Refresh"
+msgstr "更新"
+
+#, NV_T.MORE_RN, NF_T.FLAG_RN
+msgid "Renote"
+msgstr "リノート"
+
+#, NV_T.MORE_SEL_RN_OR_QT
+msgid "Renote or Quote?"
+msgstr "リノートもしくは引用しますか?"
+
+#, NV_T.SEL_RN_NOTE_VAL, NF_T.RN_CHECK
+msgid ""
+"Renote this?\n"
+"noteId:{}\n"
+"name:{}\n"
+"text:{}"
+msgstr ""
+"こちらをリノートしますか?リノートID:{}\n"
+"名前:{}\n"
+"テキスト:{}"
+
+#, NV_T.MORE_RP, NF_T.FLAG_RP
+msgid "Reply"
+msgstr "リプライ"
+
+#, CM_T.TL_STL
+msgid "STL"
+msgstr "ソーシャルタイムライン"
+
+#, CM_T.TOKEN_SELECT, NF_T.BT_SEL
+msgid "Select"
+msgstr "選択"
+
+#, NF_T.SELECT_NOTE
+msgid "Select note\n"
+msgstr "選択したノート\n"
+
+#, CM_T.TOKEN_SEARCH_SET
+msgid "Set def"
+msgstr "デフォルトを設定"
+
+#, CM_T.BT_TOKEN
+msgid "TOKEN"
+msgstr "トークン"
+
+#, CM_T.OK_TOKEN_CHECK
+msgid "TOKEN check OK :)"
+msgstr "トークンの確認に成功"
+
+#, CM_T.OK_TOKEN_CHECK_FAIL
+msgid "TOKEN check fail :("
+msgstr "トークンの確認に失敗"
+
+#, CM_T.CHANGE_INSTANCE_DETECT_TOKEN
 msgid ""
 "TOKEN detect!\n"
 "change instance will delete TOKEN.\n"
 "Ok?"
 msgstr ""
 "トークンを検出!\n"
-"インスタンス変更はトークンの削除を伴います"
-"よろしいですか?"
+"インスタンス変更はトークンの削除を伴いますよろしいですか?"
 
-#: misskey_tui.py:800
-msgid "INSTANCE"
-msgstr "インスタンス"
+#, CM_T.CURRENT_TOKEN_AVAILABLE
+msgid "TOKEN:Available"
+msgstr "トークン:選択可能"
 
-#: misskey_tui.py:801
-msgid "input instance such as 'misskey.io' 'misskey.backspace.fm'"
-msgstr "'misskey.io'や'misskey.backspace.fm'のようにインスタンスを入力してください"
+#, CM_T.CURRENT_TOKEN_NONE
+msgid "TOKEN:None"
+msgstr "トークン:なし"
 
-#: misskey_tui.py:801 misskey_tui.py:846
-msgid "current instance:{}"
-msgstr "いまのインスタンス:{}"
-
-#: misskey_tui.py:813
-msgid "TOKEN check OK :)"
-msgstr "トークンの確認に成功"
-
-#: misskey_tui.py:816
-msgid "get fail"
-msgstr "取得に失敗"
-
-#: misskey_tui.py:817
-msgid "fail to get your info :("
-msgstr "あなたの情報の取得に失敗"
-
-#: misskey_tui.py:820
-msgid "Hello {}!"
-msgstr "こんにちは、{}!"
-
-#: misskey_tui.py:826
-msgid "TOKEN check fail :("
-msgstr "トークンの確認に失敗"
-
-#: misskey_tui.py:832
-msgid "instance connected! :)"
-msgstr "インスタンスに接続!"
-
-#: misskey_tui.py:837
-msgid "error occured while get icon :("
-msgstr "アイコン取得中にエラー発生"
-
-#: misskey_tui.py:842
-msgid "error occured while get meta :("
-msgstr "メタ情報取得中にエラー発生"
-
-#: misskey_tui.py:845
-msgid "instance connect fail :("
-msgstr "インスタンスの接続に失敗しました"
-
-#: ../misskey_tui.py:908
-msgid "there is no translation files."
-msgstr "翻訳用ファイルがありません"
-
-#: ../misskey_tui.py:912
-msgid "reset"
-msgstr "初期化"
-
-#: ../misskey_tui.py:914
-msgid "select language"
-msgstr "言語を選択"
-
-#: misskey_tui.py:892
-msgid "MoreConf"
-msgstr "もっと設定"
-
-#: misskey_tui.py:892
-msgid "Note Create"
-msgstr "ノート作成"
-
-#: .\misskey_tui.py:1007
-msgid "emoji"
-msgstr "絵文字"
-
-#: misskey_tui.py:892
-msgid "hug punch"
-msgstr "フグパンチ"
-
-#: .\misskey_tui.py:1039
-msgid "emoji select from..."
-msgstr "絵文字の選択方法"
-
-#: misskey_tui.py:920
-msgid "Are you sure about that?"
-msgstr "よろしいですか?"
-
-#: misskey_tui.py:920
-msgid "Sure"
-msgstr "はい"
-
-#: misskey_tui.py:926
-msgid "Create note success :)"
-msgstr "ノート作成に成功"
-
-#: misskey_tui.py:927 misskey_tui.py:1190
+#, NF_T.DEAFAULT_TXTBX_VAL
 msgid "Tab to change widget"
 msgstr "ウィジェット変更にTabを押してください"
 
-#: misskey_tui.py:931
-msgid "Create note fail :("
-msgstr "ノート作成に失敗"
+#, CM_T.TOKEN_SEARCH_HEADMES_LEFT
+msgid "Too Left"
+msgstr "左行き過ぎ"
 
-#: misskey_tui.py:944
+#, CM_T.TOKEN_SEARCH_HEADMES_RIGHT
+msgid "Too Right"
+msgstr "右行き過ぎ"
+
+#, CM_T.BT_VERSION
+msgid "Version"
+msgstr "バージョン"
+
+#, CM_T.REAC_DECK_ADD
+msgid "add deck"
+msgstr "デッキを追加"
+
+#, CM_T.THEME_BRIGHT
+msgid "bright"
+msgstr "ブライト"
+
+#, CM_T.TL_CHANGED
+msgid "change TL:{}"
+msgstr "タイムラインを変更:{}"
+
+#, CM_T.REAC_DECK_CHECK
+msgid "check deck"
+msgstr "デッキを確認"
+
+#, CM_T.REAC_DECK_CHECK_OR_ADD
+msgid "check deck or add deck?"
+msgstr "デッキを確認もしくは追加しますか?"
+
+#, CM_T.TOKEN_SEL_COPIED
+msgid "cliped!"
+msgstr "クリップボードに保存しました!"
+
+#, CM_T.TOKEN_SEARCH_SELECT_CONNECT_FAIL
+msgid "connect fail :("
+msgstr "接続失敗!"
+
+#, NV_T.SEL_NOTE_CONNECT_FAIL
 msgid ""
-"renoteId detect!\n"
-"if return, it will delete\n"
-" are you sure about that?"
+"connect failed.\n"
+"Please Instance recreate."
 msgstr ""
-"リノートIDを検出!"
-"戻れば削除されますが"
-"よろしいですか?"
+"接続に失敗しました。\n"
+"インスタンスを再生成してください。"
 
-#: misskey_tui.py:944 misskey_tui.py:946
-msgid "sure"
-msgstr "はい"
+#, CM_T.TOKEN_SEARCH_SELECT_CONNECT_OK
+msgid "connect ok!"
+msgstr "接続完了!"
 
-#: misskey_tui.py:946
+#, CM_T.CHANGE_INSTANCE_CURRENT_INSTANCE
+msgid "current instance:{}"
+msgstr "いまのインスタンス:{}"
+
+#, NV_T.MORE_SEL_FROM_DECK, CN_T.EMOJI_SEL_FROM_DECK, NF_T.REACTION_FROM_DECK
+msgid "deck"
+msgstr "デッキ"
+
+#, CM_T.THEME_DEFAULT
+msgid "default"
+msgstr "デフォルト"
+
+#, CM_T.TOKEN_SEARCH_HEADMES_NO_DEFAULT
+msgid "default token is none"
+msgstr "デフォルトのトークンが無いです。"
+
+#, CM_T.REAC_DECK_DEL
+msgid "del deck"
+msgstr "デッキを削除"
+
+#, CN_T.BT_EMOJI
+msgid "emoji"
+msgstr "絵文字"
+
+#, CN_T.EMOJI_SEL_FROM
+msgid "emoji select from..."
+msgstr "絵文字の選択方法"
+
+#, CM_T.OK_INSTANCE_FAIL_TO_GET_ICON
+msgid "error occured while get icon :("
+msgstr "アイコン取得中にエラー発生"
+
+#, CM_T.OK_INSTANCE_FAIL_TO_GET_META
+msgid "error occured while get meta :("
+msgstr "メタ情報取得中にエラー発生"
+
+#, CM_T.MIAUTH_FAIL_TO_GET
+msgid "fail to get"
+msgstr "取得に失敗しました"
+
+# misskey_tui.py:545
+#, CM_T.MIAUTH_FAIL_TO_GET_USER
+msgid "fail to get userinfo :("
+msgstr "ユーザー情報の取得に失敗"
+
+#, NV_T.SEL_NOTE_NOT_AVAILABLE
+msgid "get note please(latest)"
+msgstr "最新のノートを取得してください"
+
+#, CM_T.THEME_GREEN
+msgid "green"
+msgstr "グリーン"
+
+#, CN_T.BT_HUG_PUNCH
+msgid "hug punch"
+msgstr "フグパンチ"
+
+#, CN_T.RETURN_MAIN_DELETE_ANNOUNCE
+msgid "if return, it will delete"
+msgstr "もし戻ると、消えてしまいます。"
+
+#, CM_T.CHANGE_INSTANCE_HINT
+msgid "input instance such as 'misskey.io' 'misskey.backspace.fm'"
+msgstr "'misskey.io'や'misskey.backspace.fm'のようにインスタンスを入力してください"
+
+#, CM_T.OK_INSTANCE_CONNECT_FAIL
+msgid "instance connect fail :("
+msgstr "インスタンスの接続に失敗しました"
+
+#, CM_T.OK_INSTANCE_CONNECT
+msgid "instance connected! :)"
+msgstr "インスタンスに接続!"
+
+#, CM_T.TOKEN_SEARCH_MES_INSTANCE
+msgid "instance:{}"
+msgstr "インスタンス:{}"
+
+#, NV_T.SEL_NOTE_POP_LATEST
+msgid "latest"
+msgstr "最新"
+
+#, NF_T.NT_MENTION
+msgid "mention comming!"
+msgstr "メンションされました!"
+
+#, CM_T.THEME_MONO
+msgid "monochrome"
+msgstr "モノクロ"
+
+#, CM_T.TOKEN_SEARCH_MES_NAME
+msgid "name:{}"
+msgstr "名前:{}"
+
+#, NF_T.SELECT_NOTE_USER
 msgid ""
-"replyId detect!\n"
-"if return, it will delete\n"
-" are you sure about that?"
+"name:{}\n"
+"username:{}\n"
 msgstr ""
-"リプライIDを検出!"
-"戻れば削除されますが"
-"よろしいですか?"
+"名前:{}\n"
+"ユーザーネーム:{}\n"
 
-#: ../misskey_tui.py:1076
-msgid "notevisibility"
-msgstr "公開範囲"
+#, NV_T.MORE_SEL_FROM_NOTE, NF_T.REACTION_FROM_NOTE
+msgid "note"
+msgstr "ノート"
 
-#: misskey_tui.py:972
-msgid "renoteId"
-msgstr "リノートID"
+#, NV_T.SEL_NOTE_POPTXT
+msgid "note get from"
+msgstr "からノートを取得"
 
-#: misskey_tui.py:972
-msgid "replyId"
-msgstr "リプライID"
-
-#: ../misskey_tui.py:1109
-msgid "Followers"
-msgstr "フォロワー"
-
-#: ../misskey_tui.py:1109
-msgid "Home"
-msgstr "ホーム"
-
-#: ../misskey_tui.py:1109
-msgid "Public"
-msgstr "パブリック"
-
-#: misskey_tui.py:1020 misskey_tui.py:1031
-msgid ""
-"user:{}\n"
-"text:{}"
-msgstr ""
-"ユーザー:{}\n"
-"テキスト:{}"
-
-#: misskey_tui.py:1023 misskey_tui.py:1034
+#, CNC_T.OK_RN_SHOWNOTE_FAIL
 msgid ""
 "note show fail :(\n"
 "maybe this noteId is unavailable"
+msgstr "ノートの反映に失敗もしかしたらこのノートIDは取得不可能かもしれません"
+
+#, NF_T.SELECT_NOTE_NOTE
+msgid ""
+"noteid:{}\n"
+"txt:{}\n"
 msgstr ""
-"ノートの反映に失敗"
-"もしかしたらこのノートIDは取得不可能かもしれません"
+"ノートid:{}\n"
+"テキスト:{}\n"
 
-#: misskey_tui.py:1083
-msgid "GetDB"
-msgstr "データを取得"
+#, CNC_T.BT_NOTE_VISIBLE
+msgid "notevisibility"
+msgstr "公開範囲"
 
-#: misskey_tui.py:1117 misskey_tui.py:1133
-msgid "DB is None, Please GetDB."
-msgstr "データがありません。データを取得してください。"
+#, NV_T.WELCOME_MESSAGE
+msgid ""
+"or welcome to MisT!\n"
+"Tab to change widget"
+msgstr ""
+"あるいは、MisTへようこそ！\n"
+"タブでウィジェットを変更できます。"
 
-#: misskey_tui.py:1154
-msgid "this reaction already in deck"
-msgstr "このリアクションは既にデッキにあります"
-
-#: misskey_tui.py:1157
+#, SR_T.SELECT_DECKADD
 msgid ""
 "reaction added\n"
 "name:{}"
@@ -747,103 +557,83 @@ msgstr ""
 "リアクションを追加しました\n"
 "名前:{}"
 
-#: misskey_tui.py:1162
-msgid "GetDB fail :("
-msgstr "データの取得に失敗しました"
+#, NV_T.MORE_SEL_REACTION_FROM, NF_T.REACTION_FROM
+msgid "reaction from note or deck or search?"
+msgstr "デッキにしますか?検索しますか?あるいはノートについている物から？"
 
-#: misskey_tui.py:1164
-msgid "GetDB success!"
-msgstr "データの取得に成功しました"
+#, CNC_T.BT_RENOTE_ID
+msgid "renoteId"
+msgstr "リノートID"
 
-#: ../misskey_tui.py:1309
-msgid "All"
-msgstr "すべて"
+#, CN_T.RETURN_MAIN_RENOTEID_DETECT
+msgid "renoteId detect!"
+msgstr "リノートIDを検出！"
 
-#: ../misskey_tui.py:1309
-msgid "Follow"
-msgstr "フォロー"
+#, CNC_T.BT_REPLY_ID
+msgid "replyId"
+msgstr "リプライID"
 
-#: misskey_tui.py:1193
-msgid "Get ntfy"
-msgstr "通知を取得"
+#, CN_T.RETURN_MAIN_REPLYID_DETECT
+msgid "replyId detect!"
+msgstr "リプライIDを検出！"
 
-#: ../misskey_tui.py:1310
-msgid "Note"
-msgstr "ノート"
+#, CM_T.LANG_RESET
+msgid "reset"
+msgstr "初期化"
 
-#: ../misskey_tui.py:1310 ../misskey_tui.py:1493
-msgid "Mention"
-msgstr "メンション"
+#, NV_T.RETURN, CM_T.RETURN, CN_T.RETURN, CNC_T.RETURN, SR_T.RETURN, NF_T.RETURN
+msgid "return"
+msgstr "戻る"
 
-#: misskey_tui.py:1214
-msgid "Fail to get notifications"
-msgstr "通知の取得に失敗しました"
+#, NV_T.MORE_SEL_FROM_SEARCH, CN_T.EMOJI_SEL_FROM_SEARCH, NF_T.REACTION_FROM_SEARCH
+msgid "search"
+msgstr "検索"
 
-#: misskey_tui.py:1215
-msgid "Fail to get ntfy"
-msgstr "通知の取得に失敗しました"
-
-#: ../misskey_tui.py:1370 ../misskey_tui.py:1377 ../misskey_tui.py:1384
-#: ../misskey_tui.py:1393 ../misskey_tui.py:1419 ../misskey_tui.py:1445
-#: ../misskey_tui.py:1491
-msgid "Please Get ntfy"
-msgstr "通知を取得してください"
-
-#: misskey_tui.py:1243
-msgid "Follow comming!"
-msgstr "フォローされました!"
-
-#: misskey_tui.py:1245
-msgid "mention comming!"
-msgstr "メンションされました!"
-
-#: misskey_tui.py:1262
-msgid "{} was reply"
-msgstr "{}が返信しました"
-
-#: misskey_tui.py:1265
-msgid "{} was quoted"
-msgstr "{}が引用しました"
-
-#: misskey_tui.py:1268
-msgid "{} was renoted"
-msgstr "{}がリノートしました"
-
-#: misskey_tui.py:1270
-msgid "{} was reaction [{}]"
-msgstr "{}が{}でリアクションしました"
-
-#: misskey_tui.py:1272
-msgid "Success"
-msgstr "成功"
-
-#: ../misskey_tui.py:1493
+#, NF_T.SELECT_SEL_FROM
 msgid "select from"
 msgstr "取得元を選択"
 
-#: ../misskey_tui.py:1523
-msgid ""
-"Select note\n"
-msgstr "選択したノート\n"
+#, CM_T.LANG_SELECT
+msgid "select language"
+msgstr "言語を選択"
 
-#: ../misskey_tui.py:1527
-msgid ""
-"type:mention\n"
+#, CM_T.TOKEN_SEARCH_HEADMES_SET
+msgid "set to default?"
+msgstr "デフォルトに設定しますか？"
+
+#, NV_T.ERROR_OCCURED, CM_T.ERROR_OCCURED
+msgid "something occured"
+msgstr "何かが起きました。"
+
+#, NV_T.SUCCESS, CM_T.SUCCESS, NF_T.SUCCESS
+msgid "success"
+msgstr "成功"
+
+#, NV_T.SEL_REAC_FROM_NOTE_NOREAC, NF_T.REACTION_NOTE_THEREISNT
+msgid "there is no reactions"
+msgstr "ノートにリアクションがついていません"
+
+#, CM_T.LANG_NO_TRANSLATION_FILES
+msgid "there is no translation files."
+msgstr "翻訳用ファイルがありません"
+
+#, SR_T.SELECT_DECKADD_ALREADY_IN_DECK
+msgid "this reaction already in deck"
+msgstr "このリアクションは既にデッキにあります"
+
+#, CM_T.TOKEN_SEARCH_MES_TOKEN
+msgid "token:{}..."
+msgstr "トークン:{}..."
+
+#, CM_T.MIAUTH_TRY_AGAIN
+msgid "try again"
+msgstr "もう一度やる"
+
+#, NF_T.SELECT_NOTE_TYPE_MENTION
+msgid "type:mention\n"
 msgstr "タイプ:メンション\n"
 
-#: ../misskey_tui.py:1538
-msgid ""
-"type:reply\n"
-"from noteid:{}\n"
-"     txt:{}\n"
-"\n"
-msgstr ""
-"タイプ:リプライ\n"
-"リプライ元 ノートid:{}\n"
-"          テキスト:{}\n"
-"\n"
-
-#: ../misskey_tui.py:1549
+#, NF_T.SELECT_NOTE_TYPE_QT
 msgid ""
 "type:quote\n"
 "from noteid:{}\n"
@@ -855,18 +645,66 @@ msgstr ""
 "       テキスト:{}\n"
 "\n"
 
-#: ../misskey_tui.py:1550
+#, NF_T.SELECT_NOTE_TYPE_RP
 msgid ""
-"name:{}\n"
-"username:{}\n"
+"type:reply\n"
+"from noteid:{}\n"
+"     txt:{}\n"
+"\n"
 msgstr ""
-"名前:{}\n"
-"ユーザーネーム:{}\n"
+"タイプ:リプライ\n"
+"リプライ元 ノートid:{}\n"
+"          テキスト:{}\n"
+"\n"
 
-#: ../misskey_tui.py:1552
+#, CM_T.TOKEN_SEARCH_UNSET
+msgid "unset def"
+msgstr "デフォルトを解除"
+
+#, CM_T.TOKEN_SEARCH_HEADMES_UNSET
+msgid "unset success!"
+msgstr "解除に成功！"
+
+#, NV_T.SEL_NOTE_POP_UNTIL
+msgid "until"
+msgstr "まで"
+
+#, CNC_T.OK_RN_SHOWNOTE
 msgid ""
-"noteid:{}\n"
-"txt:{}\n"
+"user:{}\n"
+"text:{}"
 msgstr ""
-"ノートid:{}\n"
-"テキスト:{}\n"
+"ユーザー:{}\n"
+"テキスト:{}"
+
+#, CM_T.VERSION_WRITE_BY
+msgid "write by {}"
+msgstr "{}によって製作"
+
+#, CM_T.TOKEN_WRITE_PLS
+msgid "write your TOKEN"
+msgstr "トークンを入力してください"
+
+#, NF_T.SELECT_NOTE_FILES
+msgid "{} files"
+msgstr "{}個のファイル"
+
+#, CM_T.TL_TOKEN_REQUIRED
+msgid "{} is TOKEN required"
+msgstr "{}にはトークンが必要です。"
+
+#, NF_T.NT_QT
+msgid "{} was quoted"
+msgstr "{}が引用しました"
+
+#, NF_T.NT_REACTION
+msgid "{} was reaction [{}]"
+msgstr "{}が{}でリアクションしました"
+
+#, NF_T.NT_RN
+msgid "{} was renoted"
+msgstr "{}がリノートしました"
+
+#, NF_T.NT_RP
+msgid "{} was reply"
+msgstr "{}が返信しました"

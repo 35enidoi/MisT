@@ -1,45 +1,30 @@
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.renderers import ImageFile
-from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu
+from asciimatics.widgets import Frame, Layout, TextBox, Button, PopUpDialog, VerticalDivider, Text, ListBox, PopupMenu, Divider
 from asciimatics.exceptions import StopApplication, ResizeScreenError, NextScene
 from misskey import Misskey, exceptions, MiAuth
 from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, InvalidURL, HTTPError
+from typing import Union, Any
+from io import BytesIO
 from functools import partial
 import os
 
 from textenums import *
 
-# _を定義
-# プログラム的には意味はない
-# これがないとlinterが地獄になる(_の定義がないため)
-_:None
-
 class MkAPIs():
+    # version
+    # syoumi tekitouni ageteru noha naisyo
+    version = 0.4
+
+    class WindowHundlerError(Exception):
+        pass
+
     def __init__(self) -> None:
-        # version
-        # syoumi tekitouni ageteru noha naisyo
-        self.version = 0.4
         # mistconfig load
-        if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
-            self.mistconfig_put(True)
-            if self.mistconfig["version"] < self.version:
-                self.mistconfig["version"] = self.version
-                if not self.mistconfig.get("default"):
-                    self.mistconfig["default"] = {"theme":"default","lang":None,"defaulttoken":None}
-                self.lang = self.mistconfig["default"].get("lang")
-                self.theme = self.mistconfig["default"]["theme"]
-                self.mistconfig_put()
-            else:
-                self.lang = self.mistconfig["default"].get("lang")
-                self.theme = self.mistconfig["default"]["theme"]
-        else:
-            self.lang = None
-            self.theme = "default"
-            self.mistconfig = {"version":self.version,"default":{"theme":self.theme,"lang":self.lang,"defaulttoken":None},"tokens":[]}
-            self.mistconfig_put()
+        self._mistconfig_init()
         # MisT settings
-        self.tmp = []
+        self.__window_hundler:Union[tuple[str, tuple[Any]], tuple[()]] = tuple()
         self.notes = []
         self.nowpoint = 0
         self.reacdb = None
@@ -49,16 +34,7 @@ class MkAPIs():
         self.constcrnoteconf = self.crnoteconf.copy()
         self.init_translation()
         # Misskey py settings
-        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
-            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
-                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
-                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
-            else:
-                self.i = None
-                self.instance = "misskey.io"
-        else:
-            self.i = None
-            self.instance = "misskey.io"
+        self._misskeypy_init()
         self.mk = None
         self.tl = "LTL"
         is_ok = self.reload()
@@ -70,7 +46,24 @@ class MkAPIs():
         self.daemon = daemons.Ds(self, self.mistconfig)
         self._finds = self.daemon._startds()
 
-    def mistconfig_put(self,loadmode=False):
+    def window_hundler_set(self, targetscene:str, *args:Any) -> None:
+        if self.__window_hundler  == ():
+            self.__window_hundler = (targetscene, args)
+        else:
+            raise self.WindowHundlerError("Window hundler not empty")
+    
+    def window_hundler_get(self, _scn:Scene) -> tuple[Any]:
+        if self.__window_hundler != ():
+            if _scn.name == self.__window_hundler[0]:
+                ret = self.__window_hundler[1]
+                self.__window_hundler = ()
+                return ret
+            else:
+                raise self.WindowHundlerError(f"Scene name `{_scn.name}` is not target scene `{self.__window_hundler[0]}`")
+        else:
+            raise self.WindowHundlerError("Window hundler empty")
+
+    def mistconfig_put(self, loadmode:bool=False) -> None:
         import json
         filepath = os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))
         if loadmode:
@@ -80,7 +73,7 @@ class MkAPIs():
             with open(filepath, "w") as f:
                 f.write(json.dumps(self.mistconfig))
 
-    def init_translation(self):
+    def init_translation(self) -> None:
         import gettext
         # 翻訳ファイルを配置するディレクトリ
         path_to_locale_dir = os.path.abspath(
@@ -107,7 +100,50 @@ class MkAPIs():
         # Pythonの組み込みグローバル領域に_という関数を束縛する
         translater.install()
 
-    def reload(self):
+    def _mistconfig_init(self) -> None:
+        if os.path.isfile(os.path.abspath(os.path.join(os.path.dirname(__file__),'./mistconfig.conf'))):
+            # mistconfigがあったら、まずロード
+            self.mistconfig_put(True)
+            if self.mistconfig["version"] < self.version:
+                # バージョンが下なら、mistconfigのバージョン上げ
+                self.mistconfig["version"] = self.version
+                # もしdefaultがなければ作る
+                # v0.43で廃止予定
+                if not self.mistconfig.get("default"):
+                    self.mistconfig["default"] = {"theme":"default","lang":None,"defaulttoken":None}
+                # 保存
+                self.mistconfig_put()
+            self.lang = self.mistconfig["default"].get("lang")
+            self.theme = self.mistconfig["default"]["theme"]
+        else:
+            # mistconfig無ければ
+            self.lang = None
+            self.theme = "default"
+            self.mistconfig = {"version":self.version,
+                               "default":{"theme":self.theme,
+                                          "lang":self.lang,
+                                          "defaulttoken":None},
+                                "tokens":[]}
+            # 保存
+            self.mistconfig_put()
+
+    def _misskeypy_init(self) -> None:
+        __DEFAULT_INSTANCE = "misskey.io"
+        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
+            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
+                # defaultがあるとき
+                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
+                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
+            else:
+                # defaultがないとき
+                self.i = None
+                self.instance = __DEFAULT_INSTANCE
+        else:
+            # defaultがないとき
+            self.i = None
+            self.instance = __DEFAULT_INSTANCE
+
+    def reload(self) -> bool:
         bef_mk = self.mk
         try:
             self.mk=Misskey(self.instance,self.i)
@@ -119,19 +155,19 @@ class MkAPIs():
             self.mk = bef_mk
             return False
 
-    def miauth_load(self):
+    def miauth_load(self) -> MiAuth:
         permissions = ["read:account","write:account","read:messaging","write:messaging","read:notifications",
                        "write:notifications","read:reactions","write:reactions","write:notes"]
         return MiAuth(self.instance,name="MisT",permission=permissions)
 
-    def miauth_check(self,mia):
+    def miauth_check(self, mia:MiAuth) -> bool:
         try:
             self.i = mia.check()
             return True
         except (exceptions.MisskeyMiAuthFailedException, HTTPError):
             return False
 
-    def get_i(self):
+    def get_i(self) -> Union[dict, None]:
         try:
             return self.mk.i()
         except (exceptions.MisskeyAPIException, ConnectionError):
@@ -153,13 +189,13 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
-    def get_ntfy(self):
+    def get_ntfy(self) -> Union[dict, None]:
         try:
             return self.mk.i_notifications(100)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
-    def get_reactiondb(self):
+    def get_reactiondb(self) -> None:
         import requests
         import json
         try:
@@ -174,34 +210,33 @@ class MkAPIs():
         except ConnectTimeout:
             self.reacdb = None
 
-    def noteshow(self,noteid):
+    def noteshow(self, noteid:str) -> Union[dict, None]:
         try:
             return self.mk.notes_show(noteid)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
-    def get_instance_meta(self):
+    def get_instance_meta(self) -> bool:
         try:
             self.meta = self.mk.meta()
             return True
         except (exceptions.MisskeyAPIException, ConnectTimeout):
             return False
 
-    def get_instance_icon(self):
+    def get_instance_icon(self) -> Union[BytesIO, None]:
         import requests
         try:
             iconurl = self.meta["iconUrl"]
             returns = requests.get(iconurl)
             if returns.status_code == 200:
-                import io
-                icon = io.BytesIO(returns.content)
+                icon = BytesIO(returns.content)
                 return icon
             else:
-                return "Error"
+                return None
         except ConnectTimeout:
-            return "Error"
+            return None
 
-    def create_note(self, text):
+    def create_note(self, text:str) -> Union[dict, None]:
         try:
             return self.mk.notes_create(text, self.crnoteconf["CW"],
                                         renote_id=self.crnoteconf["renoteId"],
@@ -210,17 +245,17 @@ class MkAPIs():
         except exceptions.MisskeyAPIException:
             return None
 
-    def create_renote(self, renoteid):
+    def create_renote(self, renoteid:str) -> Union[dict, None]:
         try:
             return self.mk.notes_create(renote_id=renoteid)
         except exceptions.MisskeyAPIException:
             return None
 
-    def create_reaction(self, noteid, reaction):
+    def create_reaction(self, noteid:str, reaction:str) -> bool:
         try:
             return self.mk.notes_reactions_create(noteid, reaction)
         except exceptions.MisskeyAPIException:
-            return None
+            return False
 
 class NoteView(Frame):
     def __init__(self, screen, msk:MkAPIs):
@@ -462,8 +497,7 @@ class NoteView(Frame):
                     noteid = noteval["id"]
             else:
                 noteid = noteval["id"]
-            self.msk_.tmp.append(noteid)
-            self.msk_.tmp.append("searchmode")
+            self.msk_.window_hundler_set("SelReaction", "searchmode", noteid)
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self,arg=-1):
@@ -593,6 +627,9 @@ class ConfigMenu(Frame):
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
 
+        # ok values hundler
+        self.ok_value_hundler = ""
+
         # txts create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         self.txt = Text()
@@ -680,7 +717,7 @@ class ConfigMenu(Frame):
                 self.reactiondel(-1)
         elif arg == 2:
             # add deck
-            self.msk_.tmp.append("deck")
+            self.msk_.window_hundler_set("SelReaction", "deck")
             raise NextScene("SelReaction")
     
     def reactiondel(self, arg):
@@ -756,21 +793,21 @@ class ConfigMenu(Frame):
         if arg == 0:
             from util import pypcopy, webshow
             # MiAuth
-            self.msk_.tmp.append(self.msk_.miauth_load())
-            url = self.msk_.tmp[-1].generate_url()
+            mia = self.msk_.miauth_load()
+            url = mia.generate_url()
             webshow(url)
             copysuccess = pypcopy(url)
             space = "      \n      "
             lens = self.screen.width//2
             lines = len(url)//lens
             url = space.split("\n")[0]+space.join([url[i*lens:(i+1)*lens] for i in range(lines)])
-            self.popup(CM_T.TOKEN_SEL_MIAUTH_URL.value, "\n", url, ("\n"+(CM_T.TOKEN_SEL_COPIED.value if copysuccess else "")),
+            self.popup(CM_T.TOKEN_SEL_MIAUTH_URL.value + "\n" + url + ("\n"+(CM_T.TOKEN_SEL_COPIED.value if copysuccess else "")),
                        [CM_T.OK.value],
-                       self.miauth_get)
+                       partial(self.miauth_get, mia))
         elif arg == 1:
             # TOKEN
             self._txtbxput(CM_T.TOKEN_WRITE_PLS.value)
-            self.msk_.tmp.append("TOKEN")
+            self.ok_value_hundler = "TOKEN"
             self._disables()
     
     def _ser_token_search(self, arg, *, point=0):
@@ -853,9 +890,9 @@ class ConfigMenu(Frame):
                 return
         self._ser_token_search(-1)
 
-    def miauth_get(self,arg):
+    def miauth_get(self, mia:MiAuth, arg):
         if arg == 0:
-            is_ok = self.msk_.miauth_check(self.msk_.tmp[-1])
+            is_ok = self.msk_.miauth_check(mia)
             if is_ok:
                 text = CM_T.MIAUTH_GET_SUCCESS.value + "\n"
                 self.msk_.reload()
@@ -872,19 +909,16 @@ class ConfigMenu(Frame):
                 self.msk_.notes = []
                 self.msk_.reacdb = None
                 self.popup(text, [CM_T.OK.value], self.refresh_)
-                self.msk_.tmp.pop()
             else:
                 text = CM_T.MIAUTH_CHECK_FAIL.value
-                self.popup(text, [CM_T.MIAUTH_TRY_AGAIN.value, CM_T.RETURN.value], self.miauth_get)
-        else:
-            self.msk_.tmp.pop()
+                self.popup(text, [CM_T.MIAUTH_TRY_AGAIN.value, CM_T.RETURN.value], partial(self.miauth_get, mia))
 
     def instance_(self, select=-1):
         if select == -1:
             if self.msk_.i is not None:
                 self.popup(CM_T.CHANGE_INSTANCE_DETECT_TOKEN.value, [CM_T.OK.value,CM_T.RETURN.value],on_close=self.instance_)
             else:
-                self.msk_.tmp.append("INSTANCE")
+                self.ok_value_hundler = "INSTANCE"
                 self._txtbxput(CM_T.CHANGE_INSTANCE_HINT.value, CM_T.CHANGE_INSTANCE_CURRENT_INSTANCE.value.format(self.msk_.instance),"")
                 self._disables()
         elif select == 0:
@@ -892,7 +926,8 @@ class ConfigMenu(Frame):
             self.instance_()
 
     def ok_(self):
-        ok_value = self.msk_.tmp.pop()
+        ok_value = self.ok_value_hundler
+        self.ok_value_hundler = ""
         if ok_value == "TOKEN":
             self.msk_.i = self.txt.value
             is_ok = self.msk_.reload()
@@ -920,7 +955,7 @@ class ConfigMenu(Frame):
                 is_ok = self.msk_.get_instance_meta()
                 if is_ok:
                     icon_bytes = self.msk_.get_instance_icon()
-                    if icon_bytes == "Error":
+                    if icon_bytes == None:
                         self._txtbxput(CM_T.OK_INSTANCE_FAIL_TO_GET_ICON.value)
                     else:
                         icon = ImageFile(icon_bytes,self.screen.height//2)
@@ -958,7 +993,7 @@ class ConfigMenu(Frame):
         filedir = os.path.abspath(os.path.join(os.path.dirname(__file__),"./locale/*/LC_MESSAGES"))
         langlst = glob.glob(filedir)
         if len(langlst) == 0:
-            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CN_T.OK.value])
+            self.popup(CM_T.LANG_NO_TRANSLATION_FILES.value,[CM_T.OK.value])
         else:
             selects = [pathlib.PurePath(lang).parts[-2] for lang in langlst]
             if arg == -1:
@@ -1043,7 +1078,7 @@ class CreateNote(Frame):
             else:
                 self._scene.add_effect(PopupMenu(self.screen,[(CN_T.RETURN.value, lambda : None)]+[(char, lambda x=v:self.put_emoji(x)) for v, char in enumerate(nowtoken["reacdeck"])], self.screen.width//3, 0))
         elif arg == 1:
-            self.msk_.tmp.append("crnote")
+            self.msk_.window_hundler_set("SelReaction", "crnote")
             raise NextScene("SelReaction")
 
     def put_emoji(self, arg):
@@ -1102,6 +1137,9 @@ class CreateNoteConfig(Frame):
         self.msk_ = msk
         self.set_theme(self.msk_.theme)
 
+        # ok values hundler
+        self.ok_value_hundler = ""
+
         # txt create
         self.txtbx = TextBox(screen.height-1,as_string=True,line_wrap=True)
         self.txt = Text()
@@ -1133,7 +1171,7 @@ class CreateNoteConfig(Frame):
         self.fix()
     
     def cw(self):
-        self.msk_.tmp.append("cw")
+        self.ok_value_hundler = "CW"
         self.txt.value = "" if self.msk_.crnoteconf["CW"] is None else self.msk_.crnoteconf["CW"]
         self._disables()
 
@@ -1158,19 +1196,21 @@ class CreateNoteConfig(Frame):
         self.nowconf()
 
     def renoteid(self):
-        self.msk_.tmp.append("renote")
+        self.ok_value_hundler = "RENOTE"
         self.txt.value = "" if self.msk_.crnoteconf["renoteId"] is None else self.msk_.crnoteconf["renoteId"]
         self._disables()
 
     def replyid(self):
-        self.msk_.tmp.append("reply")
+        self.ok_value_hundler = "REPLY"
         self.txt.value = "" if self.msk_.crnoteconf["replyId"] is None else self.msk_.crnoteconf["replyId"]
         self._disables()
 
     def ok_(self):
-        if (ok_value := self.msk_.tmp.pop()) == "cw":
+        ok_value = self.ok_value_hundler
+        self.ok_value_hundler = ""
+        if ok_value == "CW":
             self.msk_.crnoteconf["CW"] = None if self.txt.value == "" else self.txt.value
-        elif ok_value == "renote":
+        elif ok_value == "RENOTE":
             if self.txt.value == "":
                 self.msk_.crnoteconf["renoteId"] = None
             else:
@@ -1181,7 +1221,7 @@ class CreateNoteConfig(Frame):
                 else:
                     self.popup(CNC_T.OK_RN_SHOWNOTE_FAIL.value,[CNC_T.OK.value])
                     self.msk_.crnoteconf["renoteId"] = None
-        elif ok_value == "reply":
+        elif ok_value == "REPLY":
             if self.txt.value == "":
                 self.msk_.crnoteconf["replyId"] = None
             else:
@@ -1259,20 +1299,14 @@ class SelectReaction(Frame):
         self.fix()
 
     def load(self):
-        if len(self.msk_.tmp) != 0:
-            if (tmpval := self.msk_.tmp[-1]) == "searchmode":
-                self.msk_.tmp.pop()
-                self.flag = "search"
-                self.noteid = self.msk_.tmp.pop()
-            elif tmpval == "deck":
-                self.msk_.tmp.pop()
-                self.flag = "deckadd"
-            elif tmpval == "crnote":
-                self.flag = self.msk_.tmp.pop()
-            else:
-                self.flag = ""
-        else:
-            self.flag = ""
+        tmpval = self.msk_.window_hundler_get(self._scene)
+        if tmpval[0] == "searchmode":
+            self.flag = "search"
+            self.noteid = tmpval[1]
+        elif tmpval[0] == "deck":
+            self.flag = "deckadd"
+        elif tmpval[0] == "crnote":
+            self.flag = "createnote"
 
     def search(self):
         if self.msk_.reacdb is None:
@@ -1312,16 +1346,16 @@ class SelectReaction(Frame):
                 else:
                     nowtoken["reacdeck"].append(reaction)
                     self.popup(SR_T.SELECT_DECKADD.value.format(reaction),[SR_T.OK.value])
-            elif self.flag == "crnote":
+            elif self.flag == "createnote":
                 self.msk_.crnotetxts += f":{reaction}:"
                 raise NextScene("CreateNote")
 
     def getdb(self):
         self.msk_.get_reactiondb()
         if self.msk_.reacdb is None:
-            self.popup(SR_T.GETDB_FAIL,[SR_T.OK.value])
+            self.popup(SR_T.GETDB_FAIL.value,[SR_T.OK.value])
         else:
-            self.popup(SR_T.GETDB_SUCCESS,[SR_T.OK.value])
+            self.popup(SR_T.GETDB_SUCCESS.value,[SR_T.OK.value])
             self.search()
     
     def popup(self,txt,button,on_close=None):
@@ -1333,7 +1367,7 @@ class SelectReaction(Frame):
         raise NextScene("Main")
 
 class Notification(Frame):
-    def __init__(self, screen, msk):
+    def __init__(self, screen, msk:MkAPIs):
         super(Notification, self).__init__(screen,
                                       screen.height,
                                       screen.width,
@@ -1345,29 +1379,51 @@ class Notification(Frame):
         self.ntfys = None
         self.set_theme(self.msk_.theme)
 
+        # create flags
+        self.FLAG = [
+            True, # Follow
+            True, # Mention
+            True, # Note
+            True, # Reply
+            True, # Quote
+            True, # Renote
+            True, # Reaction
+            False # else(for DEBUG)
+        ]
+
         # txtbox create
         self.txtbx = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
         self.txtbx.auto_scroll = False
         self.txtbx.value = NF_T.DEAFAULT_TXTBX_VAL.value
+        self.flagbx = TextBox(len(self.FLAG)*2, as_string=True, readonly=True)
+        self.flagbx.auto_scroll = False
+        self.flagbx.disabled = True
+        self.flag_init()
 
         # buttons create
         buttonnames = (NF_T.BT_GET_NTFY.value, NF_T.BT_CLEAR.value, NF_T.BT_ALL.value,
                        NF_T.BT_FOLLOW.value, NF_T.BT_MENTION.value, NF_T.BT_NOTE.value,
-                       NF_T.BT_RP.value, NF_T.BT_QT.value, NF_T.BT_SEL.value,
-                       NF_T.RETURN.value)
-        on_click = (self.get_ntfy, self.clear, self.inp_all, self._ser_follow,
-                    self._ser_mention, self._ser_note, self._ser_reply, self._ser_quote,
-                    self.select, self.return_)
+                       NF_T.BT_RP.value, NF_T.BT_QT.value, NF_T.BT_RN.value,
+                       NF_T.BT_REACTION.value, NF_T.BT_SEL.value, NF_T.RETURN.value)
+        on_click = (self.get_ntfy, self.clear, self.flag_all,
+                    lambda : self.flagger(0), lambda : self.flagger(1), lambda : self.flagger(2),
+                    lambda : self.flagger(3), lambda : self.flagger(4), lambda : self.flagger(5),
+                    lambda : self.flagger(6), self.select, self.return_)
         self.buttons = [Button(buttonnames[i],on_click[i]) for i in range(len(buttonnames))]
 
         # Layout create
-        layout = Layout([14,2,self.screen.width-16])
+        layout = Layout([max(map(len, buttonnames))*2+6,2,self.screen.width-max(map(len, buttonnames))*2-6])
         self.add_layout(layout)
 
         # add widget
+        # number 0 (buttons)
         for i in range(len(self.buttons)):
             layout.add_widget(self.buttons[i],0)
+        layout.add_widget(Divider(), 0)
+        layout.add_widget(self.flagbx, 0)
+        # number 1 (divider)
         layout.add_widget(VerticalDivider(self.screen.height),1)
+        # number 2 (notifications)
         layout.add_widget(self.txtbx,2)
 
         #fix
@@ -1389,145 +1445,102 @@ class Notification(Frame):
                     checkntfytype["mention"].append(i)
                 else:
                     if not i.get("note"):
-                        pass
+                        checkntfytype["else"].append(i)
+                        continue
                     elif (ntfytype == "renote") or (ntfytype == "quote"):
-                        if i["note"]["renote"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["renote"]["id"]] = {"value":i["note"]["renote"],"ntfy":[]}
-                        checkntfytype["notes"][i["note"]["renote"]["id"]]["ntfy"].append(i)
+                        noteval = i["note"]["renote"]
                     elif ntfytype == "reply":
-                        if i["note"]["reply"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["reply"]["id"]] = {"value":i["note"]["reply"],"ntfy":[]}
-                        checkntfytype["notes"][i["note"]["reply"]["id"]]["ntfy"].append(i)
+                        noteval = i["note"]["reply"]
                     elif ntfytype == "reaction":
-                        if i["note"]["id"] not in checkntfytype["notes"]:
-                            checkntfytype["notes"][i["note"]["id"]] = {"value":i["note"],"ntfy":[]}
-                        checkntfytype["notes"][i["note"]["id"]]["ntfy"].append(i)
+                        noteval = i["note"]
                     else:
                         checkntfytype["else"].append(i)
+                        continue
+                    if (id_ := noteval["id"]) not in checkntfytype["notes"]:
+                        checkntfytype["notes"][id_] = {"value":noteval, "ntfy":[]}
+                    if i.get("user"):
+                        if i["user"]["username"] is None:
+                            i["user"]["username"] = i["user"]["name"]
+                    else:
+                        i["user"] = {"username":"Deleted user?", "isCat":False}
+                    checkntfytype["notes"][id_]["ntfy"].append(i)
             self.ntfys = checkntfytype
             self.inp_all()
             self.popup(NF_T.SUCCESS.value,[NF_T.OK.value])
 
-    def clear(self):
+    def clear(self) -> None:
         self.txtbx.value = ""
 
-    def _ser_follow(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            self.inp_follow()
+    def flag_all(self) ->None:
+        for i in range(7):
+            self.FLAG[i] = True
+        self.flag_init()
+        self.inp_all()
 
-    def _ser_mention(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            self.inp_mention()
-
-    def _ser_note(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            for note in self.ntfys["notes"]:
-                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
-                self.inp_note(note)
-
-    def _ser_reply(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            replys = {}
-            for ntfys in self.ntfys["notes"]:
-                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
-                    if ntfy["type"] == "reply":
-                        if ntfys not in replys:
-                            replys[ntfys] = []
-                        replys[ntfys].append(ntfy)
-            for noteid in replys:
-                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
-                for reply in replys[noteid]:
-                    if reply.get("user"):
-                        if reply["user"]["name"] is None:
-                            username = reply["user"]["username"]
-                        else:
-                            username = reply["user"]["name"]
-                    else:
-                        username = "Deleted user?"
-                        reply["user"] = {"isCat":False}
-                    self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(reply["note"]["text"]), "")
-                self._txtbxput("-"*(self.screen.width-18))
-
-    def _ser_quote(self):
-        if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
-        else:
-            self.clear()
-            quotes = {}
-            for ntfys in self.ntfys["notes"]:
-                for ntfy in self.ntfys["notes"][ntfys]["ntfy"]:
-                    if ntfy["type"] == "quote":
-                        if ntfys not in quotes:
-                            quotes[ntfys] = []
-                        quotes[ntfys].append(ntfy)
-            for noteid in quotes:
-                self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(self.ntfys["notes"][noteid]["value"]["text"])}', "")
-                for quote in quotes[noteid]:
-                    if quote.get("user"):
-                        if quote["user"]["name"] is None:
-                            username = quote["user"]["username"]
-                        else:
-                            username = quote["user"]["name"]
-                    else:
-                        username = "Deleted user?"
-                        quote["user"] = {"isCat":False}
-                    self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(quote["note"]["text"]), "")
-                self._txtbxput("-"*(self.screen.width-18))
+    def flagger(self, val:int) -> None:
+        self.FLAG[val] = not self.FLAG[val]
+        self.flag_init()
+        self.inp_all()
+    
+    def flag_init(self) -> None:
+        flagnames = (NF_T.FLAG_FOLLOW.value, NF_T.FLAG_MENTION.value, NF_T.FLAG_NOTE.value,
+                     NF_T.FLAG_RP.value, NF_T.FLAG_QT.value, NF_T.FLAG_RN.value,
+                     NF_T.FLAG_REACTION.value)
+        txts = ""
+        for i, v in zip(flagnames, self.FLAG):
+            txts += i+"\n"+str(v)+"\n"
+        self.flagbx.value = txts
 
     def inp_all(self):
         if self.ntfys == None:
-            self.popup(NF_T.GET_NTFY_PLS.value, [NF_T.OK.value])
+            pass
         else:
             self.clear()
-            if len(self.ntfys["follow"]) != 0:
+            if len(self.ntfys["follow"]) != 0 and self.FLAG[0]:
                 self._txtbxput(NF_T.NT_FOLLOW.value)
                 self.inp_follow()
-            if len(self.ntfys["mention"]) != 0:
+            if len(self.ntfys["mention"]) != 0 and self.FLAG[1]:
                 self._txtbxput(NF_T.NT_MENTION.value)
                 self.inp_mention()
-            for note in self.ntfys["notes"]:
-                self._txtbxput(f"noteid:{note}", f'text:{self.nyaize(self.ntfys["notes"][note]["value"]["text"])}', "")
-                self.inp_note(note)
+            if self.FLAG[2]:
+                for noteid, note in self.ntfys["notes"].items():
+                    self.inp_note(noteid, note)
+            if self.FLAG[7]:
+                for value in self.ntfys["else"]:
+                    self._txtbxput(value)
 
-    def inp_note(self, note):
-        for ntfy in self.ntfys["notes"][note]["ntfy"]:
-            if ntfy.get("user"):
-                if ntfy["user"]["name"] is None:
-                    username = ntfy["user"]["username"]
-                else:
-                    username = ntfy["user"]["name"]
+    def inp_note(self, noteid:str, note:dict):
+        txts = []
+        for ntfy in note["ntfy"]:
+            username = ntfy["user"]["name"]
+            if (nttype := ntfy["type"]) == "reply" and self.FLAG[3]:
+                txts.append(NF_T.NT_RP.value.format(username))
+                txts.append(self.nyaize(ntfy["note"]["text"]) if ntfy["user"]["isCat"] else ntfy["note"]["text"])
+            elif nttype == "quote" and self.FLAG[4]:
+                txts.append(NF_T.NT_QT.value.format(username))
+                txts.append(self.nyaize(ntfy["note"]["text"]) if ntfy["user"]["isCat"] else ntfy["note"]["text"])
+            elif nttype == "renote" and self.FLAG[5]:
+                txts.append(NF_T.NT_RN.value.format(username))
+            elif nttype == "reaction" and self.FLAG[6]:
+                txts.append(NF_T.NT_REACTION.value.format(username, ntfy["reaction"]))
             else:
-                username = "Deleted user?"
-                ntfy["user"] = {"isCat":False}
-            if (nttype := ntfy["type"]) == "reply":
-                self._txtbxput(NF_T.NT_RP.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
-            elif nttype == "quote":
-                self._txtbxput(NF_T.NT_QT.value.format(username), self.nyaize(ntfy["note"]["text"]), "")
-            elif nttype == "renote":
-                self._txtbxput(NF_T.NT_RN.value.format(username))
-            elif nttype == "reaction":
-                self._txtbxput(NF_T.NT_REACTION.value.format(username, ntfy["reaction"]))
-        self._txtbxput("-"*(self.screen.width-18))
+                continue
+            txts.append("") # 改行のための空白
+        if len(txts) != 0:
+            self._txtbxput(f"noteid:{noteid}", f'text:{self.nyaize(note["value"]["text"]) if note["value"]["user"]["isCat"] else note["value"]["text"]}', "\n")
+            for i in txts:
+                self._txtbxput(i)
+            self._txtbxput("-"*(self.screen.width-max(map(lambda x:len(x.text), self.buttons))*2-12))
 
     def inp_follow(self):
         for char in self.ntfys["follow"]:
             self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"],"")
+        self._txtbxput("-"*(self.screen.width-max(map(lambda x:len(x.text), self.buttons))*2-12))
 
     def inp_mention(self):
         for char in self.ntfys["mention"]:
-            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], self.nyaize(char["note"]["text"]),"")
+            self._txtbxput(char["user"]["name"] if char["user"].get("name") else char["user"]["username"], (self.nyaize(char["note"]["text"]) if char["user"]["isCat"] else char["note"]["text"]),"")
+            self._txtbxput("-"*(self.screen.width-max(map(lambda x:len(x.text), self.buttons))*2-12))
 
     def select(self, arg=-1):
         buttons = [(NF_T.RETURN.value, lambda:None)]
@@ -1651,8 +1664,7 @@ class Notification(Frame):
         elif arg == 2:
             # search
             noteid = note["note"]["id"]
-            self.msk_.tmp.append(noteid)
-            self.msk_.tmp.append("searchmode")
+            self.msk_.window_hundler_set("SelReaction", "searchmode", noteid)
             raise NextScene("SelReaction")
 
     def _ser_reac_note(self, arg, note):
