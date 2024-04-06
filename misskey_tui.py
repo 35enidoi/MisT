@@ -173,7 +173,7 @@ class MkAPIs():
         except (exceptions.MisskeyAPIException, ConnectionError):
             return None
 
-    def get_note(self, lim:int=100, untilid=None, sinceid=None) -> list[dict]:
+    def get_note(self, lim:int=100, untilid=None, sinceid=None) -> Union[list[dict], None]:
         try:
             if self.tl == "HTL":
                 notes = self.mk.notes_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
