@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: MisT 0.4\n"
-"POT-Creation-Date: 2024-04-03 01:28:46.533837+09:00\n"
-"PO-Revision-Date: 2024-04-04 02:39:12.908078+09:00\n"
+"Project-Id-Version: MisT 0.42\n"
+"POT-Creation-Date: 2024-04-11 02:25:20.416511+09:00\n"
+"PO-Revision-Date: 2024-04-11 02:25:54.664669+09:00\n"
 "Last-Translator: iodine53\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
