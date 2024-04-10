@@ -8,6 +8,7 @@ from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout, In
 from typing import Union, Any
 from io import BytesIO
 from functools import partial
+from datetime import datetime
 import os
 
 from textenums import *
@@ -183,9 +184,7 @@ class MkAPIs():
                 notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
                 notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
-            else:
-                notes = None
-            return notes
+            return sorted(notes, key=lambda x:datetime.fromisoformat(x["createdAt"]).timestamp(), reverse=True)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
