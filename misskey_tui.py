@@ -11,7 +11,7 @@ from functools import partial
 from datetime import datetime
 import os
 
-from textenums import *
+# from textenums import *
 
 class MkAPIs():
     # version

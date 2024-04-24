@@ -33,11 +33,11 @@ class MkAPIs():
         if not is_ok:
             self.i = None
 
+        # # import daemons
         # import daemons
-        import daemons
-        # daemons initalize
-        self.daemon = daemons.Ds(self, self.mistconfig)
-        self._finds = self.daemon._startds()
+        # # daemons initalize
+        # self.daemon = daemons.Ds(self, self.mistconfig)
+        # self._finds = self.daemon._startds()
 
     def window_hundler_set(self, targetscene:str, *args:Any) -> None:
         if self.__window_hundler  == ():
@@ -67,7 +67,7 @@ class MkAPIs():
 
     def init_translation(self) -> None:
         # 翻訳ファイルを配置するディレクトリ
-        path_to_locale_dir = self._getpath("./locale")
+        path_to_locale_dir = self._getpath("../locale")
 
         # もしself.langがNoneなら翻訳なしに
         if self.lang is None:
@@ -87,7 +87,7 @@ class MkAPIs():
         translater.install()
 
     def _mistconfig_init(self) -> None:
-        if self._getpath("./mistconfig.conf"):
+        if os_path.isfile(self._getpath("./mistconfig.conf")):
             # mistconfigがあったら、まずロード
             self.mistconfig_put(True)
             if self.mistconfig["version"] < self.version:
@@ -255,6 +255,6 @@ class MkAPIs():
         except Mi_exceptions.MisskeyAPIException:
             return False
 
-    def _getpath(dirname:str) -> str:
+    def _getpath(self, dirname:str) -> str:
         """相対パスから絶対パスに変える奴"""
         return os_path.abspath(os_path.join(os_path.dirname(__file__), dirname))
