@@ -5,11 +5,17 @@ import json
 import requests
 from requests import exceptions as Req_exceprions
 import gettext
-from misskey import Misskey, MiAuth, exceptions as Mi_exceptions, enum as Mi_enum
+from misskey import (
+    Misskey,
+    MiAuth,
+    exceptions as Mi_exceptions,
+    enum as Mi_enum
+)
 
 # 型指定用のモジュール
 from asciimatics.scene import Scene
 from typing import Union, Any
+
 
 class MkAPIs():
     # version
@@ -23,7 +29,8 @@ class MkAPIs():
         # mistconfig load
         self._mistconfig_init()
         # MisT settings
-        self.__window_hundler:Union[tuple[str, tuple[Any]], tuple[()]] = tuple()
+        self.__window_hundler = tuple()
+        self.__window_hundler: Union[tuple[str, tuple[Any]], tuple[()]]
         self.init_translation()
         # Misskey py settings
         self._misskeypy_init()
@@ -39,24 +46,29 @@ class MkAPIs():
         # self.daemon = daemons.Ds(self, self.mistconfig)
         # self._finds = self.daemon._startds()
 
-    def window_hundler_set(self, targetscene:str, *args:Any) -> None:
-        if self.__window_hundler  == ():
+    def window_hundler_set(self, targetscene: str, *args: Any) -> None:
+        if self.__window_hundler == ():
             self.__window_hundler = (targetscene, args)
         else:
             raise self.WindowHundlerError("Window hundler not empty")
-    
-    def window_hundler_get(self, _scn:Scene) -> tuple[Any]:
+
+    def window_hundler_get(self, _scn: Scene) -> tuple[Any]:
         if self.__window_hundler != ():
             if _scn.name == self.__window_hundler[0]:
                 ret = self.__window_hundler[1]
                 self.__window_hundler = ()
                 return ret
             else:
-                raise self.WindowHundlerError(f"Scene name `{_scn.name}` is not target scene `{self.__window_hundler[0]}`")
+                raise self.WindowHundlerError(
+                    "Scene name `{}` is not target scene `{}`".format(
+                        _scn.name,
+                        self.__window_hundler[0]
+                    )
+                )
         else:
             raise self.WindowHundlerError("Window hundler empty")
 
-    def mistconfig_put(self, loadmode:bool=False) -> None:
+    def mistconfig_put(self, loadmode: bool = False) -> None:
         filepath = self._getpath("./mistconfig.conf")
         if loadmode:
             with open(filepath, "r") as f:
@@ -77,10 +89,10 @@ class MkAPIs():
 
         # 翻訳用クラスの設定
         translater = gettext.translation(
-            'messages',                   # domain: 辞書ファイルの名前
-            localedir=path_to_locale_dir, # 辞書ファイル配置ディレクトリ
-            languages=[lang],             # 翻訳に使用する言語
-            fallback=True                 # .moファイルが見つからなかった時は未翻訳の文字列を出力
+            'messages',                    # domain: 辞書ファイルの名前
+            localedir=path_to_locale_dir,  # 辞書ファイル配置ディレクトリ
+            languages=[lang],              # 翻訳に使用する言語
+            fallback=True                  # .moファイルが見つからなかった時は未翻訳の文字列を出力
         )
 
         # Pythonの組み込みグローバル領域に_という関数を束縛する
@@ -96,7 +108,9 @@ class MkAPIs():
                 # もしdefaultがなければ作る
                 # v0.43で廃止予定
                 if not self.mistconfig.get("default"):
-                    self.mistconfig["default"] = {"theme":"default","lang":None,"defaulttoken":None}
+                    self.mistconfig["default"] = {"theme": "default",
+                                                  "lang": None,
+                                                  "defaulttoken": None}
                 # 保存
                 self.mistconfig_put()
             self.lang = self.mistconfig["default"].get("lang")
@@ -105,11 +119,11 @@ class MkAPIs():
             # mistconfig無ければ
             self.lang = None
             self.theme = "default"
-            self.mistconfig = {"version":self.version,
-                               "default":{"theme":self.theme,
-                                          "lang":self.lang,
-                                          "defaulttoken":None},
-                                "tokens":[]}
+            self.mistconfig = {"version": self.version,
+                               "default": {"theme": self.theme,
+                                           "lang": self.lang,
+                                           "defaulttoken": None},
+                               "tokens": []}
             # 保存
             self.mistconfig_put()
 
@@ -132,7 +146,7 @@ class MkAPIs():
     def reload(self) -> bool:
         bef_mk = self.mk
         try:
-            self.mk=Misskey(self.instance,self.i)
+            self.mk = Misskey(self.instance, self.i)
             if self.i is not None:
                 self.mk.i()
             return True
@@ -155,9 +169,9 @@ class MkAPIs():
                        Mi_enum.Permissions.READ_NOTIFICATIONS.value,
                        Mi_enum.Permissions.WRITE_NOTIFICATIONS.value]
 
-        return MiAuth(self.instance,name="MisT",permission=permissions)
+        return MiAuth(self.instance, name="MisT", permission=permissions)
 
-    def miauth_check(self, mia:MiAuth) -> bool:
+    def miauth_check(self, mia: MiAuth) -> bool:
         try:
             self.i = mia.check()
             return True
@@ -172,17 +186,22 @@ class MkAPIs():
                 Req_exceprions.ConnectionError):
             return None
 
-    def get_note(self, lim:int=100, untilid=None, sinceid=None) -> Union[list[dict], None]:
+    def get_note(self,
+                 lim: int = 100,
+                 untilid=None,
+                 sinceid=None) -> Union[list[dict], None]:
         try:
             if self.tl == "HTL":
-                notes = self.mk.notes_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
             elif self.tl == "LTL":
-                notes = self.mk.notes_local_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_local_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
             elif self.tl == "STL":
-                notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
+                notes = self.mk.notes_hybrid_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
             elif self.tl == "GTL":
-                notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
-            return sorted(notes, key=lambda x:datetime.fromisoformat(x["createdAt"]).timestamp(), reverse=True)
+                notes = self.mk.notes_global_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
+            return sorted(notes,
+                          key=lambda x: datetime.fromisoformat(x["createdAt"]).timestamp(),
+                          reverse=True)
         except (Mi_exceptions.MisskeyAPIException,
                 Req_exceprions.ReadTimeout):
             return None
@@ -207,7 +226,7 @@ class MkAPIs():
         except Req_exceprions.ConnectTimeout:
             self.reacdb = None
 
-    def noteshow(self, noteid:str) -> Union[dict, None]:
+    def noteshow(self, noteid: str) -> Union[dict, None]:
         try:
             return self.mk.notes_show(noteid)
         except (Mi_exceptions.MisskeyAPIException,
@@ -234,27 +253,29 @@ class MkAPIs():
         except Req_exceprions.ConnectTimeout:
             return None
 
-    def create_note(self, text:str) -> Union[dict, None]:
+    def create_note(self, text: str) -> Union[dict, None]:
         try:
             return self.mk.notes_create(text, self.crnoteconf["CW"],
                                         renote_id=self.crnoteconf["renoteId"],
                                         reply_id=self.crnoteconf["replyId"],
-                                        visibility=self.crnoteconf["visibility"])
+                                        visibility=self.crnoteconf["visibility"]
+                                        )
         except Mi_exceptions.MisskeyAPIException:
             return None
 
-    def create_renote(self, renoteid:str) -> Union[dict, None]:
+    def create_renote(self, renoteid: str) -> Union[dict, None]:
         try:
             return self.mk.notes_create(renote_id=renoteid)
         except Mi_exceptions.MisskeyAPIException:
             return None
 
-    def create_reaction(self, noteid:str, reaction:str) -> bool:
+    def create_reaction(self, noteid: str, reaction: str) -> bool:
         try:
             return self.mk.notes_reactions_create(noteid, reaction)
         except Mi_exceptions.MisskeyAPIException:
             return False
 
-    def _getpath(self, dirname:str) -> str:
+    def _getpath(self, dirname: str) -> str:
         """相対パスから絶対パスに変える奴"""
-        return os_path.abspath(os_path.join(os_path.dirname(__file__), dirname))
+        return os_path.abspath(os_path.join(os_path.dirname(__file__),
+                                            dirname))

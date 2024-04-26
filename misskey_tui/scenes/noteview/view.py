@@ -5,26 +5,30 @@ from asciimatics.exceptions import StopApplication
 
 from misskey_tui.textenums import NV_T
 
+
 class NoteView(Frame):
-    def __init__(self, screen:Screen, mv):
+    def __init__(self, screen: Screen, mv):
         super(NoteView, self).__init__(screen,
-                                 screen.height,
-                                 screen.width,
-                                 title="NoteView",
-                                 on_load=None,
-                                 reduce_cpu=True,
-                                 can_scroll=False)
+                                       screen.height,
+                                       screen.width,
+                                       title="NoteView",
+                                       on_load=None,
+                                       reduce_cpu=True,
+                                       can_scroll=False)
         # MVの保存
         self.mv_ = mv
         # 初期化
         self.mv_.recreate_before(self)
         self.set_theme(self.mv_.theme)
         # 型推測付与
-        self.screen:Screen
-        self._scene:Scene
+        self.screen: Screen
+        self._scene: Scene
 
         # textboxの作成
-        self.textbox = TextBox(screen.height-3, as_string=True, line_wrap=True, readonly=True)
+        self.textbox = TextBox(screen.height-3,
+                               as_string=True,
+                               line_wrap=True,
+                               readonly=True)
 
         # buttonの作成
         buttonnames = (NV_T.BT_QUIT.value, "change text")
@@ -41,7 +45,7 @@ class NoteView(Frame):
         layout0.add_widget(self.textbox)
         for ind, val in enumerate(self.buttons):
             layout1.add_widget(val, ind)
-        
+
         # 後処理
         self.fix()
         self.mv_.recreate_after()
@@ -51,10 +55,10 @@ class NoteView(Frame):
             # init
             self.popup(NV_T.QUIT.value, [NV_T.RETURN.value, NV_T.OK.value], self.pop_quit)
         elif arg == 1:
-            #quit
+            # quit
             self.quit()
 
-    def popup(self,txt,button,on_close=None):
+    def popup(self, txt, button, on_close=None):
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
 
     @staticmethod
