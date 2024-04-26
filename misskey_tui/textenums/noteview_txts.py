@@ -4,7 +4,8 @@ from typing import Any
 __all__ = ["NV_T"]
 
 # リンター対策の定義
-_:None
+_: None
+
 
 class NV_T(Enum):
     OK = "Ok"
@@ -17,7 +18,7 @@ class NV_T(Enum):
 
     BT_QUIT = "Quit"
     BT_MOVE_L = "Move L"
-    BT_MOVE_R ="Move R"
+    BT_MOVE_R = "Move R"
     BT_NOTE_UP = "Noteupdate"
     BT_NOTE_GET = "Note Get"
     BT_MORE = "More"

@@ -1,6 +1,6 @@
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.noteview.view import NoteView
-# from misskey_tui.textenums import NV_T
+from misskey_tui.textenums import NV_T
 
 
 class NV_VM:
@@ -14,6 +14,8 @@ class NV_VM:
         self.notes_point = []
         self.TL = "HTL"
         self.theme = self.msk_.theme
+        self.button_names = (NV_T.QUIT.value, "Change")
+        self.button_funcs = (self.quit_question, self.change_test)
         # 型ヒント
         self.view: NoteView
 
@@ -30,3 +32,10 @@ class NV_VM:
 
     def txtbx_write(self):
         self.view.textbox.value = self.txtbx_txt
+
+    def quit_question(self):
+        self.view.popup("Quit?", [NV_T.OK.value, NV_T.RETURN.value], self.quit)
+
+    def quit(self, arg):
+        if arg == 0:
+            self.view.quit()

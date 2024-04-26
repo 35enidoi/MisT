@@ -4,7 +4,8 @@ from typing import Any
 __all__ = ["CM_T"]
 
 # リンター対策の定義
-_:None
+_: None
+
 
 class CM_T(Enum):
     RETURN = "return"
