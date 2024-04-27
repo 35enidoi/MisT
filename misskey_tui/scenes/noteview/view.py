@@ -1,11 +1,15 @@
-from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button
+from typing import Callable, Optional
+
+from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button, Divider
 from asciimatics.screen import Screen
 from asciimatics.scene import Scene
-from asciimatics.exceptions import StopApplication
+from asciimatics.exceptions import StopApplication, NextScene
 
 
 class NoteView(Frame):
-    def __init__(self, screen: Screen, mv):
+    def __init__(self,
+                 screen: Screen,
+                 mv) -> None:
         super(NoteView, self).__init__(screen,
                                        screen.height,
                                        screen.width,
@@ -23,7 +27,7 @@ class NoteView(Frame):
         self._scene: Scene
 
         # textboxの作成
-        self.textbox = TextBox(screen.height-3,
+        self.textbox = TextBox(screen.height-4,
                                as_string=True,
                                line_wrap=True,
                                readonly=True)
@@ -34,22 +38,32 @@ class NoteView(Frame):
 
         # layoutの作成
         layout0 = Layout([100])
-        layout1 = Layout([1 for _ in range(len(self.buttons))])
+        layout1 = Layout([1])
+        layout2 = Layout([1 for _ in range(len(self.buttons))])
         self.add_layout(layout0)
         self.add_layout(layout1)
+        self.add_layout(layout2)
 
         # layoutにウィジェットを追加
         layout0.add_widget(self.textbox)
+        layout1.add_widget(Divider())
         for ind, val in enumerate(self.buttons):
-            layout1.add_widget(val, ind)
+            layout2.add_widget(val, ind)
 
         # 後処理
         self.fix()
         self.mv_.recreate_after()
 
-    def popup(self, txt, button, on_close=None):
+    def popup(self,
+              txt: str,
+              button: list[int, int],
+              on_close: Optional[Callable] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
 
+    def change_window(self,
+                      target_name: str):
+        raise NextScene(target_name)
+
     @staticmethod
-    def quit():
-        raise StopApplication("honi")
+    def quit() -> None:
+        raise StopApplication("nyaaan")
