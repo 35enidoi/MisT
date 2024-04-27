@@ -3,7 +3,7 @@ from typing import Callable, Optional
 from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button, Divider
 from asciimatics.screen import Screen
 from asciimatics.scene import Scene
-from asciimatics.exceptions import StopApplication, NextScene
+from asciimatics.exceptions import StopApplication
 
 
 class NoteView(Frame):
@@ -59,10 +59,6 @@ class NoteView(Frame):
               button: list[int, int],
               on_close: Optional[Callable] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
-
-    def change_window(self,
-                      target_name: str):
-        raise NextScene(target_name)
 
     @staticmethod
     def quit() -> None:
