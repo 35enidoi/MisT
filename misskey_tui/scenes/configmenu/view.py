@@ -2,11 +2,13 @@ from asciimatics.widgets import Frame, Layout, TextBox, Button, VerticalDivider
 from asciimatics.screen import Screen
 from asciimatics.scene import Scene
 
+from misskey_tui.abstract.viewmodel import AbstractViewModel
+
 
 class ConfigMenuView(Frame):
     def __init__(self,
                  screen: Screen,
-                 mv) -> None:
+                 mv: AbstractViewModel) -> None:
         super(ConfigMenuView, self).__init__(screen,
                                              screen.height,
                                              screen.width,

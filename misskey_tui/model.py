@@ -34,8 +34,9 @@ class MkAPIs():
         self.init_translation()
         # Misskey py settings
         self._misskeypy_init()
-        self.mk = None
-        self.tl = "LTL"
+        self.mk: Union[Misskey, None] = None
+        self.tl: str = "LTL"
+        self.i: Union[str, None]
         is_ok = self.reload()
         if not is_ok:
             self.i = None

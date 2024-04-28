@@ -1,21 +1,23 @@
 from functools import partial
+from typing import Union
 
 from asciimatics.exceptions import NextScene
 
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.noteview.view import NoteView
 from misskey_tui.textenums import NV_T
+from misskey_tui.abstract.viewmodel import AbstractViewModel
 
 
-class NoteViewModel:
+class NoteViewModel(AbstractViewModel):
     """NoteViewのViewModel"""
     def __init__(self, msk: MkAPIs) -> None:
         # modelの保存
         self.msk_ = msk
         # 変数作成
         self.txtbx_txt: str = NV_T.WELCOME_MESSAGE.value
-        self.notes = []
-        self.notes_point = []
+        self.notes: Union[list[dict], None] = []
+        self.notes_point: int = 0
         self.TL = "HTL"
         self.theme = self.msk_.theme
         self.button_names = (NV_T.QUIT.value, "Change", "Config")

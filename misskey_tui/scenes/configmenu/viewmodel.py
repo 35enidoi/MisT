@@ -5,9 +5,10 @@ from asciimatics.exceptions import NextScene
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
 from misskey_tui.textenums import CM_T
+from misskey_tui.abstract.viewmodel import AbstractViewModel
 
 
-class ConfigMenuModel:
+class ConfigMenuModel(AbstractViewModel):
     def __init__(self, msk: MkAPIs) -> None:
         # modelの保存
         self.msk_ = msk

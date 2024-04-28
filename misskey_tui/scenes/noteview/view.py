@@ -5,11 +5,13 @@ from asciimatics.screen import Screen
 from asciimatics.scene import Scene
 from asciimatics.exceptions import StopApplication
 
+from misskey_tui.abstract.viewmodel import AbstractViewModel
+
 
 class NoteView(Frame):
     def __init__(self,
                  screen: Screen,
-                 mv) -> None:
+                 mv: AbstractViewModel) -> None:
         super(NoteView, self).__init__(screen,
                                        screen.height,
                                        screen.width,
