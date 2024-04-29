@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, NoReturn
 
 from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button, Divider
 from asciimatics.screen import Screen
@@ -29,10 +29,9 @@ class NoteView(Frame):
         self._scene: Scene
 
         # textboxの作成
-        self.textbox = TextBox(screen.height-4,
-                               as_string=True,
-                               line_wrap=True,
-                               readonly=True)
+        self.textbox = TextBox(screen.height-4, as_string=True,
+                               line_wrap=True, readonly=True,
+                               on_change=self.mv_.on_change_txtbx)
 
         # buttonの作成
         self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.mv_.button_names,
@@ -63,5 +62,5 @@ class NoteView(Frame):
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
 
     @staticmethod
-    def quit() -> None:
+    def quit() -> NoReturn:
         raise StopApplication("nyaaan")

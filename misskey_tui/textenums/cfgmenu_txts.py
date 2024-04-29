@@ -12,6 +12,11 @@ class CM_T(Enum):
     OK = "Ok"
     SUCCESS = "success"
 
+    TOKEN_BUTTON = "Token"
+    TOKEN_QUESTION = "hatena"
+    TOKEN_SEL_0 = "Set Token"
+    TOKEN_SET_WRITE_PLS = "Write TOKEN please"
+
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":
             return _(super().__getattribute__(__name))

@@ -30,14 +30,13 @@ class NoteViewModel(AbstractViewModel):
         self.theme = self.msk_.theme
 
     def recreate_after(self) -> None:
-        self.txtbx_write()
+        self.view.textbox.value = self.txtbx_txt
+
+    def on_change_txtbx(self) -> None:
+        self.txtbx_txt = self.view.textbox.value
 
     def change_test(self) -> None:
-        self.txtbx_txt += "\nHoni"
-        self.txtbx_write()
-
-    def txtbx_write(self) -> None:
-        self.view.textbox.value = self.txtbx_txt
+        self.view.textbox.value += "\nHoni"
 
     def quit_question(self) -> None:
         self.view.popup("Quit?", [NV_T.OK.value, NV_T.RETURN.value], self.quit)

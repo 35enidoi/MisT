@@ -16,9 +16,10 @@ class ConfigMenuModel(AbstractViewModel):
         self.theme = self.msk_.theme
         self.view: ConfigMenuView
         self.txtbx_txt: str = ""
-        self.button_names = (CM_T.RETURN.value,
+        self.inpbx_txt: str = ""
+        self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value,
                              "Honi", "Clear")
-        self.button_funcs = (partial(self.change_window, "NoteView"),
+        self.button_funcs = (partial(self.change_window, "NoteView"), self.token,
                              partial(self.add_text, "Honi"), self.clear_text)
         self.ok_button = (CM_T.OK.value, self.ok_func)
         self.ok_mode: bool = False
@@ -29,28 +30,58 @@ class ConfigMenuModel(AbstractViewModel):
         self.theme = self.msk_.theme
 
     def recreate_after(self) -> None:
-        self.ok_disable(self.ok_mode)
+        self.ok_enable(self.ok_mode)
         self.view.txtbx.value = self.txtbx_txt
+        self.view.inp_bx.value = self.inpbx_txt
+
+    def on_change_txtbx(self) -> None:
+        self.txtbx_txt = self.view.txtbx.value
+
+    def on_change_inpbx(self) -> None:
+        self.inpbx_txt = self.view.inp_bx.value
+
+    def token(self) -> None:
+        self.view.popup(CM_T.TOKEN_QUESTION.value,
+                        [CM_T.TOKEN_SEL_0.value],
+                        self.token_sel)
+
+    def token_sel(self, arg: int):
+        if arg == 0:
+            # set token
+            self.ok_val = "tokenset"
+            self.add_text(CM_T.TOKEN_SET_WRITE_PLS.value)
+            self.ok_enable(True)
 
     def clear_text(self) -> None:
-        self.txtbx_txt = ""
-        self.view.txtbx.value = self.txtbx_txt
+        self.view.txtbx.value = ""
 
     def ok_func(self) -> None:
-        pass
+        text = str(self.view.inp_bx.value)
+        self.view.inp_bx.value = ""
+        if self.ok_val == "tokenset":
+            # token set
+            self.add_text("mizissoudesu!!!")
+            self.add_text(text)
+        self.ok_enable(False)
 
     def add_text(self, *arg: str) -> None:
-        self.txtbx_txt += "\n"
         for i in arg:
-            self.txtbx_txt += i+"\n"
-        self.txtbx_txt = self.txtbx_txt.strip()
-        self.view.txtbx.value = self.txtbx_txt
+            self.view.txtbx.value += i+"\n"
 
-    def ok_disable(self, _disable: bool):
+    def ok_enable(self, _enable: bool):
+        self.ok_mode = _enable
+        if not _enable:
+            # okじゃない！
+            if self.view._focus < len(self.view.buttons)-1:
+                self.view.switch_focus(self.view.layout, 0, 0)
+        else:
+            # okだ...
+            if self.view._focus <= len(self.view.buttons):
+                self.view.switch_focus(self.view.layout, 0, len(self.view.buttons)+1)
         for i in self.view.buttons:
-            i.disabled = _disable
-        self.view.inp_bx.disabled = not _disable
-        self.view.ok_button.disabled = not _disable
+            i.disabled = _enable
+        self.view.inp_bx.disabled = not _enable
+        self.view.ok_button.disabled = not _enable
 
     @staticmethod
     def change_window(target_name: str) -> None:
