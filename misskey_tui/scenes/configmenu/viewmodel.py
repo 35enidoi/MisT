@@ -16,14 +16,20 @@ class ConfigMenuModel(AbstractViewModel):
         self.theme = self.msk_.theme
         self.view: ConfigMenuView
         self.txtbx_txt: str = ""
-        self.button_names = (CM_T.RETURN.value, "Honi", "Clear")
-        self.button_funcs = (partial(self.change_window, "NoteView"), partial(self.add_text, "Honi"), self.clear_text)
+        self.button_names = (CM_T.RETURN.value,
+                             "Honi", "Clear")
+        self.button_funcs = (partial(self.change_window, "NoteView"),
+                             partial(self.add_text, "Honi"), self.clear_text)
+        self.ok_button = (CM_T.OK.value, self.ok_func)
+        self.ok_mode: bool = False
+        self.ok_val: str = ""
 
     def recreate_before(self, view_: ConfigMenuView) -> None:
         self.view = view_
         self.theme = self.msk_.theme
 
     def recreate_after(self) -> None:
+        self.ok_disable(self.ok_mode)
         self.view.txtbx.value = self.txtbx_txt
 
     def add_text(self, *arg: str) -> None:
@@ -36,6 +42,15 @@ class ConfigMenuModel(AbstractViewModel):
     def clear_text(self) -> None:
         self.txtbx_txt = ""
         self.view.txtbx.value = self.txtbx_txt
+
+    def ok_disable(self, _disable: bool):
+        for i in self.view.buttons:
+            i.disabled = _disable
+        self.view.inp_bx.disabled = not _disable
+        self.view.ok_button.disabled = not _disable
+
+    def ok_func(self) -> None:
+        pass
 
     @staticmethod
     def change_window(target_name: str) -> None:
