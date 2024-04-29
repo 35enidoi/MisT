@@ -32,6 +32,13 @@ class ConfigMenuModel(AbstractViewModel):
         self.ok_disable(self.ok_mode)
         self.view.txtbx.value = self.txtbx_txt
 
+    def clear_text(self) -> None:
+        self.txtbx_txt = ""
+        self.view.txtbx.value = self.txtbx_txt
+
+    def ok_func(self) -> None:
+        pass
+
     def add_text(self, *arg: str) -> None:
         self.txtbx_txt += "\n"
         for i in arg:
@@ -39,18 +46,11 @@ class ConfigMenuModel(AbstractViewModel):
         self.txtbx_txt = self.txtbx_txt.strip()
         self.view.txtbx.value = self.txtbx_txt
 
-    def clear_text(self) -> None:
-        self.txtbx_txt = ""
-        self.view.txtbx.value = self.txtbx_txt
-
     def ok_disable(self, _disable: bool):
         for i in self.view.buttons:
             i.disabled = _disable
         self.view.inp_bx.disabled = not _disable
         self.view.ok_button.disabled = not _disable
-
-    def ok_func(self) -> None:
-        pass
 
     @staticmethod
     def change_window(target_name: str) -> None:
