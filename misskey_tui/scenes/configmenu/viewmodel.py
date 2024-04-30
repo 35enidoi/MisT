@@ -1,3 +1,4 @@
+from typing import NoReturn
 from functools import partial
 
 from asciimatics.exceptions import NextScene
@@ -18,7 +19,7 @@ class ConfigMenuModel(AbstractViewModel):
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
         self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value,
-                             "Honi", "Clear")
+                             "Honi", CM_T.CLEAR_BUTTON.value)
         self.button_funcs = (partial(self.change_window, "NoteView"), self.token,
                              partial(self.add_text, "Honi"), self.clear_text)
         self.ok_button = (CM_T.OK.value, self.ok_func)
@@ -42,15 +43,18 @@ class ConfigMenuModel(AbstractViewModel):
 
     def token(self) -> None:
         self.view.popup(CM_T.TOKEN_QUESTION.value,
-                        [CM_T.TOKEN_SEL_0.value],
+                        [CM_T.TOKEN_SEL_0.value, CM_T.RETURN.value],
                         self.token_sel)
 
-    def token_sel(self, arg: int):
+    def token_sel(self, arg: int) -> None:
         if arg == 0:
             # set token
             self.ok_val = "tokenset"
             self.add_text(CM_T.TOKEN_SET_WRITE_PLS.value)
             self.ok_enable(True)
+        elif arg == 1:
+            # Return
+            pass
 
     def clear_text(self) -> None:
         self.view.txtbx.value = ""
@@ -68,7 +72,7 @@ class ConfigMenuModel(AbstractViewModel):
         for i in arg:
             self.view.txtbx.value += i+"\n"
 
-    def ok_enable(self, _enable: bool):
+    def ok_enable(self, _enable: bool) -> None:
         self.ok_mode = _enable
         if not _enable:
             # okじゃない！
@@ -84,5 +88,5 @@ class ConfigMenuModel(AbstractViewModel):
         self.view.ok_button.disabled = not _enable
 
     @staticmethod
-    def change_window(target_name: str) -> None:
+    def change_window(target_name: str) -> NoReturn:
         raise NextScene(target_name)

@@ -17,6 +17,8 @@ class CM_T(Enum):
     TOKEN_SEL_0 = "Set Token"
     TOKEN_SET_WRITE_PLS = "Write TOKEN please"
 
+    CLEAR_BUTTON = "Clear"
+
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":
             return _(super().__getattribute__(__name))
