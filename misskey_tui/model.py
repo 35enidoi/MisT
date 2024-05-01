@@ -1,8 +1,5 @@
 from os import path as os_path
-from io import BytesIO
-import datetime
 import json
-import requests
 from requests import exceptions as Req_exceprions
 import gettext
 from misskey import (
@@ -13,8 +10,7 @@ from misskey import (
 )
 
 # 型指定用のモジュール
-from asciimatics.scene import Scene
-from typing import Union, Any
+from typing import Union
 
 
 class MkAPIs():
@@ -22,52 +18,18 @@ class MkAPIs():
     # syoumi tekitouni ageteru noha naisyo
     version = 0.42
 
-    class WindowHundlerError(Exception):
-        pass
-
     def __init__(self) -> None:
         # mistconfig load
         self._mistconfig_init()
         # MisT settings
-        self.__window_hundler = tuple()
-        self.__window_hundler: Union[tuple[str, tuple[Any]], tuple[()]]
         self.init_translation()
         # Misskey py settings
         self._misskeypy_init()
         self.mk: Union[Misskey, None] = None
-        self.tl: str = "LTL"
         self.i: Union[str, None]
         is_ok = self.reload()
         if not is_ok:
             self.i = None
-
-        # # import daemons
-        # import daemons
-        # # daemons initalize
-        # self.daemon = daemons.Ds(self, self.mistconfig)
-        # self._finds = self.daemon._startds()
-
-    def window_hundler_set(self, targetscene: str, *args: Any) -> None:
-        if self.__window_hundler == ():
-            self.__window_hundler = (targetscene, args)
-        else:
-            raise self.WindowHundlerError("Window hundler not empty")
-
-    def window_hundler_get(self, _scn: Scene) -> tuple[Any]:
-        if self.__window_hundler != ():
-            if _scn.name == self.__window_hundler[0]:
-                ret = self.__window_hundler[1]
-                self.__window_hundler = ()
-                return ret
-            else:
-                raise self.WindowHundlerError(
-                    "Scene name `{}` is not target scene `{}`".format(
-                        _scn.name,
-                        self.__window_hundler[0]
-                    )
-                )
-        else:
-            raise self.WindowHundlerError("Window hundler empty")
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
         filepath = self._getpath("./mistconfig.conf")
@@ -178,102 +140,6 @@ class MkAPIs():
             return True
         except (Mi_exceptions.MisskeyMiAuthFailedException,
                 Req_exceprions.HTTPError):
-            return False
-
-    def get_i(self) -> Union[dict, None]:
-        try:
-            return self.mk.i()
-        except (Mi_exceptions.MisskeyAPIException,
-                Req_exceprions.ConnectionError):
-            return None
-
-    def get_note(self,
-                 lim: int = 100,
-                 untilid=None,
-                 sinceid=None) -> Union[list[dict], None]:
-        try:
-            if self.tl == "HTL":
-                notes = self.mk.notes_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
-            elif self.tl == "LTL":
-                notes = self.mk.notes_local_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
-            elif self.tl == "STL":
-                notes = self.mk.notes_hybrid_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
-            elif self.tl == "GTL":
-                notes = self.mk.notes_global_timeline(lim, with_files=False, until_id=untilid, since_id=sinceid)
-            return sorted(notes,
-                          key=lambda x: datetime.fromisoformat(x["createdAt"]).timestamp(),
-                          reverse=True)
-        except (Mi_exceptions.MisskeyAPIException,
-                Req_exceprions.ReadTimeout):
-            return None
-
-    def get_ntfy(self) -> Union[dict, None]:
-        try:
-            return self.mk.i_notifications(100)
-        except (Mi_exceptions.MisskeyAPIException,
-                Req_exceprions.ReadTimeout):
-            return None
-
-    def get_reactiondb(self) -> None:
-        try:
-            ret = requests.get(f'https://{self.instance}/api/emojis')
-            if ret.status_code == 200:
-                self.reacdb = {}
-                for i in json.loads(ret.text)["emojis"]:
-                    self.reacdb[i["name"]] = i["aliases"]
-                    self.reacdb[i["name"]].append(i["name"])
-            else:
-                self.reacdb = None
-        except Req_exceprions.ConnectTimeout:
-            self.reacdb = None
-
-    def noteshow(self, noteid: str) -> Union[dict, None]:
-        try:
-            return self.mk.notes_show(noteid)
-        except (Mi_exceptions.MisskeyAPIException,
-                Req_exceprions.ReadTimeout):
-            return None
-
-    def get_instance_meta(self) -> bool:
-        try:
-            self.meta = self.mk.meta()
-            return True
-        except (Mi_exceptions.MisskeyAPIException,
-                Req_exceprions.ConnectTimeout):
-            return False
-
-    def get_instance_icon(self) -> Union[BytesIO, None]:
-        try:
-            iconurl = self.meta["iconUrl"]
-            returns = requests.get(iconurl)
-            if returns.status_code == 200:
-                icon = BytesIO(returns.content)
-                return icon
-            else:
-                return None
-        except Req_exceprions.ConnectTimeout:
-            return None
-
-    def create_note(self, text: str) -> Union[dict, None]:
-        try:
-            return self.mk.notes_create(text, self.crnoteconf["CW"],
-                                        renote_id=self.crnoteconf["renoteId"],
-                                        reply_id=self.crnoteconf["replyId"],
-                                        visibility=self.crnoteconf["visibility"]
-                                        )
-        except Mi_exceptions.MisskeyAPIException:
-            return None
-
-    def create_renote(self, renoteid: str) -> Union[dict, None]:
-        try:
-            return self.mk.notes_create(renote_id=renoteid)
-        except Mi_exceptions.MisskeyAPIException:
-            return None
-
-    def create_reaction(self, noteid: str, reaction: str) -> bool:
-        try:
-            return self.mk.notes_reactions_create(noteid, reaction)
-        except Mi_exceptions.MisskeyAPIException:
             return False
 
     def _getpath(self, dirname: str) -> str:
