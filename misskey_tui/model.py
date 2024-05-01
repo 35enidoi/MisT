@@ -32,7 +32,7 @@ class MkAPIs():
             self.i = None
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
-        filepath = self._getpath("./mistconfig.conf")
+        filepath = self._getpath("../mistconfig.conf")
         if loadmode:
             with open(filepath, "r") as f:
                 self.mistconfig = json.loads(f.read())
@@ -62,7 +62,7 @@ class MkAPIs():
         translater.install()
 
     def _mistconfig_init(self) -> None:
-        if os_path.isfile(self._getpath("./mistconfig.conf")):
+        if os_path.isfile(self._getpath("../mistconfig.conf")):
             # mistconfigがあったら、まずロード
             self.mistconfig_put(True)
             if self.mistconfig["version"] < self.version:
