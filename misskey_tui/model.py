@@ -35,27 +35,6 @@ class MkAPIs():
         if not is_ok:
             self.i = None
 
-    def init_translation(self) -> None:
-        # 翻訳ファイルを配置するディレクトリ
-        path_to_locale_dir = self._getpath("../locale")
-
-        # もしself.langがNoneなら翻訳なしに
-        if self.lang is None:
-            lang = ""
-        else:
-            lang = self.lang
-
-        # 翻訳用クラスの設定
-        translater = gettext.translation(
-            'messages',                    # domain: 辞書ファイルの名前
-            localedir=path_to_locale_dir,  # 辞書ファイル配置ディレクトリ
-            languages=[lang],              # 翻訳に使用する言語
-            fallback=True                  # .moファイルが見つからなかった時は未翻訳の文字列を出力
-        )
-
-        # Pythonの組み込みグローバル領域に_という関数を束縛する
-        translater.install()
-
     def _mistconfig_init(self) -> None:
         if os_path.isfile(self._getpath("../mistconfig.conf")):
             # mistconfigがあったら、まずロード
@@ -100,6 +79,27 @@ class MkAPIs():
             # defaultがないとき
             self.i = None
             self.instance = __DEFAULT_INSTANCE
+
+    def init_translation(self) -> None:
+        # 翻訳ファイルを配置するディレクトリ
+        path_to_locale_dir = self._getpath("../locale")
+
+        # もしself.langがNoneなら翻訳なしに
+        if self.lang is None:
+            lang = ""
+        else:
+            lang = self.lang
+
+        # 翻訳用クラスの設定
+        translater = gettext.translation(
+            'messages',                    # domain: 辞書ファイルの名前
+            localedir=path_to_locale_dir,  # 辞書ファイル配置ディレクトリ
+            languages=[lang],              # 翻訳に使用する言語
+            fallback=True                  # .moファイルが見つからなかった時は未翻訳の文字列を出力
+        )
+
+        # Pythonの組み込みグローバル領域に_という関数を束縛する
+        translater.install()
 
     def reload(self) -> bool:
         bef_mk = self.mk
