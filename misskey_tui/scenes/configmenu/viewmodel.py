@@ -19,9 +19,9 @@ class ConfigMenuModel(AbstractViewModel):
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
         self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value,
-                             "Honi", CM_T.CLEAR_BUTTON.value)
+                             CM_T.INSTANCE_BUTTON.value, "Honi", CM_T.CLEAR_BUTTON.value)
         self.button_funcs = (partial(self.change_window, "NoteView"), self.token,
-                             partial(self.add_text, "Honi"), self.clear_text)
+                             self.instance, partial(self.add_text, "Honi"), self.clear_text)
         self.ok_button = (CM_T.OK.value, self.ok_func)
         self.ok_mode: bool = False
         self.ok_val: str = ""
@@ -46,6 +46,11 @@ class ConfigMenuModel(AbstractViewModel):
                         [CM_T.TOKEN_SEL_0.value, CM_T.RETURN.value],
                         self.token_sel)
 
+    def instance(self) -> None:
+        self.ok_val = "instance"
+        self.add_text(CM_T.CHANGE_INSTANCE_HINT.value)
+        self.ok_enable(True)
+
     def token_sel(self, arg: int) -> None:
         if arg == 0:
             # set token
@@ -66,6 +71,13 @@ class ConfigMenuModel(AbstractViewModel):
             # token set
             self.add_text("mizissoudesu!!!")
             self.add_text(text)
+        elif self.ok_val == "instance":
+            # instance set
+            is_ok = self.msk_.create_mk_instance(text)
+            if is_ok:
+                self.add_text(CM_T.OK_INSTANCE_CONNECT.value)
+            else:
+                self.add_text(CM_T.OK_INSTANCE_CONNECT_FAIL.value)
         self.ok_enable(False)
 
     def add_text(self, *arg: str) -> None:

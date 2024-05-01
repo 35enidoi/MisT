@@ -13,6 +13,7 @@ class NV_T(Enum):
 
     WELCOME_MESSAGE = "Hello World!\nWelcome to MisT with MVVM model!"
     QUIT = "Quit?"
+    NOTE_NONE = "Please get note."
 
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":

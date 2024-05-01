@@ -10,7 +10,7 @@ from misskey import (
 )
 
 # 型指定用のモジュール
-from typing import Union
+from typing import Union, Callable
 
 
 class MkAPIs():
@@ -26,14 +26,21 @@ class MkAPIs():
         # translation init
         self.init_translation()
         # Misskey.py init
-        self._misskeypy_init()
-        self.instance: str
-        self.i: Union[str, None]
+        i, instance = self._mistconfig_default_load()
+        self.__instance: str
+        self.i: Union[str, None] = None
         # variable set
+        self.__on_instance_changes: list[Callable[[], None]] = []
         self.mk: Union[Misskey, None] = None
-        is_ok = self.reload()
-        if not is_ok:
+        is_ok = self.create_mk_instance(instance)
+        if is_ok:
+            self.token_set(i)
+        else:
             self.i = None
+
+    @property
+    def instance(self) -> str:
+        return self.__instance
 
     def _mistconfig_init(self) -> None:
         if os_path.isfile(self._getpath("../mistconfig.conf")):
@@ -64,21 +71,22 @@ class MkAPIs():
             # 保存
             self.mistconfig_put()
 
-    def _misskeypy_init(self) -> None:
+    def _mistconfig_default_load(self) -> tuple[Union[str, None], str]:
         __DEFAULT_INSTANCE = "misskey.io"
         if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
             if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
                 # defaultがあるとき
-                self.i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
-                self.instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
+                i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
+                instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
             else:
                 # defaultがないとき
-                self.i = None
-                self.instance = __DEFAULT_INSTANCE
+                i = None
+                instance = __DEFAULT_INSTANCE
         else:
             # defaultがないとき
-            self.i = None
-            self.instance = __DEFAULT_INSTANCE
+            i = None
+            instance = __DEFAULT_INSTANCE
+        return i, instance
 
     def init_translation(self) -> None:
         # 翻訳ファイルを配置するディレクトリ
@@ -101,19 +109,39 @@ class MkAPIs():
         # Pythonの組み込みグローバル領域に_という関数を束縛する
         translater.install()
 
-    def reload(self) -> bool:
+    def add_on_change_instance(self, func: Callable[[], None]) -> None:
+        if callable(func):
+            self.__on_instance_changes.append(func)
+        else:
+            raise ValueError("function can`t callable.")
+
+    def create_mk_instance(self, instance: str) -> bool:
         bef_mk = self.mk
+        if self.i is not None:
+            self.i = None
+        self.__instance = instance
         try:
-            self.mk = Misskey(self.instance, self.i)
-            if self.i is not None:
-                self.mk.i()
+            self.mk = Misskey(instance)
+            for i in self.__on_instance_changes:
+                i()
+            return True
+        except (Mi_exceptions.MisskeyAPIException,
+                Req_exceprions.ConnectionError,
+                Req_exceprions.ReadTimeout,
+                Req_exceprions.InvalidURL):
+            self.mk = bef_mk
+            return False
+
+    def token_set(self, token: str) -> bool:
+        try:
+            self.mk.token = token
+            self.i = token
             return True
         except (Mi_exceptions.MisskeyAPIException,
                 Mi_exceptions.MisskeyAuthorizeFailedException,
                 Req_exceprions.ConnectionError,
                 Req_exceprions.ReadTimeout,
                 Req_exceprions.InvalidURL):
-            self.mk = bef_mk
             return False
 
     def miauth_load(self) -> MiAuth:
@@ -127,7 +155,7 @@ class MkAPIs():
                        Mi_enum.Permissions.READ_NOTIFICATIONS.value,
                        Mi_enum.Permissions.WRITE_NOTIFICATIONS.value]
 
-        return MiAuth(self.instance, name="MisT", permission=permissions)
+        return MiAuth(self.__instance, name="MisT", permission=permissions)
 
     def miauth_check(self, mia: MiAuth) -> bool:
         try:

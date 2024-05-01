@@ -13,9 +13,15 @@ class CM_T(Enum):
     SUCCESS = "success"
 
     TOKEN_BUTTON = "Token"
+    INSTANCE_BUTTON = "Instance"
+
     TOKEN_QUESTION = "hatena"
     TOKEN_SEL_0 = "Set Token"
     TOKEN_SET_WRITE_PLS = "Write TOKEN please"
+
+    CHANGE_INSTANCE_HINT = "input instance such as 'misskey.io' 'misskey.backspace.fm'"
+    OK_INSTANCE_CONNECT = "instance connected! :)"
+    OK_INSTANCE_CONNECT_FAIL = "instance connect fail :("
 
     CLEAR_BUTTON = "Clear"
 
