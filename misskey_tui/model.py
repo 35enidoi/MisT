@@ -19,26 +19,21 @@ class MkAPIs():
     version = 0.42
 
     def __init__(self) -> None:
-        # mistconfig load
+        # mistconfig init
         self._mistconfig_init()
-        # MisT settings
+        self.lang: Union[str, None]
+        self.theme: str
+        # translation init
         self.init_translation()
-        # Misskey py settings
+        # Misskey.py init
         self._misskeypy_init()
-        self.mk: Union[Misskey, None] = None
+        self.instance: str
         self.i: Union[str, None]
+        # variable set
+        self.mk: Union[Misskey, None] = None
         is_ok = self.reload()
         if not is_ok:
             self.i = None
-
-    def mistconfig_put(self, loadmode: bool = False) -> None:
-        filepath = self._getpath("../mistconfig.conf")
-        if loadmode:
-            with open(filepath, "r") as f:
-                self.mistconfig = json.loads(f.read())
-        else:
-            with open(filepath, "w") as f:
-                f.write(json.dumps(self.mistconfig))
 
     def init_translation(self) -> None:
         # 翻訳ファイルを配置するディレクトリ
@@ -141,6 +136,15 @@ class MkAPIs():
         except (Mi_exceptions.MisskeyMiAuthFailedException,
                 Req_exceprions.HTTPError):
             return False
+
+    def mistconfig_put(self, loadmode: bool = False) -> None:
+        filepath = self._getpath("../mistconfig.conf")
+        if loadmode:
+            with open(filepath, "r") as f:
+                self.mistconfig = json.loads(f.read())
+        else:
+            with open(filepath, "w") as f:
+                f.write(json.dumps(self.mistconfig))
 
     def _getpath(self, dirname: str) -> str:
         """相対パスから絶対パスに変える奴"""
