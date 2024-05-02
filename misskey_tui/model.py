@@ -5,6 +5,7 @@ import gettext
 from typing import Union, Callable, Final
 
 from requests import exceptions as Req_exceprions
+from asciimatics.widgets.utilities import THEMES
 from misskey import (
     Misskey,
     MiAuth,
@@ -22,7 +23,7 @@ class MkAPIs():
         # mistconfig init
         self._mistconfig_init()
         self.__lang: str
-        self.theme: str
+        self.__theme: str
         # check valid languages
         self.valid_langs: Final = tuple(os_path.basename(os_path.dirname(i)) for i in
                                         glob(self._getpath("../locale/*/LC_MESSAGES")))
@@ -49,6 +50,19 @@ class MkAPIs():
     def lang(self) -> str:
         return self.__lang
 
+    @property
+    def theme(self) -> str:
+        return self.__theme
+
+    @theme.setter
+    def theme(self, val: str) -> str:
+        if val in THEMES:
+            self.__theme = val
+            self.mistconfig["default"]["theme"] = val
+            self.mistconfig_put()
+        else:
+            raise ValueError(f"theme `{val}` not in THEMES.")
+
     def _mistconfig_init(self) -> None:
         if os_path.isfile(self._getpath("../mistconfig.conf")):
             # mistconfigがあったら、まずロード
@@ -65,13 +79,13 @@ class MkAPIs():
                 # 保存
                 self.mistconfig_put()
             self.__lang = lang if (lang := self.mistconfig["default"].get("lang")) is not None else ""
-            self.theme = self.mistconfig["default"]["theme"]
+            self.__theme = self.mistconfig["default"]["theme"]
         else:
             # mistconfig無ければ
             self.__lang = ""
-            self.theme = "default"
+            self.__theme = "default"
             self.mistconfig = {"version": self.version,
-                               "default": {"theme": self.theme,
+                               "default": {"theme": self.__theme,
                                            "lang": self.__lang,
                                            "defaulttoken": None},
                                "tokens": []}

@@ -27,6 +27,13 @@ class CM_T(Enum):
     LANGUAGE_QUESTION = "Select language"
     LANGUAGE_RESET = "Reset"
 
+    THEME_BUTTON = "Theme"
+    THEME_QUESTION = "Select theme"
+    THEME_DEFAULT = "default"
+    THEME_MONO = "monochrome"
+    THEME_GREEN = "green"
+    THEME_BRIGHT = "bright"
+
     CLEAR_BUTTON = "Clear"
 
     def __getattribute__(self, __name: str) -> Any:

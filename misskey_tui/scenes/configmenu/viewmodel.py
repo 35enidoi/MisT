@@ -20,14 +20,14 @@ class ConfigMenuModel(AbstractViewModel):
         self.inpbx_txt: str = ""
         self.button_names: tuple[str, ...]
         self.button_funcs = (partial(self.change_window, "NoteView"), self.token, self.instance,
-                             self.language, self.clear_text)
+                             self.theme_, self.language, self.clear_text)
         self.ok_button = (CM_T.OK.value, self.ok_func)
         self.ok_mode: bool = False
         self.ok_val: str = ""
 
     def recreate_before(self, view_: ConfigMenuView) -> None:
         self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
-                             CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
+                             CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
         self.view = view_
         self.theme = self.msk_.theme
 
@@ -57,6 +57,13 @@ class ConfigMenuModel(AbstractViewModel):
         self.add_text(CM_T.CHANGE_INSTANCE_HINT.value)
         self.ok_enable(True)
 
+    def theme_(self) -> None:
+        self.view.popup(CM_T.THEME_QUESTION.value,
+                        [CM_T.THEME_DEFAULT.value, CM_T.THEME_MONO.value,
+                         CM_T.THEME_GREEN.value, CM_T.THEME_BRIGHT.value,
+                         CM_T.RETURN.value],
+                        self.theme_sel)
+
     def token_sel(self, arg: int) -> None:
         if arg == 0:
             # set token
@@ -79,6 +86,17 @@ class ConfigMenuModel(AbstractViewModel):
             return
         self.msk_.translation(lang)
         raise ResizeScreenError("honi", self.view._scene)
+
+    def theme_sel(self, arg: int) -> None:
+        if arg == 4:
+            # Return
+            return
+        else:
+            # select theme
+            theme = ("default", "monochrome", "green", "bright")[arg]
+            self.msk_.theme = theme
+            self.view.set_theme(theme)
+            raise ResizeScreenError("honi", self.view._scene)
 
     def clear_text(self) -> None:
         self.view.txtbx.value = ""
