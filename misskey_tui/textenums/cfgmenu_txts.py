@@ -23,6 +23,10 @@ class CM_T(Enum):
     OK_INSTANCE_CONNECT = "instance connected! :)"
     OK_INSTANCE_CONNECT_FAIL = "instance connect fail :("
 
+    LANGUAGE_BUTTON = "Language"
+    LANGUAGE_QUESTION = "Select language"
+    LANGUAGE_RESET = "Reset"
+
     CLEAR_BUTTON = "Clear"
 
     def __getattribute__(self, __name: str) -> Any:

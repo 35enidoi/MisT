@@ -1,7 +1,7 @@
 from typing import NoReturn
 from functools import partial
 
-from asciimatics.exceptions import NextScene
+from asciimatics.exceptions import NextScene, ResizeScreenError
 
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
@@ -18,15 +18,16 @@ class ConfigMenuModel(AbstractViewModel):
         self.view: ConfigMenuView
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
-        self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value,
-                             CM_T.INSTANCE_BUTTON.value, "Honi", CM_T.CLEAR_BUTTON.value)
-        self.button_funcs = (partial(self.change_window, "NoteView"), self.token,
-                             self.instance, partial(self.add_text, "Honi"), self.clear_text)
+        self.button_names: tuple[str, ...]
+        self.button_funcs = (partial(self.change_window, "NoteView"), self.token, self.instance,
+                             self.language, self.clear_text)
         self.ok_button = (CM_T.OK.value, self.ok_func)
         self.ok_mode: bool = False
         self.ok_val: str = ""
 
     def recreate_before(self, view_: ConfigMenuView) -> None:
+        self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
+                             CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
         self.view = view_
         self.theme = self.msk_.theme
 
@@ -46,6 +47,11 @@ class ConfigMenuModel(AbstractViewModel):
                         [CM_T.TOKEN_SEL_0.value, CM_T.RETURN.value],
                         self.token_sel)
 
+    def language(self) -> None:
+        self.view.popup(CM_T.LANGUAGE_QUESTION.value,
+                        [*self.msk_.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
+                        self.language_sel)
+
     def instance(self) -> None:
         self.ok_val = "instance"
         self.add_text(CM_T.CHANGE_INSTANCE_HINT.value)
@@ -60,6 +66,19 @@ class ConfigMenuModel(AbstractViewModel):
         elif arg == 1:
             # Return
             pass
+
+    def language_sel(self, arg: int) -> None:
+        if arg <= len(self.msk_.valid_langs)-1:
+            # sel lang
+            lang = self.msk_.valid_langs[arg]
+        elif arg == len(self.msk_.valid_langs):
+            # reset lang
+            lang = ""
+        elif arg == len(self.msk_.valid_langs)+1:
+            # return
+            return
+        self.msk_.translation(lang)
+        raise ResizeScreenError("honi", self.view._scene)
 
     def clear_text(self) -> None:
         self.view.txtbx.value = ""

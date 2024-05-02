@@ -20,7 +20,7 @@ class NoteViewModel(AbstractViewModel):
         self.notes_point: int = 0
         self.TL = "HTL"
         self.theme = self.msk_.theme
-        self.button_names = (NV_T.QUIT.value, "Change", "Config")
+        self.button_names: tuple[str, ...]
         self.button_funcs = (self.quit_question, self.change_test, partial(self.change_window, "ConfigMenu"))
         # フック作成
         self.msk_.add_on_change_instance(self._on_instance_change)
@@ -31,6 +31,7 @@ class NoteViewModel(AbstractViewModel):
         self.view.textbox.value = NV_T.NOTE_NONE.value
 
     def recreate_before(self, view_: NoteView) -> None:
+        self.button_names = (NV_T.QUIT.value, "Change", "Config")
         self.view = view_
         self.theme = self.msk_.theme
 
@@ -41,7 +42,7 @@ class NoteViewModel(AbstractViewModel):
         self.txtbx_txt = self.view.textbox.value
 
     def change_test(self) -> None:
-        self.view.textbox.value += "\n".join([str(self.msk_.i), self.msk_.instance])
+        self.view.textbox.value += "\n".join(["", self.msk_.lang, str(self.msk_.valid_langs)])
 
     def quit_question(self) -> None:
         self.view.popup("Quit?", [NV_T.OK.value, NV_T.RETURN.value], self.quit)

@@ -66,6 +66,6 @@ class ConfigMenuView(Frame):
 
     def popup(self,
               txt: str,
-              button: list[int, int],
-              on_close: Optional[Callable] = None) -> None:
+              button: list[str],
+              on_close: Optional[Callable[[int], None]] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))

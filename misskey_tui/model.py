@@ -1,16 +1,16 @@
 from os import path as os_path
+from glob import glob
 import json
-from requests import exceptions as Req_exceprions
 import gettext
+from typing import Union, Callable, Final
+
+from requests import exceptions as Req_exceprions
 from misskey import (
     Misskey,
     MiAuth,
     exceptions as Mi_exceptions,
     enum as Mi_enum
 )
-
-# 型指定用のモジュール
-from typing import Union, Callable
 
 
 class MkAPIs():
@@ -21,10 +21,13 @@ class MkAPIs():
     def __init__(self) -> None:
         # mistconfig init
         self._mistconfig_init()
-        self.lang: Union[str, None]
+        self.__lang: str
         self.theme: str
+        # check valid languages
+        self.valid_langs: Final = tuple(os_path.basename(os_path.dirname(i)) for i in
+                                        glob(self._getpath("../locale/*/LC_MESSAGES")))
         # translation init
-        self.init_translation()
+        self.translation(self.__lang)
         # Misskey.py init
         i, instance = self._mistconfig_default_load()
         self.__instance: str
@@ -42,6 +45,10 @@ class MkAPIs():
     def instance(self) -> str:
         return self.__instance
 
+    @property
+    def lang(self) -> str:
+        return self.__lang
+
     def _mistconfig_init(self) -> None:
         if os_path.isfile(self._getpath("../mistconfig.conf")):
             # mistconfigがあったら、まずロード
@@ -57,15 +64,15 @@ class MkAPIs():
                                                   "defaulttoken": None}
                 # 保存
                 self.mistconfig_put()
-            self.lang = self.mistconfig["default"].get("lang")
+            self.__lang = lang if (lang := self.mistconfig["default"].get("lang")) is not None else ""
             self.theme = self.mistconfig["default"]["theme"]
         else:
             # mistconfig無ければ
-            self.lang = None
+            self.__lang = ""
             self.theme = "default"
             self.mistconfig = {"version": self.version,
                                "default": {"theme": self.theme,
-                                           "lang": self.lang,
+                                           "lang": self.__lang,
                                            "defaulttoken": None},
                                "tokens": []}
             # 保存
@@ -88,21 +95,24 @@ class MkAPIs():
             instance = __DEFAULT_INSTANCE
         return i, instance
 
-    def init_translation(self) -> None:
+    def translation(self, lang: str) -> None:
         # 翻訳ファイルを配置するディレクトリ
         path_to_locale_dir = self._getpath("../locale")
 
-        # もしself.langがNoneなら翻訳なしに
-        if self.lang is None:
-            lang = ""
-        else:
-            lang = self.lang
+        # ちゃんと使えるか確認
+        if lang not in self.valid_langs and not lang == "":
+            raise ValueError(f"language `{lang}` is invalid.")
+
+        # 保存
+        self.__lang = lang
+        self.mistconfig["default"]["lang"] = self.__lang
+        self.mistconfig_put()
 
         # 翻訳用クラスの設定
         translater = gettext.translation(
             'messages',                    # domain: 辞書ファイルの名前
             localedir=path_to_locale_dir,  # 辞書ファイル配置ディレクトリ
-            languages=[lang],              # 翻訳に使用する言語
+            languages=[self.__lang],              # 翻訳に使用する言語
             fallback=True                  # .moファイルが見つからなかった時は未翻訳の文字列を出力
         )
 
