@@ -47,11 +47,6 @@ class ConfigMenuModel(AbstractViewModel):
                         [CM_T.TOKEN_SEL_0.value, CM_T.RETURN.value],
                         self.token_sel)
 
-    def language(self) -> None:
-        self.view.popup(CM_T.LANGUAGE_QUESTION.value,
-                        [*self.msk_.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
-                        self.language_sel)
-
     def instance(self) -> None:
         self.ok_val = "instance"
         self.add_text(CM_T.CHANGE_INSTANCE_HINT.value)
@@ -64,6 +59,11 @@ class ConfigMenuModel(AbstractViewModel):
                          CM_T.RETURN.value],
                         self.theme_sel)
 
+    def language(self) -> None:
+        self.view.popup(CM_T.LANGUAGE_QUESTION.value,
+                        [*self.msk_.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
+                        self.language_sel)
+
     def token_sel(self, arg: int) -> None:
         if arg == 0:
             # set token
@@ -73,6 +73,17 @@ class ConfigMenuModel(AbstractViewModel):
         elif arg == 1:
             # Return
             pass
+
+    def theme_sel(self, arg: int) -> None:
+        if arg == 4:
+            # Return
+            return
+        else:
+            # select theme
+            theme = ("default", "monochrome", "green", "bright")[arg]
+            self.msk_.theme = theme
+            self.view.set_theme(theme)
+            raise ResizeScreenError("honi", self.view._scene)
 
     def language_sel(self, arg: int) -> None:
         if arg <= len(self.msk_.valid_langs)-1:
@@ -86,17 +97,6 @@ class ConfigMenuModel(AbstractViewModel):
             return
         self.msk_.translation(lang)
         raise ResizeScreenError("honi", self.view._scene)
-
-    def theme_sel(self, arg: int) -> None:
-        if arg == 4:
-            # Return
-            return
-        else:
-            # select theme
-            theme = ("default", "monochrome", "green", "bright")[arg]
-            self.msk_.theme = theme
-            self.view.set_theme(theme)
-            raise ResizeScreenError("honi", self.view._scene)
 
     def clear_text(self) -> None:
         self.view.txtbx.value = ""
