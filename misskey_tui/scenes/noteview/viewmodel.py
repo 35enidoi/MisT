@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Union
 
 from asciimatics.exceptions import NextScene
 
@@ -16,9 +15,9 @@ class NoteViewModel(AbstractViewModel):
         self.msk_ = msk
         # 変数作成
         self.txtbx_txt: str = NV_T.WELCOME_MESSAGE.value
-        self.notes: Union[list[dict], None] = []
+        self.notes: list[dict] = []
         self.notes_point: int = 0
-        self.TL = "HTL"
+        self.TL = "LTL"
         self.theme = self.msk_.theme
         self.button_names: tuple[str, ...]
         self.button_funcs = (self.quit_question, self.change_test, partial(self.change_window, "ConfigMenu"))
@@ -28,6 +27,8 @@ class NoteViewModel(AbstractViewModel):
         self.view: NoteView
 
     def _on_instance_change(self) -> None:
+        self.notes = []
+        self.notes_point = 0
         self.view.textbox.value = NV_T.NOTE_NONE.value
 
     def recreate_before(self, view_: NoteView) -> None:
