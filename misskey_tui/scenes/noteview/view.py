@@ -36,10 +36,10 @@ class NoteView(Frame):
                                on_change=self.mv_.on_change_txtbx)
 
         # buttonの作成
-        self.button_names = (NV_T.QUIT_BUTTON.value, "Change", NV_T.CONFIG_BUTTON.value)
-        self.button_funcs = (self.mv_.quit_question, self.mv_.change_test, partial(self.change_window, "ConfigMenu"))
-        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.button_names,
-                                                                                    self.button_funcs))
+        button_names = (NV_T.QUIT_BUTTON.value, "Change", NV_T.CONFIG_BUTTON.value)
+        button_funcs = (self.mv_.quit_question, self.mv_.change_test, partial(self.change_window, "ConfigMenu"))
+        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(button_names,
+                                                                                    button_funcs))
 
         # layoutの作成
         layout0 = Layout([100])

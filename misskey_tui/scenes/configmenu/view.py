@@ -46,14 +46,15 @@ class ConfigMenuView(Frame):
         self.inp_bx = Text(on_change=self.mv_.on_change_inpbx)
 
         # buttonの作成
-        self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
-                             CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
-        self.button_funcs = (partial(self.change_window, "NoteView"), self.mv_.token, self.mv_.instance,
-                             self.mv_.theme_, self.mv_.language, self.mv_.clear_text)
-        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.button_names,
-                                                                                    self.button_funcs))
+        button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
+                        CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
+        button_funcs = (partial(self.change_window, "NoteView"), self.mv_.token, self.mv_.instance,
+                        self.mv_.theme_, self.mv_.language, self.mv_.clear_text)
+
+        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(button_names,
+                                                                                    button_funcs))
         self.ok_button = Button(*self.mv_.ok_button)
-        max_button_length = max(map(check_terminal_haba, self.button_names))
+        max_button_length = max(map(check_terminal_haba, button_names))
 
         # layoutの作成
         layout0 = Layout([max_button_length, 1, 100-max_button_length-1])
