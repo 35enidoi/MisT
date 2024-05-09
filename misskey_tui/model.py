@@ -55,7 +55,7 @@ class MkAPIs():
         return self.__theme
 
     @theme.setter
-    def theme(self, val: str) -> str:
+    def theme(self, val: str) -> None:
         if val in THEMES:
             self.__theme = val
             self.mistconfig["default"]["theme"] = val
