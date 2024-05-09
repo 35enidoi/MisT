@@ -1,7 +1,3 @@
-from functools import partial
-
-from asciimatics.exceptions import NextScene
-
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.noteview.view import NoteView
 from misskey_tui.textenums import NV_T
@@ -19,8 +15,6 @@ class NoteViewModel(AbstractViewModel):
         self.notes_point: int = 0
         self.TL = "LTL"
         self.theme = self.msk_.theme
-        self.button_names: tuple[str, ...]
-        self.button_funcs = (self.quit_question, self.change_test, partial(self.change_window, "ConfigMenu"))
         # フック作成
         self.msk_.add_on_change_instance(self._on_instance_change)
         # 型ヒント
@@ -32,7 +26,6 @@ class NoteViewModel(AbstractViewModel):
         self.view.textbox.value = NV_T.NOTE_NONE.value
 
     def recreate_before(self, view_: NoteView) -> None:
-        self.button_names = (NV_T.QUIT.value, "Change", "Config")
         self.view = view_
         self.theme = self.msk_.theme
 
@@ -51,7 +44,3 @@ class NoteViewModel(AbstractViewModel):
     def quit(self, arg: int) -> None:
         if arg == 0:
             self.view.quit()
-
-    @staticmethod
-    def change_window(target_name: str) -> None:
-        raise NextScene(target_name)

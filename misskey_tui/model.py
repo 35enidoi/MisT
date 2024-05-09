@@ -198,7 +198,8 @@ class MkAPIs():
             with open(filepath, "w") as f:
                 f.write(json.dumps(self.mistconfig))
 
-    def _getpath(self, dirname: str) -> str:
+    @staticmethod
+    def _getpath(dirname: str) -> str:
         """相対パスから絶対パスに変える奴"""
         return os_path.abspath(os_path.join(os_path.dirname(__file__),
                                             dirname))

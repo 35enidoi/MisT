@@ -1,7 +1,9 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, NoReturn
+from functools import partial
 
 from asciimatics.screen import Screen
 from asciimatics.scene import Scene
+from asciimatics.exceptions import NextScene
 from asciimatics.widgets import (Frame,
                                  Layout,
                                  TextBox,
@@ -12,6 +14,8 @@ from asciimatics.widgets import (Frame,
                                  PopUpDialog)
 
 from misskey_tui.abstract.viewmodel import AbstractViewModel
+from misskey_tui.textenums import CM_T
+from misskey_tui.util import check_terminal_haba
 
 
 class ConfigMenuView(Frame):
@@ -42,12 +46,19 @@ class ConfigMenuView(Frame):
         self.inp_bx = Text(on_change=self.mv_.on_change_inpbx)
 
         # buttonの作成
-        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.mv_.button_names,
-                                                                                    self.mv_.button_funcs))
+        self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
+                             CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
+        self.button_funcs = (partial(self.change_window, "NoteView"), self.mv_.token, self.mv_.instance,
+                             self.mv_.theme_, self.mv_.language, self.mv_.clear_text)
+        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.button_names,
+                                                                                    self.button_funcs))
         self.ok_button = Button(*self.mv_.ok_button)
+        max_button_length = max(map(check_terminal_haba, self.button_names))
+        max_button_length = 8
+        self.mv_.txtbx_txt += str(max_button_length)
 
         # layoutの作成
-        layout0 = Layout([max(map(len, self.mv_.button_names))*2, 1, 100-max(map(len, self.mv_.button_names))*2-1])
+        layout0 = Layout([max_button_length, 1, 100-max_button_length-1])
         self.layout = layout0
         self.add_layout(layout0)
 
@@ -69,3 +80,7 @@ class ConfigMenuView(Frame):
               button: list[str],
               on_close: Optional[Callable[[int], None]] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
+
+    @staticmethod
+    def change_window(target_name: str) -> NoReturn:
+        raise NextScene(target_name)

@@ -11,6 +11,9 @@ class NV_T(Enum):
     OK = "Ok"
     RETURN = "return"
 
+    QUIT_BUTTON = "Quit"
+    CONFIG_BUTTON = "Config"
+
     WELCOME_MESSAGE = "Hello World!\nWelcome to MisT with MVVM model!"
     QUIT = "Quit?"
     NOTE_NONE = "Please get note."

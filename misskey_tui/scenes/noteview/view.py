@@ -1,11 +1,13 @@
 from typing import Callable, Optional, NoReturn
+from functools import partial
 
 from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button, Divider
 from asciimatics.screen import Screen
 from asciimatics.scene import Scene
-from asciimatics.exceptions import StopApplication
+from asciimatics.exceptions import StopApplication, NextScene
 
 from misskey_tui.abstract.viewmodel import AbstractViewModel
+from misskey_tui.textenums import NV_T
 
 
 class NoteView(Frame):
@@ -34,8 +36,10 @@ class NoteView(Frame):
                                on_change=self.mv_.on_change_txtbx)
 
         # buttonの作成
-        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.mv_.button_names,
-                                                                                    self.mv_.button_funcs))
+        self.button_names = (NV_T.QUIT_BUTTON.value, "Change", NV_T.CONFIG_BUTTON.value)
+        self.button_funcs = (self.mv_.quit_question, self.mv_.change_test, partial(self.change_window, "ConfigMenu"))
+        self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(self.button_names,
+                                                                                    self.button_funcs))
 
         # layoutの作成
         layout0 = Layout([100])
@@ -60,6 +64,10 @@ class NoteView(Frame):
               button: list[str],
               on_close: Optional[Callable[[int], None]] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
+
+    @staticmethod
+    def change_window(target_name: str) -> NoReturn:
+        raise NextScene(target_name)
 
     @staticmethod
     def quit() -> NoReturn:

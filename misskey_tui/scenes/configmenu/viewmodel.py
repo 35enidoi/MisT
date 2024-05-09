@@ -1,7 +1,4 @@
-from typing import NoReturn
-from functools import partial
-
-from asciimatics.exceptions import NextScene, ResizeScreenError
+from asciimatics.exceptions import ResizeScreenError
 
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
@@ -18,16 +15,11 @@ class ConfigMenuModel(AbstractViewModel):
         self.view: ConfigMenuView
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
-        self.button_names: tuple[str, ...]
-        self.button_funcs = (partial(self.change_window, "NoteView"), self.token, self.instance,
-                             self.theme_, self.language, self.clear_text)
         self.ok_button = (CM_T.OK.value, self.ok_func)
         self.ok_mode: bool = False
         self.ok_val: str = ""
 
     def recreate_before(self, view_: ConfigMenuView) -> None:
-        self.button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
-                             CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
         self.view = view_
         self.theme = self.msk_.theme
 
@@ -135,7 +127,3 @@ class ConfigMenuModel(AbstractViewModel):
             i.disabled = _enable
         self.view.inp_bx.disabled = not _enable
         self.view.ok_button.disabled = not _enable
-
-    @staticmethod
-    def change_window(target_name: str) -> NoReturn:
-        raise NextScene(target_name)
