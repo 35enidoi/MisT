@@ -54,8 +54,6 @@ class ConfigMenuView(Frame):
                                                                                     self.button_funcs))
         self.ok_button = Button(*self.mv_.ok_button)
         max_button_length = max(map(check_terminal_haba, self.button_names))
-        max_button_length = 8
-        self.mv_.txtbx_txt += str(max_button_length)
 
         # layoutの作成
         layout0 = Layout([max_button_length, 1, 100-max_button_length-1])
