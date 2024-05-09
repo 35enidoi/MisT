@@ -4,7 +4,7 @@ import json
 import gettext
 from typing import Union, Callable, Final
 
-from requests import exceptions as Req_exceprions
+from requests import exceptions as Req_exceptions
 from asciimatics.widgets.utilities import THEMES
 from misskey import (
     Misskey,
@@ -150,9 +150,9 @@ class MkAPIs():
                 i()
             return True
         except (Mi_exceptions.MisskeyAPIException,
-                Req_exceprions.ConnectionError,
-                Req_exceprions.ReadTimeout,
-                Req_exceprions.InvalidURL):
+                Req_exceptions.ConnectionError,
+                Req_exceptions.ReadTimeout,
+                Req_exceptions.InvalidURL):
             self.mk = bef_mk
             return False
 
@@ -163,9 +163,9 @@ class MkAPIs():
             return True
         except (Mi_exceptions.MisskeyAPIException,
                 Mi_exceptions.MisskeyAuthorizeFailedException,
-                Req_exceprions.ConnectionError,
-                Req_exceprions.ReadTimeout,
-                Req_exceprions.InvalidURL):
+                Req_exceptions.ConnectionError,
+                Req_exceptions.ReadTimeout,
+                Req_exceptions.InvalidURL):
             return False
 
     def miauth_load(self) -> MiAuth:
@@ -186,7 +186,7 @@ class MkAPIs():
             self.i = mia.check()
             return True
         except (Mi_exceptions.MisskeyMiAuthFailedException,
-                Req_exceprions.HTTPError):
+                Req_exceptions.HTTPError):
             return False
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
