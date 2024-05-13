@@ -1,7 +1,7 @@
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.noteview.view import NoteView
 from misskey_tui.textenums import NV_T
-from misskey_tui.abstract.viewmodel import AbstractViewModel
+from misskey_tui.abstract import AbstractViewModel
 
 
 class NoteViewModel(AbstractViewModel):

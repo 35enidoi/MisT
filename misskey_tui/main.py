@@ -6,9 +6,10 @@ from asciimatics.exceptions import ResizeScreenError
 
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes import SCENES
+from misskey_tui.abstract import AbstractViewModel
 
 
-def wrapper(screen: Screen, last_scene: Union[Scene, None], vm):
+def wrapper(screen: Screen, last_scene: Union[Scene, None], vm: list[AbstractViewModel]):
     scene = [Scene([v[0](screen, vm[i])], -1, name=v[2]) for i, v in enumerate(SCENES)]
     screen.play(scenes=scene,
                 stop_on_resize=True,

@@ -3,7 +3,7 @@ from asciimatics.exceptions import ResizeScreenError
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
 from misskey_tui.textenums import CM_T
-from misskey_tui.abstract.viewmodel import AbstractViewModel
+from misskey_tui.abstract import AbstractViewModel
 
 
 class ConfigMenuModel(AbstractViewModel):

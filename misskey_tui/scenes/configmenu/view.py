@@ -13,7 +13,7 @@ from asciimatics.widgets import (Frame,
                                  Divider,
                                  PopUpDialog)
 
-from misskey_tui.abstract.viewmodel import AbstractViewModel
+from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.textenums import CM_T
 from misskey_tui.util import check_terminal_haba
 

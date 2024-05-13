@@ -6,7 +6,7 @@ from asciimatics.screen import Screen
 from asciimatics.scene import Scene
 from asciimatics.exceptions import StopApplication, NextScene
 
-from misskey_tui.abstract.viewmodel import AbstractViewModel
+from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.textenums import NV_T
 
 
