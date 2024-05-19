@@ -6,7 +6,7 @@ __all__ = ["AbstractViewModel"]
 class AbstractViewModel(ABC):
     theme: str
 
-    @ abstractmethod
+    @abstractmethod
     def recreate_before(self, _view) -> None:
         pass
 
