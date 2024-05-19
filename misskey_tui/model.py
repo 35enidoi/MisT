@@ -13,12 +13,12 @@ from misskey import (
     enum as Mi_enum
 )
 
+# version
+# syoumi tekitouni ageteru noha naisyo
+VERSION = 0.42
+
 
 class MkAPIs():
-    # version
-    # syoumi tekitouni ageteru noha naisyo
-    version = 0.42
-
     def __init__(self) -> None:
         # mistconfig init
         self.__mistconfig_init()
@@ -67,9 +67,9 @@ class MkAPIs():
         if os_path.isfile(self._getpath("../mistconfig.conf")):
             # mistconfigがあったら、まずロード
             self.mistconfig_put(True)
-            if self.mistconfig["version"] < self.version:
+            if self.mistconfig["version"] < VERSION:
                 # バージョンが下なら、mistconfigのバージョン上げ
-                self.mistconfig["version"] = self.version
+                self.mistconfig["version"] = VERSION
                 # もしdefaultがなければ作る
                 # v0.43で廃止予定
                 if not self.mistconfig.get("default"):
@@ -84,7 +84,7 @@ class MkAPIs():
             # mistconfig無ければ
             self.__lang = ""
             self.__theme = "default"
-            self.mistconfig = {"version": self.version,
+            self.mistconfig = {"version": VERSION,
                                "default": {"theme": self.__theme,
                                            "lang": self.__lang,
                                            "defaulttoken": None},
