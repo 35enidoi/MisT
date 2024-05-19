@@ -21,7 +21,7 @@ class MkAPIs():
 
     def __init__(self) -> None:
         # mistconfig init
-        self._mistconfig_init()
+        self.__mistconfig_init()
         self.__lang: str
         self.__theme: str
         # check valid languages
@@ -30,7 +30,7 @@ class MkAPIs():
         # translation init
         self.translation(self.__lang)
         # Misskey.py init
-        i, instance = self._mistconfig_default_load()
+        i, instance = self.__mistconfig_default_load()
         self.__instance: str
         self.i: Union[str, None] = None
         # variable set
@@ -63,7 +63,7 @@ class MkAPIs():
         else:
             raise ValueError(f"theme `{val}` not in THEMES.")
 
-    def _mistconfig_init(self) -> None:
+    def __mistconfig_init(self) -> None:
         if os_path.isfile(self._getpath("../mistconfig.conf")):
             # mistconfigがあったら、まずロード
             self.mistconfig_put(True)
@@ -92,7 +92,7 @@ class MkAPIs():
             # 保存
             self.mistconfig_put()
 
-    def _mistconfig_default_load(self) -> tuple[Union[str, None], str]:
+    def __mistconfig_default_load(self) -> tuple[Union[str, None], str]:
         __DEFAULT_INSTANCE = "misskey.io"
         if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
             if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
