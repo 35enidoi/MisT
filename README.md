@@ -1,6 +1,10 @@
 # MisT
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2F35enidoi%2FMisT.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2F35enidoi%2FMisT?ref=badge_shield)
 ## 説明  
+> [!IMPORTANT]
+> 現在このMVVMモデルバージョンは開発中です！！！  
+> `python run.py`で動かすことができます。  
+
 テキストユーザーインターフェース(TUI)のMisskeyクライアントです  
 まだ開発中なので機能は少ないしバグもあるかもしれません。  
 ### なぜTUI？  
