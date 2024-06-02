@@ -1,3 +1,5 @@
+from typing import Callable
+
 from asciimatics.exceptions import ResizeScreenError
 
 from misskey_tui.model import MkAPIs
@@ -15,6 +17,10 @@ class ConfigMenuModel(AbstractViewModel):
         self.view: ConfigMenuView
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
+        self.ok_selections: dict[str, Callable[[str], None]] = {
+            "tokenset": self.token_on_ok,
+            "instance": self.instance_on_ok
+        }
         self.ok_button = (CM_T.OK.value, self.ok_func)
         self.ok_mode: bool = False
         self.ok_val: str = ""
@@ -66,6 +72,16 @@ class ConfigMenuModel(AbstractViewModel):
             # Return
             pass
 
+    def token_on_ok(self, text: str) -> None:
+        self.add_text("mizissoudesu!!!!!", text)
+
+    def instance_on_ok(self, text: str) -> None:
+        is_ok = self.msk_.create_mk_instance(text)
+        if is_ok:
+            self.add_text(CM_T.OK_INSTANCE_CONNECT.value)
+        else:
+            self.add_text(CM_T.OK_INSTANCE_CONNECT_FAIL.value)
+
     def theme_sel(self, arg: int) -> None:
         if arg == 4:
             # Return
@@ -96,17 +112,8 @@ class ConfigMenuModel(AbstractViewModel):
     def ok_func(self) -> None:
         text = str(self.view.inp_bx.value)
         self.view.inp_bx.value = ""
-        if self.ok_val == "tokenset":
-            # token set
-            self.add_text("mizissoudesu!!!")
-            self.add_text(text)
-        elif self.ok_val == "instance":
-            # instance set
-            is_ok = self.msk_.create_mk_instance(text)
-            if is_ok:
-                self.add_text(CM_T.OK_INSTANCE_CONNECT.value)
-            else:
-                self.add_text(CM_T.OK_INSTANCE_CONNECT_FAIL.value)
+        self.ok_selections[self.ok_val](text)
+        self.ok_val = ""
         self.ok_enable(False)
 
     def add_text(self, *arg: str) -> None:
