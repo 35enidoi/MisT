@@ -24,6 +24,7 @@ class MkAPIs():
         self.__mistconfig_init()
         self.__lang: str
         self.__theme: str
+        self.VERSION: Final = VERSION
         # check valid languages
         self.valid_langs: Final = tuple(os_path.basename(os_path.dirname(i)) for i in
                                         glob(self._getpath("../locale/*/LC_MESSAGES")))
