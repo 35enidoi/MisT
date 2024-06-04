@@ -29,9 +29,7 @@ def main():
             except ResizeScreenError as e:
                 last_scene = e.scene
     finally:
-        pass
-        # print("honi")
-        # msk._finds()
+        msk.mistconfig_put()
 
 
 if __name__ == "__main__":

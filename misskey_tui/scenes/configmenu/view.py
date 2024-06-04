@@ -47,9 +47,11 @@ class ConfigMenuView(Frame):
 
         # buttonの作成
         button_names = (CM_T.RETURN.value, CM_T.TOKEN_BUTTON.value, CM_T.INSTANCE_BUTTON.value,
-                        CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value)
+                        CM_T.THEME_BUTTON.value, CM_T.LANGUAGE_BUTTON.value, CM_T.CLEAR_BUTTON.value,
+                        "Show")
         button_funcs = (partial(self.change_window, "NoteView"), self.mv_.token, self.mv_.instance,
-                        self.mv_.theme_, self.mv_.language, self.mv_.clear_text)
+                        self.mv_.theme_, self.mv_.language, self.mv_.clear_text,
+                        self.mv_.show_now_info)
 
         self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(button_names,
                                                                                     button_funcs))

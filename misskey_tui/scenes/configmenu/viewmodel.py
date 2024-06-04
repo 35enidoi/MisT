@@ -76,7 +76,7 @@ class ConfigMenuModel(AbstractViewModel):
         self.add_text("mizissoudesu!!!!!", text)
 
     def instance_on_ok(self, text: str) -> None:
-        is_ok = self.msk_.create_mk_instance(text)
+        is_ok = self.msk_.connect_mk_instance(text)
         if is_ok:
             self.add_text(CM_T.OK_INSTANCE_CONNECT.value)
         else:
@@ -105,6 +105,15 @@ class ConfigMenuModel(AbstractViewModel):
             return
         self.msk_.translation(lang)
         raise ResizeScreenError("honi", self.view._scene)
+
+    def show_now_info(self) -> None:
+        self.add_text("Current Instance: " + self.msk_.instance)
+        if self.msk_.now_user_info is not None:
+            self.add_text("TOKEN: Valid")
+            self.add_text("Name: " + self.msk_.now_user_info["name"])
+            self.add_text("TokenId: " + self.msk_.now_user_info["token"][:8] + "...")
+        else:
+            self.add_text("TOKEN:" + "Invalid")
 
     def clear_text(self) -> None:
         self.view.txtbx.value = ""

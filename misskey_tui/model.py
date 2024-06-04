@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import path as os_path
 from glob import glob
 import json
@@ -13,6 +14,13 @@ from misskey import (
     enum as Mi_enum
 )
 
+from misskey_tui.enum import (
+    MisskeyPyExceptions,
+    MistConfig_Kata_Token,
+    MistConfig_Kata_Default,
+    MistConfig_Kata
+)
+
 # version
 # syoumi tekitouni ageteru noha naisyo
 VERSION = 0.42
@@ -20,28 +28,37 @@ VERSION = 0.42
 
 class MkAPIs():
     def __init__(self) -> None:
+        self.VERSION: Final = VERSION
         # mistconfig init
         self.__mistconfig_init()
+        self.mistconfig: MistConfig_Kata
         self.__lang: str
         self.__theme: str
-        self.VERSION: Final = VERSION
         # check valid languages
         self.valid_langs: Final = tuple(os_path.basename(os_path.dirname(i)) for i in
                                         glob(self._getpath("../locale/*/LC_MESSAGES")))
-        # translation init
+        # translation
         self.translation(self.__lang)
-        # Misskey.py init
-        i, instance = self.__mistconfig_default_load()
-        self.__instance: str
-        self.i: Union[str, None] = None
         # variable set
         self.__on_instance_changes: list[Callable[[], None]] = []
         self.mk: Union[Misskey, None] = None
-        is_ok = self.create_mk_instance(instance)
-        if is_ok:
-            self.token_set(i)
+        self.__instance: str
+        self.nowuser: Union[int, None] = None
+        if self.mistconfig["default"]["defaulttoken"] is not None:
+            self.select_user(self.mistconfig["default"]["defaulttoken"])
         else:
-            self.i = None
+            self.connect_mk_instance("misskey.io")
+
+    @property
+    def now_user_info(self) -> Union[MistConfig_Kata_Token, None]:
+        if self.nowuser is not None:
+            return self.mistconfig["tokens"][self.nowuser].copy()
+        else:
+            return None
+
+    @property
+    def users_info(self) -> list[MistConfig_Kata_Token]:
+        return deepcopy(self.mistconfig["tokens"])
 
     @property
     def instance(self) -> str:
@@ -85,37 +102,20 @@ class MkAPIs():
             # mistconfig無ければ
             self.__lang = ""
             self.__theme = "default"
-            self.mistconfig = {"version": VERSION,
-                               "default": {"theme": self.__theme,
-                                           "lang": self.__lang,
-                                           "defaulttoken": None},
-                               "tokens": []}
+            self.mistconfig = MistConfig_Kata(version=self.VERSION,
+                                              default=MistConfig_Kata_Default(theme=self.__theme,
+                                                                              lang=self.__lang,
+                                                                              defaulttoken=None),
+                                              tokens=[])
             # 保存
             self.mistconfig_put()
-
-    def __mistconfig_default_load(self) -> tuple[Union[str, None], str]:
-        __DEFAULT_INSTANCE = "misskey.io"
-        if (default := self.mistconfig["default"]).get("defaulttoken") or default.get("defaulttoken") == 0:
-            if len(self.mistconfig["tokens"]) != 0 and (len(self.mistconfig["tokens"]) > default["defaulttoken"]):
-                # defaultがあるとき
-                i = self.mistconfig["tokens"][default["defaulttoken"]]["token"]
-                instance = self.mistconfig["tokens"][default["defaulttoken"]]["instance"]
-            else:
-                # defaultがないとき
-                i = None
-                instance = __DEFAULT_INSTANCE
-        else:
-            # defaultがないとき
-            i = None
-            instance = __DEFAULT_INSTANCE
-        return i, instance
 
     def translation(self, lang: str) -> None:
         # 翻訳ファイルを配置するディレクトリ
         path_to_locale_dir = self._getpath("../locale")
 
         # ちゃんと使えるか確認
-        if lang not in self.valid_langs and not lang == "":
+        if lang not in self.valid_langs and lang != "":
             raise ValueError(f"language `{lang}` is invalid.")
 
         # 保存
@@ -140,34 +140,72 @@ class MkAPIs():
         else:
             raise ValueError("function can`t callable.")
 
-    def create_mk_instance(self, instance: str) -> bool:
+    def connect_mk_instance(self, instance: str) -> bool:
         bef_mk = self.mk
-        if self.i is not None:
-            self.i = None
         self.__instance = instance
         try:
             self.mk = Misskey(instance)
+            self.nowuser = None
             for i in self.__on_instance_changes:
                 i()
             return True
-        except (Mi_exceptions.MisskeyAPIException,
-                Req_exceptions.ConnectionError,
-                Req_exceptions.ReadTimeout,
+        except (MisskeyPyExceptions,
                 Req_exceptions.InvalidURL):
             self.mk = bef_mk
             return False
 
-    def token_set(self, token: str) -> bool:
+    def add_user(self, token: str) -> bool:
         try:
             self.mk.token = token
-            self.i = token
+            try:
+                name = self.mk.i()["name"]
+            except MisskeyPyExceptions:
+                name = "Fail to get user info"
+            self.mistconfig["tokens"].append(MistConfig_Kata_Token(name=name,
+                                                                   instance=self.__instance,
+                                                                   token=token,
+                                                                   reacdeck=[]))
             return True
-        except (Mi_exceptions.MisskeyAPIException,
+        except (MisskeyPyExceptions,
                 Mi_exceptions.MisskeyAuthorizeFailedException,
-                Req_exceptions.ConnectionError,
-                Req_exceptions.ReadTimeout,
                 Req_exceptions.InvalidURL):
             return False
+
+    def del_user(self, user_pos: int) -> None:
+        if 0 <= user_pos <= len(self.mistconfig["tokens"]):
+            if self.mistconfig["default"]["defaulttoken"] is not None:
+                if user_pos < self.mistconfig["default"]["defaulttoken"]:
+                    self.mistconfig["default"]["defaulttoken"] -= 1
+                elif user_pos == self.mistconfig["default"]["defaulttoken"]:
+                    self.mistconfig["default"]["defaulttoken"] = None
+                self.mistconfig_put()
+            self.mistconfig["tokens"].pop(user_pos)
+        else:
+            raise ValueError("Invalid position.")
+
+    def select_user(self, user_pos: int) -> bool:
+        bef_mk = self.mk
+        try:
+            is_ok = self.connect_mk_instance(self.mistconfig["tokens"][user_pos]["instance"])
+            if is_ok:
+                self.mk.token = self.mistconfig["tokens"][user_pos]["token"]
+                self.nowuser = user_pos
+                return True
+            else:
+                raise MisskeyPyExceptions
+        except (MisskeyPyExceptions,
+                Mi_exceptions.MisskeyAuthorizeFailedException):
+            self.mk = bef_mk
+            return False
+
+    def default_set_user(self, user_pos: int) -> None:
+        if 0 <= user_pos <= len(self.mistconfig["tokens"]):
+            self.mistconfig["default"]["defaulttoken"] = user_pos
+        else:
+            raise ValueError("Invalid position.")
+
+    def del_default_user(self) -> None:
+        self.mistconfig["default"]["defaulttoken"] = None
 
     def miauth_load(self) -> MiAuth:
         permissions = [Mi_enum.Permissions.WRITE_NOTES.value,
@@ -182,13 +220,12 @@ class MkAPIs():
 
         return MiAuth(self.__instance, name="MisT", permission=permissions)
 
-    def miauth_check(self, mia: MiAuth) -> bool:
+    def miauth_check(self, mia: MiAuth) -> Union[str, None]:
         try:
-            self.i = mia.check()
-            return True
+            return mia.check()
         except (Mi_exceptions.MisskeyMiAuthFailedException,
                 Req_exceptions.HTTPError):
-            return False
+            return None
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
         filepath = self._getpath("../mistconfig.conf")
@@ -197,7 +234,7 @@ class MkAPIs():
                 self.mistconfig = json.loads(f.read())
         else:
             with open(filepath, "w") as f:
-                f.write(json.dumps(self.mistconfig))
+                f.write(json.dumps(self.mistconfig, indent=4))
 
     @staticmethod
     def _getpath(dirname: str) -> str:
