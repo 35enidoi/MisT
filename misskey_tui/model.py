@@ -190,6 +190,13 @@ class MkAPIs():
             if is_ok:
                 self.mk.token = self.mistconfig["tokens"][user_pos]["token"]
                 self.nowuser = user_pos
+                if self.mistconfig["tokens"][self.nowuser]["name"] == "Fail to get user info":
+                    # 名前がadd時に手に入ってなかったときに再取得する奴
+                    try:
+                        username = self.mk.i()["name"]
+                        self.mistconfig["tokens"][self.nowuser]["name"] = username
+                    except MisskeyPyExceptions:
+                        pass
                 return True
             else:
                 raise MisskeyPyExceptions
@@ -239,5 +246,4 @@ class MkAPIs():
     @staticmethod
     def _getpath(dirname: str) -> str:
         """相対パスから絶対パスに変える奴"""
-        return os_path.abspath(os_path.join(os_path.dirname(__file__),
-                                            dirname))
+        return os_path.abspath(os_path.join(os_path.dirname(__file__), dirname))

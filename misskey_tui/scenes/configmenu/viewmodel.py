@@ -73,7 +73,11 @@ class ConfigMenuModel(AbstractViewModel):
             pass
 
     def token_on_ok(self, text: str) -> None:
-        self.add_text("mizissoudesu!!!!!", text)
+        is_ok = self.msk_.add_user(text)
+        if is_ok:
+            self.msk_.select_user(-1)
+            self.add_text("token check successful! :)")
+        self.add_text("token check fail :(")
 
     def instance_on_ok(self, text: str) -> None:
         is_ok = self.msk_.connect_mk_instance(text)
