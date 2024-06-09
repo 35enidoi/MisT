@@ -28,6 +28,7 @@ VERSION = 0.42
 
 class MkAPIs():
     def __init__(self) -> None:
+        DEFAULT_INSTANCE = "misskey.io"
         self.VERSION: Final = VERSION
         # mistconfig init
         self.__mistconfig_init()
@@ -42,12 +43,12 @@ class MkAPIs():
         # variable set
         self.__on_instance_changes: list[Callable[[], None]] = []
         self.mk: Union[Misskey, None] = None
-        self.__instance: str
+        self.__instance: str = DEFAULT_INSTANCE
         self.nowuser: Union[int, None] = None
         if self.mistconfig["default"]["defaulttoken"] is not None:
             self.select_user(self.mistconfig["default"]["defaulttoken"])
         else:
-            self.connect_mk_instance("misskey.io")
+            self.connect_mk_instance(DEFAULT_INSTANCE)
 
     @property
     def now_user_info(self) -> Union[MistConfig_Kata_Token, None]:
@@ -142,10 +143,10 @@ class MkAPIs():
 
     def connect_mk_instance(self, instance: str) -> bool:
         bef_mk = self.mk
-        self.__instance = instance
         try:
             self.mk = Misskey(instance)
             self.nowuser = None
+            self.__instance = instance
             for i in self.__on_instance_changes:
                 i()
             return True
