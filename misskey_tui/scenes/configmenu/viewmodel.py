@@ -62,6 +62,15 @@ class ConfigMenuModel(AbstractViewModel):
                         [*self.msk_.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
                         self.language_sel)
 
+    def current(self) -> None:
+        self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.msk_.instance)
+        if self.msk_.now_user_info is not None:
+            self.add_text(CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
+                          CM_T.CURRENT_NAME.value + ": " + self.msk_.now_user_info["name"],
+                          CM_T.CURRENT_TOKENID.value + ": " + self.msk_.now_user_info["token"][:8] + "...")
+        else:
+            self.add_text(CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_INVALID.value)
+
     def token_sel(self, arg: int) -> None:
         if arg == 0:
             # set token

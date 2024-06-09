@@ -36,6 +36,14 @@ class CM_T(Enum):
 
     CLEAR_BUTTON = "Clear"
 
+    CURRENT_BUTTON = "Current"
+    CURRENT_INSTANCE = "Current Instance"
+    CURRENT_TOKEN = "TOKEN"
+    CURRENT_NAME = "Name"
+    CURRENT_TOKENID = "TokenId"
+    CURRENT_VALID = "Valid"
+    CURRENT_INVALID = "Invalid"
+
     def __getattribute__(self, __name: str) -> Any:
         if __name == "value":
             return _(super().__getattribute__(__name))
