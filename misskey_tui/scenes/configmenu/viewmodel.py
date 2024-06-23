@@ -1,4 +1,5 @@
 from typing import Callable
+from functools import partial
 
 from asciimatics.exceptions import ResizeScreenError
 
@@ -42,7 +43,7 @@ class ConfigMenuModel(AbstractViewModel):
 
     def token(self) -> None:
         self.view.popup(CM_T.TOKEN_QUESTION.value,
-                        [CM_T.TOKEN_SEL_0.value, CM_T.RETURN.value],
+                        [CM_T.TOKEN_SEL_0.value, CM_T.TOKEN_SEL_1.value, CM_T.RETURN.value],
                         self.token_sel)
 
     def instance(self) -> None:
@@ -78,8 +79,49 @@ class ConfigMenuModel(AbstractViewModel):
             self.add_text(CM_T.TOKEN_SET_WRITE_PLS.value)
             self.ok_enable(True)
         elif arg == 1:
+            # Select
+            if len(self.msk_.users_info) != 0:
+                self.token_on_select(0)
+            else:
+                self.view.popup("add user please.", "OKOKOKOKOK")
+        elif arg == 2:
             # Return
             pass
+
+    def token_on_select(self, position: int) -> None:
+        BUTTONS = ("Select", "L", "R", "Return")
+        userinfo = self.msk_.users_info[position]
+        text = "\n".join([
+            f"<{position}/{len(self.msk_.users_info) - 1}> " + "Now User Info",
+            "Instance" + f": {userinfo['instance']}",
+            "UserName" + f": {userinfo['name']}",
+            "Token" + f": {userinfo['token'][:8]}..."])
+        self.view.popup(
+            txt=text,
+            button=BUTTONS,
+            on_close=partial(self.on_token_select, pos=position)
+        )
+
+    def on_token_select(self, arg: int, pos: int) -> None:
+        if arg == 0:
+            # select
+            self.on_token_select_pop(pos=pos)
+        elif arg == 1:
+            # L
+            if pos - 1 != -1:
+                pos -= 1
+            self.token_on_select(pos)
+        elif arg == 2:
+            # R
+            if pos + 1 != len(self.msk_.users_info):
+                pos += 1
+            self.token_on_select(pos)
+        elif arg == 3:
+            # Return
+            pass
+
+    def on_token_select_pop(self, pos: int) -> None:
+        self.add_text(*map(lambda x: str(x), ["mizissou", pos, self.msk_.users_info[pos]["name"]]))
 
     def token_on_ok(self, text: str) -> None:
         is_ok = self.msk_.add_user(text)

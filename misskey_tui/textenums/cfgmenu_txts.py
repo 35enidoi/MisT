@@ -17,6 +17,7 @@ class CM_T(Enum):
 
     TOKEN_QUESTION = "hatena"
     TOKEN_SEL_0 = "Set Token"
+    TOKEN_SEL_1 = "Select Token"
     TOKEN_SET_WRITE_PLS = "Write TOKEN please"
 
     CHANGE_INSTANCE_HINT = "input instance such as 'misskey.io' 'misskey.backspace.fm'"
