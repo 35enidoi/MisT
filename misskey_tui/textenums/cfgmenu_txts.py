@@ -11,14 +11,38 @@ class CM_T(Enum):
     RETURN = "return"
     OK = "Ok"
     SUCCESS = "success"
+    YES = "Yes"
+    NO = "No"
 
-    TOKEN_BUTTON = "Token"
+    TOKEN_BUTTON = "TOKEN"
     INSTANCE_BUTTON = "Instance"
 
     TOKEN_QUESTION = "hatena"
-    TOKEN_SEL_0 = "Set Token"
-    TOKEN_SEL_1 = "Select Token"
+    TOKEN_SEL_0 = "Set TOKEN"
+    TOKEN_SEL_1 = "Select TOKEN"
     TOKEN_SET_WRITE_PLS = "Write TOKEN please"
+
+    TOKEN_SEL_1_NO_USER = "No users."
+
+    TOKEN_USER_SEL = "Select"
+    TOKEN_NOW_USER_L = "L"
+    TOKEN_NOW_USER_R = "R"
+    TOKEN_USER_SELECT_DELETE = "Delete"
+    TOKEN_USER_DEFAULT_SET = "Set to Default"
+
+    TOKEN_NOW_USER_INFO = "Now User Info"
+    TOKEN_SELECTED_INFO = "Selected TOKEN information:"
+    TOKEN_USER_INSTANCE = INSTANCE_BUTTON
+    TOKEN_USER_NAME = "UserName"
+    TOKEN_USER_TOKEN = TOKEN_BUTTON
+
+    TOKEN_SELECT_SUCCESS = "Select user successful!"
+    TOKEN_SELECT_FAIL = "fail to select user"
+
+    TOKEN_DELETED = "Deleted."
+    TOKEN_DELETE_CHECK = "Are you sure about that?"
+
+    TOKEN_DEFAULT_SETTED = "Setted to default user."
 
     CHANGE_INSTANCE_HINT = "input instance such as 'misskey.io' 'misskey.backspace.fm'"
     OK_INSTANCE_CONNECT = "instance connected! :)"
@@ -39,7 +63,7 @@ class CM_T(Enum):
 
     CURRENT_BUTTON = "Current"
     CURRENT_INSTANCE = "Current Instance"
-    CURRENT_TOKEN = "TOKEN"
+    CURRENT_TOKEN = TOKEN_BUTTON
     CURRENT_NAME = "Name"
     CURRENT_TOKENID = "TokenId"
     CURRENT_VALID = "Valid"

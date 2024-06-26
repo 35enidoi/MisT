@@ -83,19 +83,21 @@ class ConfigMenuModel(AbstractViewModel):
             if len(self.msk_.users_info) != 0:
                 self.token_on_select(0)
             else:
-                self.view.popup("add user please.", "OKOKOKOKOK")
+                self.view.popup(CM_T.TOKEN_SEL_1_NO_USER.value, CM_T.OK.value)
         elif arg == 2:
             # Return
             pass
 
     def token_on_select(self, position: int) -> None:
-        BUTTONS = ("Select", "L", "R", "Return")
+        BUTTONS = (CM_T.TOKEN_USER_SEL.value, CM_T.TOKEN_NOW_USER_L.value,
+                   CM_T.TOKEN_NOW_USER_R.value, CM_T.RETURN.value)
         userinfo = self.msk_.users_info[position]
         text = "\n".join([
-            f"<{position}/{len(self.msk_.users_info) - 1}> " + "Now User Info",
-            "Instance" + f": {userinfo['instance']}",
-            "UserName" + f": {userinfo['name']}",
-            "Token" + f": {userinfo['token'][:8]}..."])
+            f"<{position+1}/{len(self.msk_.users_info)}> " + CM_T.TOKEN_NOW_USER_INFO.value,
+            CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo['instance']}",
+            CM_T.TOKEN_USER_NAME.value + f": {userinfo['name']}",
+            CM_T.TOKEN_USER_TOKEN.value + f": {userinfo['token'][:8]}..."
+        ])
         self.view.popup(
             txt=text,
             button=BUTTONS,
@@ -105,7 +107,7 @@ class ConfigMenuModel(AbstractViewModel):
     def on_token_select(self, arg: int, pos: int) -> None:
         if arg == 0:
             # select
-            self.on_token_select_pop(pos=pos)
+            self.select_token_pop(pos=pos)
         elif arg == 1:
             # L
             if pos - 1 != -1:
@@ -120,15 +122,60 @@ class ConfigMenuModel(AbstractViewModel):
             # Return
             pass
 
-    def on_token_select_pop(self, pos: int) -> None:
-        self.add_text(*map(lambda x: str(x), ["mizissou", pos, self.msk_.users_info[pos]["name"]]))
+    def select_token_pop(self, pos: int) -> None:
+        CHOICES = (CM_T.TOKEN_USER_SEL.value, CM_T.TOKEN_USER_SELECT_DELETE.value,
+                   CM_T.TOKEN_USER_DEFAULT_SET.value, CM_T.RETURN.value)
+        userinfo = self.msk_.users_info[pos]
+        text = "\n".join([
+            CM_T.TOKEN_SELECTED_INFO.value,
+            CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo['instance']}",
+            CM_T.TOKEN_USER_NAME.value + f": {userinfo['name']}",
+            CM_T.TOKEN_USER_TOKEN.value + f": {userinfo['token'][:8]}..."
+        ])
+        self.view.popup(
+            txt=text,
+            button=CHOICES,
+            on_close=partial(self.on_select_token_pop, pos=pos)
+        )
+
+    def on_select_token_pop(self, arg: int, pos: int) -> None:
+        if arg == 0:
+            # Set
+            is_ok = self.msk_.select_user(pos)
+            if is_ok:
+                text = CM_T.TOKEN_SELECT_SUCCESS.value
+            else:
+                text = CM_T.TOKEN_SELECT_FAIL.value
+            self.view.popup(text, ["Ok"])
+        elif arg == 1:
+            # Delete
+            def _del_check(is_ok: int):
+                if is_ok == 1:
+                    # 消す
+                    self.msk_.del_user(pos)
+                    self.add_text(CM_T.TOKEN_DELETED.value)
+                else:
+                    pass
+
+            self.view.popup(
+                txt=CM_T.TOKEN_DELETE_CHECK.value,
+                button=[CM_T.NO.value, CM_T.YES.value],
+                on_close=_del_check)
+        elif arg == 2:
+            # Default Set
+            self.msk_.default_set_user(pos)
+            self.add_text(CM_T.TOKEN_DEFAULT_SETTED.value)
+        elif arg == 3:
+            # Return
+            pass
 
     def token_on_ok(self, text: str) -> None:
         is_ok = self.msk_.add_user(text)
         if is_ok:
             self.msk_.select_user(-1)
-            self.add_text("token check successful! :)")
-        self.add_text("token check fail :(")
+            self.add_text("TOKEN check successful! :)")
+        else:
+            self.add_text("TOKEN check fail :(")
 
     def instance_on_ok(self, text: str) -> None:
         is_ok = self.msk_.connect_mk_instance(text)
@@ -166,7 +213,7 @@ class ConfigMenuModel(AbstractViewModel):
         if self.msk_.now_user_info is not None:
             self.add_text("TOKEN: Valid")
             self.add_text("Name: " + self.msk_.now_user_info["name"])
-            self.add_text("TokenId: " + self.msk_.now_user_info["token"][:8] + "...")
+            self.add_text("TOKENId: " + self.msk_.now_user_info["token"][:8] + "...")
         else:
             self.add_text("TOKEN:" + "Invalid")
 

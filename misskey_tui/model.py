@@ -200,7 +200,7 @@ class MkAPIs():
                         pass
                 return True
             else:
-                raise MisskeyPyExceptions
+                return False
         except (MisskeyPyExceptions,
                 Mi_exceptions.MisskeyAuthorizeFailedException):
             self.mk = bef_mk
