@@ -17,7 +17,7 @@ class CM_T(Enum):
     TOKEN_BUTTON = "TOKEN"
     INSTANCE_BUTTON = "Instance"
 
-    TOKEN_QUESTION = "hatena"
+    TOKEN_QUESTION = "?"
     TOKEN_SEL_0 = "Set TOKEN"
     TOKEN_SEL_1 = "Select TOKEN"
     TOKEN_SET_WRITE_PLS = "Write TOKEN please"
