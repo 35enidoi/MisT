@@ -44,6 +44,9 @@ class CM_T(Enum):
 
     TOKEN_DEFAULT_SETTED = "Setted to default user."
 
+    TOKEN_ADD_SUCCESS = "TOKEN check successful!"
+    TOKEN_ADD_FAIL = "TOKEN check fail."
+
     CHANGE_INSTANCE_HINT = "input instance such as 'misskey.io' 'misskey.backspace.fm'"
     OK_INSTANCE_CONNECT = "instance connected! :)"
     OK_INSTANCE_CONNECT_FAIL = "instance connect fail :("

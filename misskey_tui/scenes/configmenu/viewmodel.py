@@ -146,7 +146,7 @@ class ConfigMenuModel(AbstractViewModel):
                 text = CM_T.TOKEN_SELECT_SUCCESS.value
             else:
                 text = CM_T.TOKEN_SELECT_FAIL.value
-            self.view.popup(text, ["Ok"])
+            self.view.popup(text, [CM_T.OK.value])
         elif arg == 1:
             # Delete
             def _del_check(is_ok: int):
@@ -173,9 +173,9 @@ class ConfigMenuModel(AbstractViewModel):
         is_ok = self.msk_.add_user(text)
         if is_ok:
             self.msk_.select_user(-1)
-            self.add_text("TOKEN check successful! :)")
+            self.add_text(CM_T.TOKEN_ADD_SUCCESS.value)
         else:
-            self.add_text("TOKEN check fail :(")
+            self.add_text(CM_T.TOKEN_ADD_FAIL.value)
 
     def instance_on_ok(self, text: str) -> None:
         is_ok = self.msk_.connect_mk_instance(text)
@@ -207,15 +207,6 @@ class ConfigMenuModel(AbstractViewModel):
             return
         self.msk_.translation(lang)
         raise ResizeScreenError("honi", self.view._scene)
-
-    def show_now_info(self) -> None:
-        self.add_text("Current Instance: " + self.msk_.instance)
-        if self.msk_.now_user_info is not None:
-            self.add_text("TOKEN: Valid")
-            self.add_text("Name: " + self.msk_.now_user_info["name"])
-            self.add_text("TOKENId: " + self.msk_.now_user_info["token"][:8] + "...")
-        else:
-            self.add_text("TOKEN:" + "Invalid")
 
     def clear_text(self) -> None:
         self.view.txtbx.value = ""
