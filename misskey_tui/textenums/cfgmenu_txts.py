@@ -4,7 +4,7 @@ from typing import Any, Callable
 __all__ = ["CM_T"]
 
 # リンター対策の定義
-_: Callable
+_: Callable[[str], str]
 
 
 class CM_T(Enum):
