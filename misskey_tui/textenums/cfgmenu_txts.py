@@ -18,11 +18,12 @@ class CM_T(Enum):
     INSTANCE_BUTTON = "Instance"
 
     TOKEN_QUESTION = "?"
-    TOKEN_SEL_0 = "Set TOKEN"
-    TOKEN_SEL_1 = "Select TOKEN"
+    TOKEN_SEL_0 = "Select TOKEN"
+    TOKEN_SEL_1 = "Set TOKEN"
+    TOKEN_SEL_2 = "MiAuth"
     TOKEN_SET_WRITE_PLS = "Write TOKEN please"
 
-    TOKEN_SEL_1_NO_USER = "No users."
+    TOKEN_SELECT_NO_USER = "No users."
 
     TOKEN_USER_SEL = "Select"
     TOKEN_NOW_USER_L = "L"
@@ -46,6 +47,9 @@ class CM_T(Enum):
 
     TOKEN_ADD_SUCCESS = "TOKEN check successful!"
     TOKEN_ADD_FAIL = "TOKEN check fail."
+
+    MIAUTH_CHECK_FAIL = "Fail to check miauth."
+    MIAUTH_CHECK_FAIL_TRYAGAIN = "try again?"
 
     CHANGE_INSTANCE_HINT = "input instance such as 'misskey.io' 'misskey.backspace.fm'"
     OK_INSTANCE_CONNECT = "instance connected! :)"

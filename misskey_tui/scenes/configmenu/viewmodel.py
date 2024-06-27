@@ -2,9 +2,13 @@ from typing import Callable
 from functools import partial
 
 from asciimatics.exceptions import ResizeScreenError
+from misskey import MiAuth
+from misskey.exceptions import MisskeyMiAuthFailedException
 
 from misskey_tui.model import MkAPIs
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
+from misskey_tui.enum import MisskeyPyExceptions
+from misskey_tui.util import web_show
 from misskey_tui.textenums import CM_T
 from misskey_tui.abstract import AbstractViewModel
 
@@ -43,7 +47,8 @@ class ConfigMenuModel(AbstractViewModel):
 
     def token(self) -> None:
         self.view.popup(CM_T.TOKEN_QUESTION.value,
-                        [CM_T.TOKEN_SEL_0.value, CM_T.TOKEN_SEL_1.value, CM_T.RETURN.value],
+                        [CM_T.TOKEN_SEL_0.value, CM_T.TOKEN_SEL_1.value,
+                         CM_T.TOKEN_SEL_2.value, CM_T.RETURN.value],
                         self.token_sel)
 
     def instance(self) -> None:
@@ -74,17 +79,50 @@ class ConfigMenuModel(AbstractViewModel):
 
     def token_sel(self, arg: int) -> None:
         if arg == 0:
-            # set token
-            self.ok_val = "tokenset"
-            self.add_text(CM_T.TOKEN_SET_WRITE_PLS.value)
-            self.ok_enable(True)
-        elif arg == 1:
             # Select
             if len(self.msk_.users_info) != 0:
                 self.token_on_select(0)
             else:
-                self.view.popup(CM_T.TOKEN_SEL_1_NO_USER.value, CM_T.OK.value)
+                self.view.popup(CM_T.TOKEN_SELECT_NO_USER.value, CM_T.OK.value)
+        elif arg == 1:
+            # set token
+            self.ok_val = "tokenset"
+            self.add_text(CM_T.TOKEN_SET_WRITE_PLS.value)
+            self.ok_enable(True)
         elif arg == 2:
+            # miauth
+            def _ok_callback(arg: int, mia: MiAuth) -> None:
+                if arg == 0:
+                    # check
+                    try:
+                        token = mia.check()
+                        is_ok = self.msk_.add_user(token)
+                        if is_ok:
+                            self.view.popup(CM_T.TOKEN_ADD_SUCCESS.value, button=[CM_T.OK.value])
+                            is_ok_select_user = self.msk_.select_user(-1)
+                            if is_ok_select_user:
+                                self.add_text(CM_T.TOKEN_SELECT_SUCCESS.value)
+                            else:
+                                self.add_text(CM_T.TOKEN_SELECT_FAIL.value)
+                    except (MisskeyMiAuthFailedException,
+                            MisskeyPyExceptions):
+                        text = "\n".join((CM_T.MIAUTH_CHECK_FAIL.value,
+                                          CM_T.MIAUTH_CHECK_FAIL_TRYAGAIN.value))
+                        self.view.popup(txt=text,
+                                        button=[CM_T.YES.value, CM_T.NO.value],
+                                        on_close=partial(_ok_callback, mia=mia))
+                else:
+                    # nocheck
+                    pass
+
+            mia = self.msk_.get_miauth()
+            url = mia.generate_url()
+            web_show(url)
+            text = "URL" + "\n\n" + url
+            self.view.popup(txt=text,
+                            button=[CM_T.OK.value],
+                            on_close=partial(_ok_callback, mia=mia))
+        elif arg == 3:
             # Return
             pass
 

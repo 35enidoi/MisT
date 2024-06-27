@@ -25,6 +25,10 @@ from misskey_tui.enum import (
 # syoumi tekitouni ageteru noha naisyo
 VERSION = 0.42
 
+# program name
+# kore kasyounanode kaerukanousei takai
+PROGRAM_NAME = "MisT"
+
 
 class MkAPIs():
     def __init__(self) -> None:
@@ -180,6 +184,12 @@ class MkAPIs():
                 elif user_pos == self.mistconfig["default"]["defaulttoken"]:
                     self.mistconfig["default"]["defaulttoken"] = None
                 self.mistconfig_put()
+            if self.nowuser is not None:
+                if user_pos < self.nowuser:
+                    self.nowuser -= 1
+                elif user_pos == self.nowuser:
+                    del self.mk.token
+                    self.nowuser = None
             self.mistconfig["tokens"].pop(user_pos)
         else:
             raise ValueError("Invalid position.")
@@ -215,7 +225,8 @@ class MkAPIs():
     def del_default_user(self) -> None:
         self.mistconfig["default"]["defaulttoken"] = None
 
-    def miauth_load(self) -> MiAuth:
+    def get_miauth(self) -> MiAuth:
+        """miauthを取得するやつ"""
         permissions = [Mi_enum.Permissions.WRITE_NOTES.value,
                        Mi_enum.Permissions.READ_ACCOUNT.value,
                        Mi_enum.Permissions.WRITE_ACCOUNT.value,
@@ -226,14 +237,7 @@ class MkAPIs():
                        Mi_enum.Permissions.READ_NOTIFICATIONS.value,
                        Mi_enum.Permissions.WRITE_NOTIFICATIONS.value]
 
-        return MiAuth(self.__instance, name="MisT", permission=permissions)
-
-    def miauth_check(self, mia: MiAuth) -> Union[str, None]:
-        try:
-            return mia.check()
-        except (Mi_exceptions.MisskeyMiAuthFailedException,
-                Req_exceptions.HTTPError):
-            return None
+        return MiAuth(address=self.__instance, name=PROGRAM_NAME, permission=permissions)
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
         filepath = self._getpath("../mistconfig.conf")
