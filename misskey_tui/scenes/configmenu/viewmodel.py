@@ -69,13 +69,14 @@ class ConfigMenuModel(AbstractViewModel):
                         self.language_sel)
 
     def current(self) -> None:
-        self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.msk_.instance)
         if self.msk_.now_user_info is not None:
-            self.add_text(CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
+            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.msk_.instance,
+                          CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
                           CM_T.CURRENT_NAME.value + ": " + self.msk_.now_user_info["name"],
                           CM_T.CURRENT_TOKENID.value + ": " + self.msk_.now_user_info["token"][:8] + "...")
         else:
-            self.add_text(CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_INVALID.value)
+            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.msk_.instance,
+                          CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_INVALID.value)
 
     def token_sel(self, arg: int) -> None:
         if arg == 0:
@@ -259,6 +260,7 @@ class ConfigMenuModel(AbstractViewModel):
     def add_text(self, *arg: str) -> None:
         for i in arg:
             self.view.txtbx.value += i+"\n"
+        self.view.txtbx.value += "\n"
 
     def ok_enable(self, _enable: bool) -> None:
         self.ok_mode = _enable
