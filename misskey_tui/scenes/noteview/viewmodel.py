@@ -59,10 +59,10 @@ class NoteViewModel(AbstractViewModel):
                 # get fail
                 additional_text = ""
                 if self.msk_.now_user_info is None:
-                    additional_text = "Maybe cause no token."
+                    additional_text = "Probably because there is no token."
                     if self.TL in ("HTL", "STL"):
-                        additional_text = f"Maybe cause select invalid TL;{self.TL}"
-                self.view.popup("Something was occured while get note.\n" + additional_text,
+                        additional_text = f"Probably because select invalid TL;{self.TL}"
+                self.view.popup("Something occured while get note.\n" + additional_text,
                                 ["Ok"])
         else:
             self.view.popup("misskeypy is invalid. reconnect instance please", ["ok"])
