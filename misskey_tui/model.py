@@ -3,7 +3,7 @@ from os import path as os_path
 from glob import glob
 import json
 import gettext
-from typing import Union, Callable, Final
+from typing import Union, Callable, Final, TypeVar
 
 from requests import exceptions as Req_exceptions
 from asciimatics.widgets.utilities import THEMES
@@ -20,6 +20,11 @@ from misskey_tui.enum import (
     MistConfig_Kata_Default,
     MistConfig_Kata
 )
+
+__all__ = ["VERSION", "PROGRAM_NAME", "MkAPIs"]
+
+T = TypeVar("T")
+P = TypeVar("P")
 
 # version
 # syoumi tekitouni ageteru noha naisyo
@@ -68,6 +73,10 @@ class MkAPIs():
     @property
     def instance(self) -> str:
         return self.__instance
+
+    @property
+    def is_valid_misskeypy(self) -> bool:
+        return self.mk is not None
 
     @property
     def lang(self) -> str:
@@ -172,8 +181,7 @@ class MkAPIs():
                                                                    reacdeck=[]))
             return True
         except (MisskeyPyExceptions,
-                Mi_exceptions.MisskeyAuthorizeFailedException,
-                Req_exceptions.InvalidURL):
+                Mi_exceptions.MisskeyAuthorizeFailedException):
             return False
 
     def del_user(self, user_pos: int) -> None:
@@ -247,6 +255,18 @@ class MkAPIs():
         else:
             with open(filepath, "w") as f:
                 f.write(json.dumps(self.mistconfig, indent=4))
+
+    @staticmethod
+    def misskeypy_wrapper(msk_func: Callable[[P], T], **kargs: P) -> Union[T, None]:
+        """
+        misskey.pyの例外が発生したらNoneを返すやーつ"""
+        if callable(msk_func):
+            try:
+                return msk_func(**kargs)
+            except MisskeyPyExceptions:
+                return None
+        else:
+            raise TypeError(f"{msk_func} is not callable.")
 
     @staticmethod
     def _getpath(dirname: str) -> str:
