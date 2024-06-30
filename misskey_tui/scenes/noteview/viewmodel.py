@@ -54,24 +54,23 @@ class NoteViewModel(AbstractViewModel):
             if notes is not None:
                 # get success
                 self.notes = notes
-                self.view.popup("get note success!", ["Ok"])
+                self.view.popup(NV_T.GET_NOTE_SUCCESS.value, [NV_T.OK.value])
             else:
                 # get fail
                 additional_text = ""
                 if self.msk_.now_user_info is None:
-                    additional_text = "Probably because there is no token."
+                    additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_1._value_
                     if self.TL in ("HTL", "STL"):
-                        additional_text = f"Probably because select invalid TL;{self.TL}"
-                self.view.popup("Something occured while get note.\n" + additional_text,
-                                ["Ok"])
+                        additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_2.value + f"; {self.TL}"
+                self.view.popup(NV_T.GET_NOTE_FAIL.value + "\n" + additional_text, [NV_T.OK.value])
         else:
-            self.view.popup("misskeypy is invalid. reconnect instance please", ["ok"])
+            self.view.popup(NV_T.GET_NOTE_MISSKEYPY_INVALID.value, [NV_T.OK.value])
 
     def change_test(self) -> None:
         self.view.textbox.value += "\n".join(["", self.msk_.lang, str(self.msk_.valid_langs)])
 
     def quit_question(self) -> None:
-        self.view.popup("Quit?", [NV_T.OK.value, NV_T.RETURN.value], self.quit)
+        self.view.popup(NV_T.QUIT.value, [NV_T.OK.value, NV_T.RETURN.value], self.quit)
 
     def quit(self, arg: int) -> None:
         if arg == 0:

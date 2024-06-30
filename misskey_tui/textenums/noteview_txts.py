@@ -12,7 +12,15 @@ class NV_T(Enum):
     RETURN = "return"
 
     QUIT_BUTTON = "Quit"
+    GET_NOTE_BUTTON = "Get note"
     CONFIG_BUTTON = "Config"
+
+    GET_NOTE_SUCCESS = "Succeed in getting note!"
+    GET_NOTE_FAIL = "Something occured while get note."
+    GET_NOTE_FAIL_ADDITIONAL_1 = "Probably because there is no token."
+    GET_NOTE_FAIL_ADDITIONAL_2 = "Probably because select invalid TL"
+
+    GET_NOTE_MISSKEYPY_INVALID = "misskeypy is invalid. reconnect instance please"
 
     WELCOME_MESSAGE = "Hello World!\nWelcome to MisT with MVVM model!"
     QUIT = "Quit?"
