@@ -135,7 +135,7 @@ class Note(TypedDict):
     localOnly: bool
     reactionAcceptance: Union[str, None]
     reactionEmojis: dict[str, str]
-    reactions: dict[str, str]
+    reactions: dict[str, int]
     reactionCount: int
     renoteCount: int
     repliesCount: int
