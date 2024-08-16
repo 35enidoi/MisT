@@ -36,6 +36,7 @@ PROGRAM_NAME = "MisT"
 
 
 class MkAPIs():
+    """MVVMモデルのMの部分"""
     def __init__(self) -> None:
         DEFAULT_INSTANCE = "misskey.io"
         self.VERSION: Final = VERSION
@@ -61,6 +62,7 @@ class MkAPIs():
 
     @property
     def now_user_info(self) -> Union[MistConfig_Kata_Token, None]:
+        """現在のユーザーの情報"""
         if self.nowuser is not None:
             return self.mistconfig["tokens"][self.nowuser].copy()
         else:
@@ -68,22 +70,27 @@ class MkAPIs():
 
     @property
     def users_info(self) -> list[MistConfig_Kata_Token]:
+        """ユーザー達の情報"""
         return deepcopy(self.mistconfig["tokens"])
 
     @property
     def instance(self) -> str:
+        """現在接続しているインスタンス"""
         return self.__instance
 
     @property
     def is_valid_misskeypy(self) -> bool:
+        """misskeypyがちゃんとインスタンス化されているか"""
         return self.mk is not None
 
     @property
     def lang(self) -> str:
+        """現在の使用言語"""
         return self.__lang
 
     @property
     def theme(self) -> str:
+        """現在のテーマ"""
         return self.__theme
 
     @theme.setter
@@ -125,6 +132,21 @@ class MkAPIs():
             self.mistconfig_put()
 
     def translation(self, lang: str) -> None:
+        """文字の翻訳をする関数
+
+        Parameters
+        ----------
+        lang: str
+            言語の種類
+
+        Raises
+        ------
+        ValueError
+            言語の種類が不適の時
+
+        Note
+        ----
+        有効な言語の種類は:obj:`valid_langs`にリストで載っています。"""
         # 翻訳ファイルを配置するディレクトリ
         path_to_locale_dir = self._getpath("../locale")
 
@@ -149,13 +171,37 @@ class MkAPIs():
         translater.install()
 
     def add_on_change_instance(self, func: Callable[[], None]) -> None:
+        """接続するインスタンスが変わった時に引数の関数を呼び出すようにする
+
+        Parameters
+        ----------
+        func: Callable
+            呼び出させる関数
+
+        Raises
+        ------
+        ValueError
+            引数が呼び出し不可能(関数ではない)とき"""
         if callable(func):
             self.__on_instance_changes.append(func)
         else:
             raise ValueError("function can`t callable.")
 
     def connect_mk_instance(self, instance: str) -> bool:
+        """接続するインスタンスを変更する
+
+        Parameters
+        ----------
+        instance: str
+            接続するインスタンス
+
+        Returns
+        -------
+        bool
+            接続に成功したかどうか"""
         bef_mk = self.mk
+        bef_nowuser = self.nowuser
+        bef_instance = self.__instance
         try:
             self.mk = Misskey(instance)
             self.nowuser = None
@@ -165,10 +211,23 @@ class MkAPIs():
             return True
         except (MisskeyPyExceptions,
                 Req_exceptions.InvalidURL):
+            self.nowuser = bef_nowuser
+            self.__instance = bef_instance
             self.mk = bef_mk
             return False
 
     def add_user(self, token: str) -> bool:
+        """ユーザーを追加する
+
+        Parameters
+        ----------
+        token: str
+            トークン
+
+        Returns
+        -------
+        bool
+            成功したかどうか"""
         try:
             self.mk.token = token
             try:
@@ -185,7 +244,18 @@ class MkAPIs():
             return False
 
     def del_user(self, user_pos: int) -> None:
-        if 0 <= user_pos <= len(self.mistconfig["tokens"]):
+        """ユーザー情報を消す
+
+        Parameters
+        ----------
+        user_pos: int
+            ユーザー情報の場所
+
+        Raises
+        ------
+        IndexError
+            場所が不適の時"""
+        if 0 <= user_pos <= len(self.mistconfig["tokens"]) - 1:
             if self.mistconfig["default"]["defaulttoken"] is not None:
                 if user_pos < self.mistconfig["default"]["defaulttoken"]:
                     self.mistconfig["default"]["defaulttoken"] -= 1
@@ -200,9 +270,28 @@ class MkAPIs():
                     self.nowuser = None
             self.mistconfig["tokens"].pop(user_pos)
         else:
-            raise ValueError("Invalid position.")
+            raise IndexError("Invalid position.")
 
     def select_user(self, user_pos: int) -> bool:
+        """ユーザーを選択する
+
+        Parameters
+        ----------
+        user_pos: int
+            ユーザー情報の場所
+
+        Raises
+        ------
+        IndexError
+            場所が不適の時
+
+        Returns
+        -------
+        bool
+            成功したかどうか"""
+        if user_pos < 0 or len(self.mistconfig["tokens"]) <= user_pos:
+            raise IndexError("Invalid position.")  # 範囲外
+
         bef_mk = self.mk
         try:
             is_ok = self.connect_mk_instance(self.mistconfig["tokens"][user_pos]["instance"])
@@ -219,18 +308,36 @@ class MkAPIs():
                 return True
             else:
                 return False
+
         except (MisskeyPyExceptions,
                 Mi_exceptions.MisskeyAuthorizeFailedException):
             self.mk = bef_mk
             return False
 
     def default_set_user(self, user_pos: int) -> None:
-        if 0 <= user_pos <= len(self.mistconfig["tokens"]):
+        """デフォルトユーザーに指定する
+
+        Parameters
+        ----------
+        user_pos: int
+            ユーザー情報の場所
+
+        Raises
+        ------
+        IndexError
+            場所が不適の時
+        """
+        if 0 <= user_pos <= len(self.mistconfig["tokens"]) - 1:
             self.mistconfig["default"]["defaulttoken"] = user_pos
         else:
-            raise ValueError("Invalid position.")
+            raise IndexError("Invalid position.")
 
     def del_default_user(self) -> None:
+        """デフォルトユーザーの指定を消す
+
+        Note
+        ----
+        デフォルトユーザーがいない場合、何も起きません。実際同じ値代入してるだけ。実際そう。"""
         self.mistconfig["default"]["defaulttoken"] = None
 
     def get_miauth(self) -> MiAuth:
@@ -248,6 +355,7 @@ class MkAPIs():
         return MiAuth(address=self.__instance, name=PROGRAM_NAME, permission=permissions)
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
+        """mistconfigの情報を保存させる"""
         filepath = self._getpath("../mistconfig.conf")
         if loadmode:
             with open(filepath, "r") as f:
