@@ -16,7 +16,7 @@ from textenums import *
 class MkAPIs():
     # version
     # syoumi tekitouni ageteru noha naisyo
-    version = 0.42
+    version = 0.421
 
     class WindowHundlerError(Exception):
         pass
@@ -184,7 +184,8 @@ class MkAPIs():
                 notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
                 notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
-            return sorted(notes, key=lambda x:datetime.fromisoformat(x["createdAt"]).timestamp(), reverse=True)
+
+            return sorted(notes, key=lambda x:datetime.fromisoformat(x["createdAt"][:-1]).timestamp(), reverse=True)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
@@ -352,7 +353,7 @@ class NoteView(Frame):
 
     def noteupdate(self):
         btmnoteid = self.msk_.notes[len(self.msk_.notes)-1]["id"]
-        notes = self.msk_.get_note(sinceid=btmnoteid[:-2]+"aa")
+        notes = self.msk_.get_note(sinceid=btmnoteid[:-2]+"00")
         if notes != None:
             if (dif := len(notes)-len(self.msk_.notes)) > 0:
                 self.msk_.nowpoint += dif
