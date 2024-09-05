@@ -16,7 +16,7 @@ from textenums import *
 class MkAPIs():
     # version
     # syoumi tekitouni ageteru noha naisyo
-    version = 0.42
+    version = 0.421
 
     class WindowHundlerError(Exception):
         pass
