@@ -184,7 +184,8 @@ class MkAPIs():
                 notes = self.mk.notes_hybrid_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
             elif self.tl == "GTL":
                 notes = self.mk.notes_global_timeline(lim,with_files=False,until_id=untilid,since_id=sinceid)
-            return sorted(notes, key=lambda x:datetime.fromisoformat(x["createdAt"]).timestamp(), reverse=True)
+
+            return sorted(notes, key=lambda x:datetime.fromisoformat(x["createdAt"][:-1]).timestamp(), reverse=True)
         except (exceptions.MisskeyAPIException, ReadTimeout):
             return None
 
