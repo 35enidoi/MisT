@@ -28,7 +28,7 @@ class Anupd:
                     ntlen = 100-CUTNOTELEN
                     flag = True
                 btmnoteid = msk.notes[ntlen-1]["id"]
-                notes = msk.get_note(sinceid=btmnoteid[:-2]+"aa")
+                notes = msk.get_note(sinceid=btmnoteid[:-2]+"00")
                 if notes is not None:
                     beforenotes = msk.notes
                     if flag:

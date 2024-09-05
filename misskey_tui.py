@@ -353,7 +353,7 @@ class NoteView(Frame):
 
     def noteupdate(self):
         btmnoteid = self.msk_.notes[len(self.msk_.notes)-1]["id"]
-        notes = self.msk_.get_note(sinceid=btmnoteid[:-2]+"aa")
+        notes = self.msk_.get_note(sinceid=btmnoteid[:-2]+"00")
         if notes != None:
             if (dif := len(notes)-len(self.msk_.notes)) > 0:
                 self.msk_.nowpoint += dif
