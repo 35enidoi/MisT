@@ -37,17 +37,19 @@ class NoteViewModel(AbstractViewModel):
         self.view.textbox.value = self.txtbx_txt
 
     def on_change_txtbx(self) -> None:
-        self.txtbx_txt = self.view.textbox.value
+        self.txtbx_txt = self.view.textbox.value  # type: ignore  textbox.valueは必ずstr
 
-    def note_get_func(self) -> Callable[[Any], Note]:
+    def note_get_func(self) -> Callable[[Any], list[Note]]:
         if self.TL == "HTL":
-            return self.msk_.mk.notes_timeline
+            return self.msk_.mk.notes_timeline  # type: ignore  list[Note]が返ってくる
         elif self.TL == "LTL":
-            return self.msk_.mk.notes_local_timeline
+            return self.msk_.mk.notes_local_timeline  # type: ignore  同文
         elif self.TL == "STL":
-            return self.msk_.mk.notes_hybrid_timeline
+            return self.msk_.mk.notes_hybrid_timeline  # type: ignore  同文
         elif self.TL == "GTL":
-            return self.msk_.mk.notes_global_timeline
+            return self.msk_.mk.notes_global_timeline  # type: ignore  同文
+        else:
+            raise ValueError(f"Unknown TL type: {self.TL}")
 
     def note_get(self) -> None:
         if self.msk_.is_valid_misskeypy:
