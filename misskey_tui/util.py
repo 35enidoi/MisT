@@ -23,3 +23,8 @@ def web_show(url: str) -> None:
             browser.open(url)
     except webbrowser.Error:
         return
+
+
+def nyaize(text: str) -> str:
+    """テキストをnyaize処理する関数"""
+    return text.replace("な", "にゃ").replace("ナ", "ニャ")

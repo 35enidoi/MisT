@@ -5,6 +5,7 @@ from misskey_tui.scenes.noteview.view import NoteView
 from misskey_tui.textenums import NV_T
 from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.enum.misskeypy_return import Note
+from misskey_tui.util import nyaize
 
 
 class NoteViewModel(AbstractViewModel):
@@ -66,8 +67,114 @@ class NoteViewModel(AbstractViewModel):
         else:
             self.view.popup(NV_T.GET_NOTE_MISSKEYPY_INVALID.value, [NV_T.OK.value])
 
+        self.note_write()
+
     def change_test(self) -> None:
         self.view.textbox.value += "\n".join(["", self.msk_.lang, str(self.msk_.valid_langs)])
+
+    def note_write(self) -> None:
+        if self.notes != []:
+            # ノートがある時
+            return_strs = []
+
+            return_strs.append(f"<{self.notes_point + 1}/{len(self.notes)}>\n")
+
+            return_strs.append(self._note_inp(self.notes[self.notes_point]))
+            if (renote := self.notes[self.notes_point].get("renote")):
+                return_strs.append(self._note_inp(renote))
+
+            self.view.textbox.value = "\n".join(return_strs)
+        else:
+            # ノート無い時
+            self.view.textbox.value = NV_T.NOTE_NONE.value
+
+    def _note_inp(self, note: Note) -> str:
+        return_strs = []
+
+        # usernameの取得
+        if note["user"]["host"] is None:
+            username = f'@{note["user"]["username"]}@{self.msk_.instance}'
+        else:
+            username = f'@{note["user"]["username"]}@{note["user"]["host"]}'
+
+        # ユーザー名の取得
+        if note["user"]["name"] is None:
+            name = note["user"]["username"]
+        else:
+            name = note["user"]["name"]
+
+        # どのようなノートなのか確認
+        if note["replyId"] is not None:
+            # 返信
+            return_strs.append(f"{name} [{username}] was replied    noteId:{note['id']}")
+        elif note["renoteId"] is not None:
+            if note["text"] is not None:
+                # 引用
+                return_strs.append(f"{name} [{username}] was quoted     noteId:{note['id']} text:{note['text']}")
+            else:
+                # リノート
+                return_strs.append(f"{name} [{username}] was renoted    noteId:{note['id']}")
+        else:
+            # 通常のノート
+            return_strs.append(f"{name} [{username}] was noted      noteId:{note['id']}")
+
+        # ユーザーの特殊フラグを取得
+        flags = []
+
+        if note["user"]["isBot"]:
+            flags.append("isBot:True")
+        if note["user"]["isCat"]:
+            flags.append("isCat:True")
+
+        if flags:
+            return_strs.append(" ".join(flags))
+
+        # ユーザーのroleを取得
+        if (badge_roles := note["user"].get("badgeRoles")):
+            if len(badge_roles) != 0:
+                return_strs.append("badgeRoles:["+",".join(i["name"] for i in badge_roles)+"]")
+
+        # 区切り線
+        return_strs.append("-"*(self.view.screen.width-4))
+
+        # Todo: これなに
+        if note["text"] is None:
+            if len(note["files"]) == 0:
+                return "\n".join(return_strs)
+
+        # CWがあればそれを先に記載
+        if note["cw"] is not None:
+            return_strs.append("CW detect!")
+            return_strs.append(note["cw"])
+            return_strs.append("~"*(self.view.screen.width-4))
+
+        # テキストの処理
+        if note["user"]["isCat"]:
+            return_strs.append(nyaize(str(note["text"])))
+        else:
+            return_strs.append(note["text"])
+
+        # 一行開ける
+        return_strs.append("")
+
+        # 添付ファイルの処理
+        if len(note["files"]) != 0:
+            return_strs.append("{} files".format(len(note["files"])))
+
+        # ノートのリノートや返信の情報を取得
+        renote_count = note.get("renoteCount", 0)
+        replies_count = note.get("repliesCount", 0)
+        reactions = note.get("reactions", {})
+
+        return_strs.append(f'{renote_count} renotes {replies_count} replys {sum(reactions.values())} reactions')
+
+        # リアクション情報を書き込み
+        return_strs.append("  ".join(f'{i.replace("@.","")}[{reactions[i]}]' for i in reactions.keys()))
+
+        # 改行
+        return_strs.append("")
+
+        return "\n".join(return_strs)
 
     def quit_question(self) -> None:
         self.view.popup(NV_T.QUIT.value, [NV_T.OK.value, NV_T.RETURN.value], self.quit)
