@@ -1,4 +1,4 @@
-from typing import Callable, Optional, NoReturn
+from typing import Callable, Optional, NoReturn, TYPE_CHECKING
 from functools import partial
 
 from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button, Divider
@@ -6,14 +6,16 @@ from asciimatics.screen import Screen
 from asciimatics.scene import Scene
 from asciimatics.exceptions import StopApplication, NextScene
 
-from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.textenums import NV_T
+
+if TYPE_CHECKING:
+    from misskey_tui.scenes.noteview.viewmodel import NoteViewModel
 
 
 class NoteView(Frame):
     def __init__(self,
                  screen: Screen,
-                 mv: AbstractViewModel) -> None:
+                 mv: "NoteViewModel") -> None:
         super(NoteView, self).__init__(screen,
                                        screen.height,
                                        screen.width,

@@ -1,11 +1,13 @@
-from typing import Callable, Any, Literal
+from typing import Callable, Any, Literal, TYPE_CHECKING
 
 from misskey_tui.model import MkAPIs
-from misskey_tui.scenes.noteview.view import NoteView
 from misskey_tui.textenums import NV_T
 from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.enum.misskeypy_return import Note
 from misskey_tui.util import nyaize
+
+if TYPE_CHECKING:
+    from misskey_tui.scenes.noteview.view import NoteView
 
 
 class NoteViewModel(AbstractViewModel):
@@ -22,14 +24,14 @@ class NoteViewModel(AbstractViewModel):
         # フック作成
         self.msk_.add_on_change_instance(self._on_instance_change)
         # 型ヒント
-        self.view: NoteView
+        self.view: "NoteView"
 
     def _on_instance_change(self) -> None:
         self.notes = []
         self.notes_point = 0
         self.view.textbox.value = NV_T.NOTE_NONE.value
 
-    def recreate_before(self, view_: NoteView) -> None:
+    def recreate_before(self, view_: "NoteView") -> None:
         self.view = view_
         self.theme = self.msk_.theme
 
