@@ -72,6 +72,14 @@ class NoteView(Frame):
         self.fix()
         self.mv_.recreate_after()
 
+    def set_nav_enabled(self, prev_enabled: bool, next_enabled: bool) -> None:
+        """Prev/Nextボタンの有効/無効を設定"""
+        # ボタン順: QUIT, GET, PREV, NEXT, CONFIG
+        # Prev
+        self.buttons[2].disabled = not prev_enabled
+        # Next
+        self.buttons[3].disabled = not next_enabled
+
     def popup(self,
               txt: str,
               button: list[str],

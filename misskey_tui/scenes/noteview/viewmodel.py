@@ -30,6 +30,7 @@ class NoteViewModel(AbstractViewModel):
         self.notes = []
         self.notes_point = 0
         self.view.textbox.value = NV_T.NOTE_NONE.value
+        self.update_nav_buttons()
 
     def recreate_before(self, view_: "NoteView") -> None:
         self.view = view_
@@ -37,6 +38,7 @@ class NoteViewModel(AbstractViewModel):
 
     def recreate_after(self) -> None:
         self.view.textbox.value = self.txtbx_txt
+        self.update_nav_buttons()
 
     def on_change_txtbx(self) -> None:
         self.txtbx_txt = self.view.textbox.value  # type: ignore  textbox.valueは必ずstr
@@ -79,17 +81,35 @@ class NoteViewModel(AbstractViewModel):
         """次のノートへ移動 (末尾を超えない)."""
         if not self.notes:
             return
+
         if self.notes_point < len(self.notes) - 1:
             self.notes_point += 1
             self.note_write()
+        else:
+            # note_write内で呼ぶはずだったので呼ぶ
+            self.update_nav_buttons()
 
     def prev_note(self) -> None:
         """前のノートへ移動 (0未満にならない)."""
         if not self.notes:
             return
+
         if self.notes_point > 0:
             self.notes_point -= 1
             self.note_write()
+        else:
+            # next_noteの同節
+            self.update_nav_buttons()
+
+    def update_nav_buttons(self) -> None:
+        """Prev/Nextボタンの有効無効を更新"""
+        if not self.notes:
+            self.view.set_nav_enabled(False, False)
+        else:
+            prev_en = self.notes_point > 0
+            next_en = self.notes_point < len(self.notes) - 1
+
+            self.view.set_nav_enabled(prev_en, next_en)
 
     def note_write(self) -> None:
         self.view.textbox.value = ""  # 初期化
@@ -108,6 +128,7 @@ class NoteViewModel(AbstractViewModel):
         else:
             # ノート無い時
             self.view.textbox.value = NV_T.NOTE_NONE.value
+        self.update_nav_buttons()
 
     def _note_inp(self, note: Note) -> str:
         return_strs = []
