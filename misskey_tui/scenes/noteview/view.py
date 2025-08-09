@@ -43,7 +43,6 @@ class NoteView(Frame):
             NV_T.GET_NOTE_BUTTON.value,
             NV_T.PREV_NOTE_BUTTON.value,
             NV_T.NEXT_NOTE_BUTTON.value,
-            "Change",
             NV_T.CONFIG_BUTTON.value,
         )
         button_funcs = (
@@ -51,7 +50,6 @@ class NoteView(Frame):
             self.mv_.note_get,
             self.mv_.prev_note,
             self.mv_.next_note,
-            self.mv_.change_test,
             partial(self.change_window, "ConfigMenu"),
         )
         self.buttons = tuple(Button(text=name, on_click=func) for name, func in zip(button_names, button_funcs))

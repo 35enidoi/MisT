@@ -74,9 +74,6 @@ class NoteViewModel(AbstractViewModel):
 
         self.note_write()
 
-    def change_test(self) -> None:
-        self.view.textbox.value += "\n".join(["", self.msk_.lang, str(self.msk_.valid_langs)])
-
     # --- 追加: ノート移動関数 ---
     def next_note(self) -> None:
         """次のノートへ移動 (末尾を超えない)."""
