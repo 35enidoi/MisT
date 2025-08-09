@@ -59,6 +59,7 @@ class NoteViewModel(AbstractViewModel):
             if notes is not None:
                 # get success
                 self.notes = notes
+                self.notes_point = 0  # 新規取得時は先頭にリセット
                 self.view.popup(NV_T.GET_NOTE_SUCCESS.value, [NV_T.OK.value])
             else:
                 # get fail
@@ -76,7 +77,26 @@ class NoteViewModel(AbstractViewModel):
     def change_test(self) -> None:
         self.view.textbox.value += "\n".join(["", self.msk_.lang, str(self.msk_.valid_langs)])
 
+    # --- 追加: ノート移動関数 ---
+    def next_note(self) -> None:
+        """次のノートへ移動 (末尾を超えない)."""
+        if not self.notes:
+            return
+        if self.notes_point < len(self.notes) - 1:
+            self.notes_point += 1
+            self.note_write()
+
+    def prev_note(self) -> None:
+        """前のノートへ移動 (0未満にならない)."""
+        if not self.notes:
+            return
+        if self.notes_point > 0:
+            self.notes_point -= 1
+            self.note_write()
+
     def note_write(self) -> None:
+        self.view.textbox.value = ""  # 初期化
+
         if self.notes != []:
             # ノートがある時
             return_strs = []
@@ -173,7 +193,7 @@ class NoteViewModel(AbstractViewModel):
         return_strs.append(f'{renote_count} renotes {replies_count} replys {sum(reactions.values())} reactions')
 
         # リアクション情報を書き込み
-        return_strs.append("  ".join(f'{i.replace("@.","")}[{reactions[i]}]' for i in reactions.keys()))
+        return_strs.append("  ".join(f'{i.replace("@.", "")}[{reactions[i]}]' for i in reactions.keys()))
 
         # 改行
         return_strs.append("")

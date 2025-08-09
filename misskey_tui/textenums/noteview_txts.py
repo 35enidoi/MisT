@@ -1,10 +1,14 @@
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 __all__ = ["NV_T"]
 
-# リンター対策の定義
-_: Callable
+# リンター対策 + フォールバック定義
+try:
+    _  # type: ignore[name-defined]
+except NameError:
+    def _(x: Any) -> Any:  # type: ignore[override]
+        return x
 
 
 class NV_T(Enum):
@@ -13,6 +17,8 @@ class NV_T(Enum):
 
     QUIT_BUTTON = "Quit"
     GET_NOTE_BUTTON = "Get note"
+    PREV_NOTE_BUTTON = "Prev"  # 追加: 前のノートへ移動
+    NEXT_NOTE_BUTTON = "Next"  # 追加: 次のノートへ移動
     CONFIG_BUTTON = "Config"
 
     GET_NOTE_SUCCESS = "Succeed in getting note!"
