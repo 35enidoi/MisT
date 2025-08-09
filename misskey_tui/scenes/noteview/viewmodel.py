@@ -67,7 +67,7 @@ class NoteViewModel(AbstractViewModel):
                 # get fail
                 additional_text = ""
                 if self.msk_.now_user_info is None:
-                    additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_1._value_
+                    additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_1.value
                     if self.TL in ("HTL", "STL"):
                         additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_2.value + f"; {self.TL}"
                 self.view.popup(NV_T.GET_NOTE_FAIL.value + "\n" + additional_text, [NV_T.OK.value])
