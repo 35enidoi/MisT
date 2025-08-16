@@ -42,7 +42,10 @@ class Model:
     def __init__(self, mkapi: MkAPIs) -> None:
         self.mkapi = mkapi
         self._observers: list[ChangeHandler] = []
-        self.timeline = TimelineService(self)
+        # TimelineService には mkapi のみ注入
+        self.timeline = TimelineService(self.mkapi)
+        # TimelineService に Model のエミッタをバインド（購読管理はModelのみ）
+        self.timeline.bind_emitter(self._emit)
         # MkAPIs のインスタンス変更を橋渡し
         self.mkapi.add_on_change_instance(self._on_instance_change)
         # TODO: 型と初期化方針を決める（設定/永続化と連動）
@@ -62,32 +65,37 @@ class Model:
     def instance(self) -> str:
         return self.mkapi.instance
 
+    # ---- イベント購読（Modelに集約） ----
     def add_on_change(self, cb: ChangeHandler) -> None:
         self._observers.append(cb)
     def remove_on_change(self, cb: ChangeHandler) -> None:
         if cb in self._observers: self._observers.remove(cb)
     def _emit(self, ev: ChangeEvent) -> None:
         for cb in list(self._observers):
-            cb(ev)
+            try:
+                cb(ev)
+            except Exception:
+                # UI保護のため握り潰し（必要に応じてログ）
+                pass
 
     def _on_instance_change(self) -> None:
         # 下位サービスへ伝搬
         self.timeline.clear()
-        # 上位へも通知
+        # 上位へも通知（Modelが発火元）
         self._emit(InstanceChangeEvent())
 ```
 
 TimelineService の要点
 - `current_tl`, `notes(読み取り専用: tuple)`, `index`, `has_prev/has_next`, `current_note`, `count`
-- `refresh(limit)` は bool を返し、詳細はイベントで通知
-- `move_prev() / move_next()`, `set_tl()`, `clear()`
-- `misskeypy_wrapper` は `self.model.mkapi.misskeypy_wrapper` を介して呼ぶ
-- 変更時は `TimelineChangeEvent` / 失敗時は `ErrorChangeEvent` を発火。`Model` は必要なら横流し
+- `refresh(limit)`/`move_prev()`/`move_next()`/`set_tl()`/`clear()` は状態操作のみを行う
+- イベント購読APIは持たない（`add_on_change`等は無し）
+- Model からバインドされたエミッタ関数を用いて、必要時にイベントを「発火のみ」する
+- `misskeypy_wrapper` は `mkapi.misskeypy_wrapper` を介して呼ぶ（mkapiのみ注入）
 
 取得実装（詳細）
 - TL→API マッピングは TimelineService 内にカプセル化
 - 取得には `misskeypy_wrapper` を使用（既存踏襲）
-- 戻り値は `bool`（成功/失敗）。UI 更新や詳細情報はイベント（`TimelineChangeEvent` / `ErrorChangeEvent`）で配信
+- 成否や詳細通知は、TimelineService がバインド済みエミッタでイベント発火、購読管理は Model が担当
 
 ViewModel の役割（移行後）
 - Model/Timeline の状態を反映
@@ -132,7 +140,7 @@ ViewModel の役割（移行後）
 ### TimelineService シグネチャ（確定案）
 ```python
 class TimelineService:
-    def __init__(self, model: Model): ...
+    def __init__(self, mkapi: MkAPIs): ...  # mkapiのみ注入
 
     # 状態
     @property
@@ -150,16 +158,15 @@ class TimelineService:
     @property
     def current_note(self) -> Note | None: ...
 
-    # 操作
+    # 操作（購読管理はしない。必要時にバインド済みエミッタで発火）
     def set_tl(self, tl: Literal["HTL","LTL","STL","GTL"]) -> None: ...
     def refresh(self, limit: int = 10) -> bool: ...
     def move_next(self) -> bool: ...
     def move_prev(self) -> bool: ...
     def clear(self) -> None: ...
 
-    # 変更通知
-    def add_on_change(self, cb: ChangeHandler) -> None: ...
-    def remove_on_change(self, cb: ChangeHandler) -> None: ...
+    # Model から受け取る単一エミッタのバインド（購読管理はModel側）
+    def bind_emitter(self, emit: Callable[[ChangeEvent], None]) -> None: ...
 ```
 
 イベント型の明確化（events.py 追加）
@@ -210,57 +217,31 @@ ChangeHandler = Callable[[ChangeEvent], None]
 ```
 
 イベント発火ポイント（規約）
-- Model
+- Model（購読管理と一部発火）
   - インスタンス変更受信時: `InstanceChangeEvent()` を `_emit(...)`
-- TimelineService
+- TimelineService（発火のみ。購読はしない）
   - 取得成功: `TimelineChangeEvent(action="refresh", count=len(self._notes))`
+  - 取得失敗: `ErrorChangeEvent(reason=...)`
   - インデックス移動: `TimelineChangeEvent(action="index", index=self.index)`
   - TL 切替: `TimelineChangeEvent(action="set_tl", tl=self.current_tl)`
   - クリア: `TimelineChangeEvent(action="clear")`
-  - 取得失敗など: `ErrorChangeEvent(reason="token_missing" | "invalid_tl" | "misskeypy_invalid", detail=...)`
 
-発火/購読の実装例
+発火/購読の実装例（Model 集約版）
 ```python
 # Model 側（抜粋）
-from misskey_tui.model.events import ChangeEvent, ChangeHandler, InstanceChangeEvent
+from misskey_tui.model.events import ChangeEvent, ChangeHandler
 
 self._observers: list[ChangeHandler] = []
-
-def add_on_change(self, cb: ChangeHandler) -> None:
-    self._observers.append(cb)
-
-def remove_on_change(self, cb: ChangeHandler) -> None:
-    if cb in self._observers:
-        self._observers.remove(cb)
-
-def _emit(self, ev: ChangeEvent) -> None:
-    for cb in list(self._observers):
-        try:
-            cb(ev)
-        except Exception:
-            # 購読側の例外で通知ループを止めない（ログは必要に応じて）
-            pass
+self.timeline = TimelineService(self.mkapi)
+self.timeline.bind_emitter(self._emit)
 
 # TimelineService 側（抜粋）
-from misskey_tui.model.events import TimelineChangeEvent, ErrorChangeEvent
-
-# 取得成功時
-self._emit(TimelineChangeEvent(action="refresh", count=len(self._notes)))
-
-# 取得失敗時（例）
-self._emit(ErrorChangeEvent(reason="token_missing"))
-
-# インデックス移動
-self._emit(TimelineChangeEvent(action="index", index=self.index))
-
-# TL 切替
-self._emit(TimelineChangeEvent(action="set_tl", tl=self.current_tl))
-
-# クリア
-self._emit(TimelineChangeEvent(action="clear"))
+# self._emit は bind_emitter で渡された関数。未設定時はNo-Opにしておく
+if self._emit:
+    self._emit(TimelineChangeEvent(action="refresh", count=len(self._notes)))
 ```
 
 注意事項
 - イベントは呼び出しスレッド（通常は UI メインループ）で同期的に配信されます。購読側は重い処理を避けるか非同期化してください。
-- 例外は `_emit` 内で握り潰す方針（UI を落とさないため）。必要に応じてログを追加してください。
-- 文字列 Literal は固定のため、誤記を CI/type-check で検出可能です。
+- 例外は Model の `_emit` 内で握り潰し（UIを落とさない）。必要に応じてログを追加。
+- TimelineService は購読者リストを持たず、単一エミッタへの委譲のみを行います。
