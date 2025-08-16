@@ -1,5 +1,7 @@
 # MkAPIs ラッパーとしての Model クラス設計計画
 
+> 本ドキュメントは「ViewModel → Model 移管計画（note_to_model.md）」の内容を統合し、Model 包含設計として再編したものです。
+
 目的
 - 既存の MkAPIs を「アプリのドメイン Model」から明確に分離し、`Model` クラスがアプリ状態の中核を担う。
 - 以降は ViewModel などの呼び出し側は `Model` 経由（`model.mkapi` や `model.timeline`）で機能にアクセス。
@@ -12,7 +14,8 @@
 
 新規/更新ファイル構成（案）
 - `misskey_tui/model/model.py` ・・・ 新規 `Model` クラス
-- `misskey_tui/model/timeline.py` ・・・ 新規 `TimelineService`（前計画のとおり）
+- `misskey_tui/model/timeline.py` ・・・ 新規 `TimelineService`（統合後の中核）
+- `misskey_tui/model/events.py` ・・・ 変更通知イベント（型）
 - `misskey_tui/model/__init__.py` ・・・ エクスポート（`from .model import Model` など）
 - 既存 `misskey_tui/model.py`（MkAPIs 定義元）・・・ そのまま。`Model` はこれを内包する
 
@@ -67,80 +70,129 @@ class Model:
         self._emit(InstanceChangeEvent())
 ```
 
-TimelineService の要点（再掲）
-- `current_tl`, `notes`, `index`, `has_prev/has_next`, `current_note`, `refresh`, `move_prev/next`, `clear`
+TimelineService の要点
+- `current_tl`, `notes`, `index`, `has_prev/has_next`, `current_note`, `count`
+- `refresh(limit)`, `move_prev() / move_next()`, `set_tl()`, `clear()`
 - `misskeypy_wrapper` は `self.model.mkapi.misskeypy_wrapper` を介して呼ぶ
-- 変更時は自身の `add_on_change` で通知。`Model` は必要ならそれを横流し/集約通知
+- 変更時は `TimelineChangeEvent` を発火。`Model` は必要なら横流し
 
-移行方針（NoteViewModel から）
-1) 依存の差し替え
-   - コンストラクタ引数: `msk: MkAPIs` → `model: Model`
-   - フィールド: `self.msk_` → `self.model`
-2) 呼び出し変更
-   - 取得: `self.model.timeline.refresh(limit=10)`
-   - 前後移動: `self.model.timeline.move_prev()/move_next()`
-   - 有効/無効: `self.model.timeline.has_prev/has_next`
-   - 表示: `self.model.timeline.current_note` と `self.model.instance` など
-   - 既存の `self.msk_.misskeypy_wrapper` 参照は `self.model.mkapi.misskeypy_wrapper` に置換（ViewModel で直接触る場面は段階的に削減）
-3) インスタンス変更
-   - これまでの `self.msk_.add_on_change_instance` への登録は `Model` 側で完結
-   - ViewModel は `model.add_on_change` を購読し、NOTE_NONE 表示やボタン無効化を行う
+取得実装（詳細）
+- TL→API マッピングは TimelineService 内にカプセル化
+- 取得には `misskeypy_wrapper` を使用（既存踏襲）
+- 失敗時は `FetchResult`（`ok: bool`, `reason` 等）を返却して ViewModel 側で i18n メッセージに合成
+
+ViewModel の役割（移行後）
+- Model/Timeline の状態を反映
+  - テキスト描画は `timeline.current_note` から
+  - ボタン状態は `timeline.has_prev/has_next`
+- ユーザー操作の委譲
+  - 取得: `timeline.refresh()`
+  - 前後: `timeline.move_prev()/move_next()`
+  - TL 切替: `timeline.set_tl()`
+- ポップアップは `NV_T` を用いて i18n 対応
+
+インスタンス変更フック
+- `Model` が `mkapi` のインスタンス変更を購読
+- 受信時に `timeline.clear()`→ ViewModel が NOTE_NONE とナビ無効化を反映
 
 段階的実装ステップ
-- Step 1: `TimelineService` を実装（既存計画のまま）
+- Step 1: `TimelineService` を実装（本設計準拠）
 - Step 2: `Model` を作成し、`TimelineService` を内包。`MkAPIs` のインスタンス変更を中継
 - Step 3: `NoteViewModel` の依存を `Model` に切替
 - Step 4: 表示系の確認とリグレッション修正
 - Step 5: テスト（Timeline 単体、Model 結合、ViewModel 結合）
 
 受け入れ基準
-- 既存のノート取得/移動挙動が維持される
-- インスタンス変更時に `timeline` がクリアされ、UI が NOTE_NONE になり Prev/Next 無効
-- ViewModel から MkAPIs を直接参照せず `model.*` 経由での参照に置換
+- ノート未取得時に Prev/Next が無効
+- 取得後、位置・件数に応じて Prev/Next が正しく切替
+- TL 切替で notes がリセットされ、取得が正しく動作
+- インスタンス変更時に状態クリア＋UI 反映
+- 既存 `NV_T` メッセージがそのまま機能
 
-備考
-- 将来的に設定の永続化（選択 TL など）や非同期取得キューを `Model` に集約可能。
-- `Model` は「アプリの状態・ハブ」として拡張余地を確保し、UI/データ取得の結合度を下げる設計とする。
+エラーハンドリング / i18n
+- `TimelineService.refresh` の結果に応じて ViewModel が NV_T メッセージを選択
+  - トークン未設定→`NV_T.GET_NOTE_FAIL_ADDITIONAL_1`
+  - TL 不正→`NV_T.GET_NOTE_FAIL_ADDITIONAL_2`
+  - misskeypy 無効→`NV_T.GET_NOTE_MISSKEYPY_INVALID`
 
-## イベント型の明確化（events.py 追加）
-型安全と補完向上のため、Model/Timeline の変更通知イベントを型として定義します。
+将来拡張（任意）
+- 取得の非同期化（Thread/Queue）＋メインスレッド反映
+- ページング（次ページ取得）/ スクロール
+- TL 選択 UI の追加
+- 設定の永続化（選択 TL など）
 
-- 目的
-  - Observer のイベントを厳密な型で表現し、分岐を `kind` と `action` に限定。
-  - 将来のイベント追加も Union に型を足すだけで拡張可能。
-- 追加ファイル（新規）
-  - `misskey_tui/model/events.py`
+### TimelineService シグネチャ（確定案）
+```python
+class TimelineService:
+    def __init__(self, model: Model): ...
 
-### 提案実装（雛形）
+    # 状態
+    @property
+    def current_tl(self) -> Literal["HTL","LTL","STL","GTL"]: ...
+    @property
+    def notes(self) -> list[Note]: ...  # 読み取り専用想定
+    @property
+    def index(self) -> int: ...
+    @property
+    def count(self) -> int: ...
+    @property
+    def has_prev(self) -> bool: ...
+    @property
+    def has_next(self) -> bool: ...
+    @property
+    def current_note(self) -> Note | None: ...
+
+    # 操作
+    def set_tl(self, tl: Literal["HTL","LTL","STL","GTL"]) -> None: ...
+    def refresh(self, limit: int = 10) -> FetchResult: ...
+    def move_next(self) -> bool: ...
+    def move_prev(self) -> bool: ...
+    def clear(self) -> None: ...
+
+    # 変更通知
+    def add_on_change(self, cb: ChangeHandler) -> None: ...
+    def remove_on_change(self, cb: ChangeHandler) -> None: ...
+```
+
+イベント型の明確化（events.py 追加）
+以下の内容で新規ファイル `misskey_tui/model/events.py` を作成することを前提にします。イベントはすべて型付きで扱い、IDE 補完と型安全を確保します。
+
 ```python
 # misskey_tui/model/events.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Protocol, Callable, Literal, Any
+from typing import Callable, Literal, Any, Optional, Union
 
-# ひな形（抽象）
-class AbstractChangeEvent(Protocol):
-    kind: Literal["instance", "timeline", "error", "settings"]
+# イベント識別は各 dataclass の kind (Literal) で行う
 
-# 具体イベント
+# Timeline のアクション種別
+TimelineAction = Literal["refresh", "index", "clear", "set_tl"]
+
+# インスタンス変更（例: 接続先インスタンスが変更された）
 @dataclass(frozen=True)
 class InstanceChangeEvent:
     kind: Literal["instance"] = "instance"
 
+# タイムラインに関する変化（取得・インデックス移動・TL 切替・クリア）
 @dataclass(frozen=True)
 class TimelineChangeEvent:
     kind: Literal["timeline"] = "timeline"
-    action: Literal["refresh", "index", "clear", "set_tl"] = "refresh"
-    index: int | None = None
-    count: int | None = None
-    tl: Literal["HTL", "LTL", "STL", "GTL"] | None = None
+    action: TimelineAction = "refresh"
+    # index: 現在位置（index 移動時など）
+    index: Optional[int] = None
+    # count: ノート件数（refresh 成功時など）
+    count: Optional[int] = None
+    # tl: 選択中 TL（set_tl 時など）
+    tl: Optional[Literal["HTL", "LTL", "STL", "GTL"]] = None
 
+# 何らかのエラー（取得失敗などの理由伝達）
 @dataclass(frozen=True)
 class ErrorChangeEvent:
     kind: Literal["error"] = "error"
     reason: str = "unknown"
-    detail: dict[str, Any] | None = None
+    detail: Optional[dict[str, Any]] = None
 
+# 設定変更（テーマ、言語、その他アプリ設定の変更通知）
 @dataclass(frozen=True)
 class SettingsChangeEvent:
     kind: Literal["settings"] = "settings"
@@ -148,55 +200,68 @@ class SettingsChangeEvent:
     value: Any = None
 
 # 型エイリアス
-ChangeEvent = InstanceChangeEvent | TimelineChangeEvent | ErrorChangeEvent | SettingsChangeEvent
+ChangeEvent = Union[
+    InstanceChangeEvent,
+    TimelineChangeEvent,
+    ErrorChangeEvent,
+    SettingsChangeEvent,
+]
 ChangeHandler = Callable[[ChangeEvent], None]
 ```
 
-### Model での使用例（型ヒント差し替え）
+イベント発火ポイント（規約）
+- Model
+  - インスタンス変更受信時: `InstanceChangeEvent()` を `_emit(...)`
+  - 将来の設定変更: `SettingsChangeEvent(key, value)` を `_emit(...)`
+- TimelineService
+  - 取得成功: `TimelineChangeEvent(action="refresh", count=len(self._notes))`
+  - インデックス移動: `TimelineChangeEvent(action="index", index=self.index)`
+  - TL 切替: `TimelineChangeEvent(action="set_tl", tl=self.current_tl)`
+  - クリア: `TimelineChangeEvent(action="clear")`
+  - 取得失敗など: `ErrorChangeEvent(reason="token_missing" | "invalid_tl" | "misskeypy_invalid", detail=...)`
+
+発火/購読の実装例
 ```python
-# misskey_tui/model/model.py（抜粋）
+# Model 側（抜粋）
 from misskey_tui.model.events import ChangeEvent, ChangeHandler, InstanceChangeEvent
 
-class Model:
-    def __init__(self, mkapi: MkAPIs) -> None:
-        self.mkapi = mkapi
-        self._observers: list[ChangeHandler] = []
-        self.timeline = TimelineService(self)
-        # MkAPIs のインスタンス変更を橋渡し
-        self.mkapi.add_on_change_instance(self._on_instance_change)
+self._observers: list[ChangeHandler] = []
 
-    def add_on_change(self, cb: ChangeHandler) -> None:
-        self._observers.append(cb)
+def add_on_change(self, cb: ChangeHandler) -> None:
+    self._observers.append(cb)
 
-    def remove_on_change(self, cb: ChangeHandler) -> None:
-        if cb in self._observers:
-            self._observers.remove(cb)
+def remove_on_change(self, cb: ChangeHandler) -> None:
+    if cb in self._observers:
+        self._observers.remove(cb)
 
-    def _emit(self, ev: ChangeEvent) -> None:
-        for cb in list(self._observers):
+def _emit(self, ev: ChangeEvent) -> None:
+    for cb in list(self._observers):
+        try:
             cb(ev)
+        except Exception:
+            # 購読側の例外で通知ループを止めない（ログは必要に応じて）
+            pass
 
-    def _on_instance_change(self) -> None:
-        self.timeline.clear()
-        self._emit(InstanceChangeEvent())
-```
-
-### TimelineService での使用例
-```python
-# misskey_tui/model/timeline.py（抜粋）
-from misskey_tui.model.events import TimelineChangeEvent
+# TimelineService 側（抜粋）
+from misskey_tui.model.events import TimelineChangeEvent, ErrorChangeEvent
 
 # 取得成功時
 self._emit(TimelineChangeEvent(action="refresh", count=len(self._notes)))
 
-# インデックス移動時
+# 取得失敗時（例）
+self._emit(ErrorChangeEvent(reason="token_missing"))
+
+# インデックス移動
 self._emit(TimelineChangeEvent(action="index", index=self.index))
 
-# TL 切替時
+# TL 切替
 self._emit(TimelineChangeEvent(action="set_tl", tl=self.current_tl))
 
-# クリア時
+# クリア
 self._emit(TimelineChangeEvent(action="clear"))
 ```
 
-この方式により、呼び出し側（例: ViewModel）は `kind` と `action` に基づく分岐で明確に処理でき、IDE 補完も効きます。
+注意事項
+- イベントは呼び出しスレッド（通常は UI メインループ）で同期的に配信されます。購読側は重い処理を避けるか非同期化してください。
+- 例外は `_emit` 内で握り潰す方針（UI を落とさないため）。必要に応じてログを追加してください。
+- 文字列 Literal は固定のため、誤記を CI/type-check で検出可能です。
