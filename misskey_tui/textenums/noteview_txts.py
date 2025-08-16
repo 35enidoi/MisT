@@ -3,6 +3,12 @@ from typing import Any
 
 __all__ = ["NV_T"]
 
+# NOTE:
+# - i18nは MkAPIs.translation が gettext.install() を呼び、グローバル関数 _ を束縛する設計です。
+# - 本ファイルの Enum は __getattribute__ で value アクセス時に _(value) を適用します。
+# - ここにある簡易 fallback _ は、リンタ/テスト時に _ が未バインドでも落ちないための暫定で、
+#   実行時は MkAPIs.translation によるグローバル _ のバインドに依存してください。
+
 # リンター対策 + フォールバック定義
 try:
     _  # type: ignore[name-defined]

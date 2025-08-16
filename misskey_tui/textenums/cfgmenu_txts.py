@@ -3,8 +3,20 @@ from typing import Any, Callable
 
 __all__ = ["CM_T"]
 
-# リンター対策の定義
+# NOTE:
+# - i18nは MkAPIs.translation が gettext.install() を呼び、グローバル関数 _ を束縛する設計です。
+# - 本ファイルの Enum は __getattribute__ で value アクセス時に _(value) を適用します。
+# - 下の簡易 fallback _ は、リンタ/テスト時に _ が未バインドでも落ちないための暫定で、
+#   実行時は MkAPIs.translation によるグローバル _ のバインドに依存してください。
+
+# リンター対策の定義（型注釈）
 _: Callable[[str], str]
+# 実行時フォールバック定義
+try:
+    _  # type: ignore[name-defined]
+except NameError:
+    def _(x: Any) -> Any:  # type: ignore[override]
+        return x
 
 
 class CM_T(Enum):
