@@ -1,0 +1,47 @@
+digraph before_mkapi_wrap_model {
+  rankdir=LR;
+  node [shape=box];
+
+  subgraph cluster_ui {
+    label="UI (misskey_tui/scenes/noteview)";
+    style=filled; color=lightgrey;
+    nView [label="NoteView (View)"];
+    nVM [label="NoteViewModel (ViewModel)"];
+    nTLState [label="TL state in VM\n- notes (list)\n- index (notes_point)\n- current TL"];
+  }
+
+  subgraph cluster_mkapi {
+    label="MkAPIs (misskey_tui/model.py)";
+    nMkAPIs [label="MkAPIs"];
+    nWrapper [label="misskeypy_wrapper"];
+    nTranslation [label="translation (i18n)"];
+    nGettext [label="gettext.install()\n(binds global _)"];
+  }
+
+  subgraph cluster_i18n {
+    label="i18n Text Enums";
+    nNVT [label="NV_T (noteview_txts)\nvalue -> _(value)"];
+    nUnderscore [label="fallback _ in NV_T\n(identity; for lint/test)"];
+    nGlobalUS [label="global _ (translator)"];
+  }
+
+  // UI interactions
+  nView -> nVM [label="buttons call methods"];
+  nVM -> nView [label="update text/buttons"];
+
+  // VM -> APIs (current direct coupling)
+  nVM -> nMkAPIs [label="API calls / config / translation"];
+  nVM -> nWrapper [label="fetch TL"];
+
+  // VM state ownership (before)
+  nVM -> nTLState [label="owns"];
+
+  // ViewModel uses NV_T directly
+  nVM -> nNVT [label="uses NV_T for labels/popups"];
+
+  // i18n binding path
+  nTranslation -> nGettext [label="calls"];
+  nGettext -> nGlobalUS [label="binds"];
+  nNVT -> nGlobalUS [label="uses via __getattribute__"];
+  nNVT -> nUnderscore [style=dashed, label="fallback when _ not installed"];
+}

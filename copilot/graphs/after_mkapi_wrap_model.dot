@@ -1,0 +1,55 @@
+digraph after_mkapi_wrap_model {
+  rankdir=LR;
+  node [shape=box];
+
+  subgraph cluster_ui {
+    label="UI (misskey_tui/scenes/noteview)";
+    style=filled; color=lightgrey;
+    nView [label="NoteView (View)"];
+    nVM [label="NoteViewModel (ViewModel)"];
+  }
+
+  subgraph cluster_model {
+    label="Domain Model (misskey_tui/model)";
+    style=filled; color=lightyellow;
+    nModel [label="Model\n- mkapi (wrap)\n- timeline (service)\n- lang/theme (TODO)"];
+    nTL [label="TimelineService\n- current_tl\n- notes (tuple, read-only)\n- index/count\n- has_prev/has_next\n- refresh/move/set/clear\n- emits events"];
+    nEvents [label="events.py\n- InstanceChangeEvent\n- TimelineChangeEvent\n- ErrorChangeEvent\n- ChangeHandler"];
+  }
+
+  subgraph cluster_mkapi {
+    label="MkAPIs (misskey_tui/model.py)";
+    nMkAPIs [label="MkAPIs"];
+    nWrapper [label="misskeypy_wrapper"];
+    nTranslation [label="translation (i18n)"];
+    nGettext [label="gettext.install()\n(binds global _)"];
+  }
+
+  subgraph cluster_i18n {
+    label="i18n Text Enums";
+    nNVT [label="NV_T (noteview_txts)\nvalue -> _(value)"];
+    nGlobalUS [label="global _ (translator)"];
+  }
+
+  // UI interactions via Model
+  nView -> nVM [label="buttons call methods"];
+  nVM -> nView [label="update text/buttons"];
+  nVM -> nModel [label="observe & delegate"];
+
+  // Model as facade
+  nModel -> nTL [label="manage TL state"];
+  nModel -> nMkAPIs [label="wrap raw APIs"];
+  nMkAPIs -> nModel [label="on instance change"];
+  nModel -> nEvents [label="emit ChangeEvent"];
+
+  // Timeline <-> MkAPIs
+  nTL -> nWrapper [label="fetch TL via model.mkapi"];
+
+  // i18n binding path (unchanged)
+  nTranslation -> nGettext [label="calls"];
+  nGettext -> nGlobalUS [label="binds"];
+  nNVT -> nGlobalUS [label="uses via __getattribute__"];
+
+  // ViewModel uses NV_T directly
+  nVM -> nNVT [label="uses NV_T for labels/popups"];
+}
