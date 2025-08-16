@@ -1,9 +1,8 @@
 # MkAPIs ラッパーとしての Model クラス設計計画
 
-> 本ドキュメントは「ViewModel → Model 移管計画（note_to_model.md）」の内容を統合し、Model 包含設計として再編したものです。
-
 目的
 - 既存の MkAPIs を「アプリのドメイン Model」から明確に分離し、`Model` クラスがアプリ状態の中核を担う。
+- 現状`NoteViewModel`が保持している`timeline`の状態を`model.timeline`に集約し、ViewModelの役割を明確化する。
 - 以降は ViewModel などの呼び出し側は `Model` 経由（`model.mkapi` や `model.timeline`）で機能にアクセス。
 - 将来的な機能追加（キャッシュ・非同期・設定永続化）を `Model` に集約しやすくする。
 
