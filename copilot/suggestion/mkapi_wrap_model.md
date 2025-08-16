@@ -23,7 +23,7 @@ Model クラスの役割
 - アプリ全体状態の集約点
   - MkAPIs の参照を `mkapi` として保持
   - タイムラインのストア/サービスを `timeline` として保持
-  - 言語・テーマ・インスタンスなど、UI が参照する読み取り系プロパティを橋渡し
+  - 言語・テーマは `Model` が保持（型は後で決める TODO）。インスタンスは `mkapi` を参照
 - 変更通知（Observer）
   - `add_on_change`/`remove_on_change` を提供し、`TimelineService` や `MkAPIs` の重要イベントを 1 箇所から通知
   - 通知イベントは `misskey_tui/model/events.py` の型付きイベント（`ChangeEvent`/`ChangeHandler`）を使用
@@ -46,14 +46,22 @@ class Model:
         self.timeline = TimelineService(self)
         # MkAPIs のインスタンス変更を橋渡し
         self.mkapi.add_on_change_instance(self._on_instance_change)
+        # TODO: 型と初期化方針を決める（設定/永続化と連動）
+        self._lang = "en"  # TODO: 型
+        self._theme = None  # TODO: 型
 
-    # 読み取り系プロパティの橋渡し
+    # 読み取り系プロパティ
     @property
-    def lang(self) -> str: return self.mkapi.lang
+    def lang(self):  # TODO: 型
+        return self._lang
+
     @property
-    def theme(self): return self.mkapi.theme
+    def theme(self):  # TODO: 型
+        return self._theme
+
     @property
-    def instance(self) -> str: return self.mkapi.instance
+    def instance(self) -> str:
+        return self.mkapi.instance
 
     def add_on_change(self, cb: ChangeHandler) -> None:
         self._observers.append(cb)
@@ -71,15 +79,16 @@ class Model:
 ```
 
 TimelineService の要点
-- `current_tl`, `notes`, `index`, `has_prev/has_next`, `current_note`, `count`
-- `refresh(limit)`, `move_prev() / move_next()`, `set_tl()`, `clear()`
+- `current_tl`, `notes(読み取り専用: tuple)`, `index`, `has_prev/has_next`, `current_note`, `count`
+- `refresh(limit)` は bool を返し、詳細はイベントで通知
+- `move_prev() / move_next()`, `set_tl()`, `clear()`
 - `misskeypy_wrapper` は `self.model.mkapi.misskeypy_wrapper` を介して呼ぶ
-- 変更時は `TimelineChangeEvent` を発火。`Model` は必要なら横流し
+- 変更時は `TimelineChangeEvent` / 失敗時は `ErrorChangeEvent` を発火。`Model` は必要なら横流し
 
 取得実装（詳細）
 - TL→API マッピングは TimelineService 内にカプセル化
 - 取得には `misskeypy_wrapper` を使用（既存踏襲）
-- 失敗時は `FetchResult`（`ok: bool`, `reason` 等）を返却して ViewModel 側で i18n メッセージに合成
+- 戻り値は `bool`（成功/失敗）。UI 更新や詳細情報はイベント（`TimelineChangeEvent` / `ErrorChangeEvent`）で配信
 
 ViewModel の役割（移行後）
 - Model/Timeline の状態を反映
@@ -89,7 +98,7 @@ ViewModel の役割（移行後）
   - 取得: `timeline.refresh()`
   - 前後: `timeline.move_prev()/move_next()`
   - TL 切替: `timeline.set_tl()`
-- ポップアップは `NV_T` を用いて i18n 対応
+- ポップアップは `NV_T` を用いて i18n 対応（`ErrorChangeEvent.reason` に応じて選択）
 
 インスタンス変更フック
 - `Model` が `mkapi` のインスタンス変更を購読
@@ -110,10 +119,10 @@ ViewModel の役割（移行後）
 - 既存 `NV_T` メッセージがそのまま機能
 
 エラーハンドリング / i18n
-- `TimelineService.refresh` の結果に応じて ViewModel が NV_T メッセージを選択
-  - トークン未設定→`NV_T.GET_NOTE_FAIL_ADDITIONAL_1`
-  - TL 不正→`NV_T.GET_NOTE_FAIL_ADDITIONAL_2`
-  - misskeypy 無効→`NV_T.GET_NOTE_MISSKEYPY_INVALID`
+- `TimelineService.refresh` の成否は `bool`。詳細はイベントで通知
+  - トークン未設定→`ErrorChangeEvent(reason="token_missing")`
+  - TL 不正→`ErrorChangeEvent(reason="invalid_tl")`
+  - misskeypy 無効→`ErrorChangeEvent(reason="misskeypy_invalid")`
 
 将来拡張（任意）
 - 取得の非同期化（Thread/Queue）＋メインスレッド反映
@@ -130,7 +139,7 @@ class TimelineService:
     @property
     def current_tl(self) -> Literal["HTL","LTL","STL","GTL"]: ...
     @property
-    def notes(self) -> list[Note]: ...  # 読み取り専用想定
+    def notes(self) -> tuple[Note, ...]: ...  # 読み取り専用
     @property
     def index(self) -> int: ...
     @property
@@ -144,7 +153,7 @@ class TimelineService:
 
     # 操作
     def set_tl(self, tl: Literal["HTL","LTL","STL","GTL"]) -> None: ...
-    def refresh(self, limit: int = 10) -> FetchResult: ...
+    def refresh(self, limit: int = 10) -> bool: ...
     def move_next(self) -> bool: ...
     def move_prev(self) -> bool: ...
     def clear(self) -> None: ...
@@ -192,19 +201,11 @@ class ErrorChangeEvent:
     reason: str = "unknown"
     detail: Optional[dict[str, Any]] = None
 
-# 設定変更（テーマ、言語、その他アプリ設定の変更通知）
-@dataclass(frozen=True)
-class SettingsChangeEvent:
-    kind: Literal["settings"] = "settings"
-    key: str = ""
-    value: Any = None
-
 # 型エイリアス
 ChangeEvent = Union[
     InstanceChangeEvent,
     TimelineChangeEvent,
     ErrorChangeEvent,
-    SettingsChangeEvent,
 ]
 ChangeHandler = Callable[[ChangeEvent], None]
 ```
@@ -212,7 +213,6 @@ ChangeHandler = Callable[[ChangeEvent], None]
 イベント発火ポイント（規約）
 - Model
   - インスタンス変更受信時: `InstanceChangeEvent()` を `_emit(...)`
-  - 将来の設定変更: `SettingsChangeEvent(key, value)` を `_emit(...)`
 - TimelineService
   - 取得成功: `TimelineChangeEvent(action="refresh", count=len(self._notes))`
   - インデックス移動: `TimelineChangeEvent(action="index", index=self.index)`
