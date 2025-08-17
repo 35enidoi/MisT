@@ -5,7 +5,7 @@ from asciimatics.exceptions import ResizeScreenError
 from misskey import MiAuth
 from misskey.exceptions import MisskeyMiAuthFailedException
 
-from misskey_tui.model import MkAPIs
+from misskey_tui.model.model import MkAPIs
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
 from misskey_tui.enum import MisskeyPyExceptions
 from misskey_tui.util import web_show

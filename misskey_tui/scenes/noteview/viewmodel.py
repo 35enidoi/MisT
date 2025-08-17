@@ -1,6 +1,6 @@
 from typing import Callable, Any, Literal, TYPE_CHECKING
 
-from misskey_tui.model import MkAPIs
+from misskey_tui.model.model import MkAPIs
 from misskey_tui.textenums import NV_T
 from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.enum.misskeypy_return import Note

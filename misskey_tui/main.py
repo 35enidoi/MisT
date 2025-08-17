@@ -4,7 +4,7 @@ from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError
 
-from misskey_tui.model import MkAPIs
+from misskey_tui.model.model import MkAPIs
 from misskey_tui.scenes import SCENES
 from misskey_tui.abstract import AbstractViewModel
 
