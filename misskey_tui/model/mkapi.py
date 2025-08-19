@@ -47,7 +47,7 @@ class MkAPIs():
         self.__theme: str
         # check valid languages
         self.valid_langs: Final = tuple(os_path.basename(os_path.dirname(i)) for i in
-                                        glob(self._getpath("../locale/*/LC_MESSAGES")))
+                                        glob(self._getpath("./locale/*/LC_MESSAGES")))
         # translation
         self.translation(self.__lang)
         # variable set
@@ -103,7 +103,7 @@ class MkAPIs():
             raise ValueError(f"theme `{val}` not in THEMES.")
 
     def __mistconfig_init(self) -> None:
-        if os_path.isfile(self._getpath("../mistconfig.conf")):
+        if os_path.isfile(self._getpath("./mistconfig.conf")):
             # mistconfigがあったら、まずロード
             self.mistconfig_put(True)
             if self.mistconfig["version"] < VERSION:
@@ -148,7 +148,7 @@ class MkAPIs():
         ----
         有効な言語の種類は:obj:`valid_langs`にリストで載っています。"""
         # 翻訳ファイルを配置するディレクトリ
-        path_to_locale_dir = self._getpath("../locale")
+        path_to_locale_dir = self._getpath("./locale")
 
         # ちゃんと使えるか確認
         if lang not in self.valid_langs and lang != "":
@@ -356,7 +356,7 @@ class MkAPIs():
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
         """mistconfigの情報を保存させる"""
-        filepath = self._getpath("../mistconfig.conf")
+        filepath = self._getpath("./mistconfig.conf")
         if loadmode:
             with open(filepath, "r") as f:
                 self.mistconfig = json.loads(f.read())
@@ -378,5 +378,7 @@ class MkAPIs():
 
     @staticmethod
     def _getpath(dirname: str) -> str:
-        """相対パスから絶対パスに変える奴"""
-        return os_path.abspath(os_path.join(os_path.dirname(__file__), dirname))
+        """プロジェクトのルートディレクトリからのパスを取得する"""
+        project_root = os_path.abspath(os_path.join(os_path.dirname(__file__), "../../"))
+
+        return os_path.abspath(os_path.join(project_root, dirname))
