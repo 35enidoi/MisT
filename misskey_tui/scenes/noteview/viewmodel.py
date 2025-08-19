@@ -80,7 +80,6 @@ class NoteViewModel(AbstractViewModel):
 
         self.note_write()
 
-    # --- 追加: ノート移動関数 ---
     def next_note(self) -> None:
         """次のノートへ移動 (末尾を超えない)."""
         if not self.notes:
