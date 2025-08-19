@@ -18,6 +18,6 @@ class MistConfig_Kata_Token(TypedDict):
 
 
 class MistConfig_Kata(TypedDict):
-    version: int
+    version: float
     default: MistConfig_Kata_Default
     tokens: list[MistConfig_Kata_Token]

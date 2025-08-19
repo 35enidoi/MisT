@@ -41,7 +41,11 @@ class NoteViewModel(AbstractViewModel):
         self.update_nav_buttons()
 
     def on_change_txtbx(self) -> None:
-        self.txtbx_txt = self.view.textbox.value  # type: ignore  textbox.valueは必ずstr
+        value = self.view.textbox.value
+        if isinstance(value, list):
+            self.txtbx_txt = "\n".join(str(v) for v in value)
+        else:
+            self.txtbx_txt = str(value)
 
     def note_get_func(self) -> Callable[[Any], list[Note]]:
         if self.TL == "HTL":

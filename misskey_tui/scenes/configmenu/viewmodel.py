@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 from functools import partial
 
 from asciimatics.exceptions import ResizeScreenError
@@ -6,11 +6,13 @@ from misskey import MiAuth
 from misskey.exceptions import MisskeyMiAuthFailedException
 
 from misskey_tui.model.model import Model
-from misskey_tui.scenes.configmenu.view import ConfigMenuView
 from misskey_tui.enum import MisskeyPyExceptions
 from misskey_tui.util import web_show
 from misskey_tui.textenums import CM_T
 from misskey_tui.abstract import AbstractViewModel
+
+if TYPE_CHECKING:
+    from misskey_tui.scenes.configmenu.view import ConfigMenuView
 
 
 class ConfigMenuModel(AbstractViewModel):
@@ -40,7 +42,11 @@ class ConfigMenuModel(AbstractViewModel):
         self.view.inp_bx.value = self.inpbx_txt
 
     def on_change_txtbx(self) -> None:
-        self.txtbx_txt = self.view.txtbx.value
+        value = self.view.txtbx.value
+        if isinstance(value, list):
+            self.txtbx_txt = "\n".join(str(v) for v in value)
+        else:
+            self.txtbx_txt = str(value)
 
     def on_change_inpbx(self) -> None:
         self.inpbx_txt = self.view.inp_bx.value
@@ -84,7 +90,7 @@ class ConfigMenuModel(AbstractViewModel):
             if len(self.model.mkapi.users_info) != 0:
                 self.token_on_select(0)
             else:
-                self.view.popup(CM_T.TOKEN_SELECT_NO_USER.value, CM_T.OK.value)
+                self.view.popup(CM_T.TOKEN_SELECT_NO_USER.value, [CM_T.OK.value])
         elif arg == 1:
             # set token
             self.ok_val = "tokenset"

@@ -3,7 +3,7 @@ from os import path as os_path
 from glob import glob
 import json
 import gettext
-from typing import Union, Callable, Final, TypeVar
+from typing import Union, Callable, Final, TypeVar, Any
 
 from requests import exceptions as Req_exceptions
 from asciimatics.widgets.utilities import THEMES
@@ -228,6 +228,9 @@ class MkAPIs():
         -------
         bool
             成功したかどうか"""
+        if self.mk is None:
+            # TODO エラーを投げるようにする
+            return False
         try:
             self.mk.token = token
             try:
@@ -255,21 +258,37 @@ class MkAPIs():
         ------
         IndexError
             場所が不適の時"""
+        # 削除対象の位置が有効範囲か検査
         if 0 <= user_pos <= len(self.mistconfig["tokens"]) - 1:
+            # デフォルトユーザー設定への影響を調整
             if self.mistconfig["default"]["defaulttoken"] is not None:
+                # 削除位置がデフォルト位置より前ならインデックスを詰める
                 if user_pos < self.mistconfig["default"]["defaulttoken"]:
                     self.mistconfig["default"]["defaulttoken"] -= 1
+                # デフォルト本人を削除するならデフォルト解除
                 elif user_pos == self.mistconfig["default"]["defaulttoken"]:
                     self.mistconfig["default"]["defaulttoken"] = None
+                # 変更を設定ファイルへ保存
                 self.mistconfig_put()
+
+            # 現在選択中ユーザーへの影響を調整
             if self.nowuser is not None:
+                # 削除位置が現在位置より前ならインデックスを詰める
                 if user_pos < self.nowuser:
                     self.nowuser -= 1
+                # 現在のユーザー本人を削除ならログアウト相当
                 elif user_pos == self.nowuser:
-                    del self.mk.token
+                    # ログアウト処理
+                    if self.mk is not None:
+                        del self.mk.token
+
                     self.nowuser = None
+
+            # 実際に対象ユーザー情報をリストから削除
             self.mistconfig["tokens"].pop(user_pos)
+
         else:
+            # 範囲外の位置なら例外を送出
             raise IndexError("Invalid position.")
 
     def select_user(self, user_pos: int) -> bool:
@@ -289,19 +308,21 @@ class MkAPIs():
         -------
         bool
             成功したかどうか"""
+        # 範囲内かどうか調べる
         if user_pos < 0 or len(self.mistconfig["tokens"]) <= user_pos:
-            raise IndexError("Invalid position.")  # 範囲外
+            raise IndexError("Invalid position.")
 
+        # いったん格納
         bef_mk = self.mk
         try:
             is_ok = self.connect_mk_instance(self.mistconfig["tokens"][user_pos]["instance"])
             if is_ok:
-                self.mk.token = self.mistconfig["tokens"][user_pos]["token"]
+                self.mk.token = self.mistconfig["tokens"][user_pos]["token"]  # type: ignore connect_mk_instanceがTrueでmkは必ず存在
                 self.nowuser = user_pos
                 if self.mistconfig["tokens"][self.nowuser]["name"] == "Fail to get user info":
                     # 名前がadd時に手に入ってなかったときに再取得する奴
                     try:
-                        username = self.mk.i()["name"]
+                        username = self.mk.i()["name"]  # type: ignore 上と同様
                         self.mistconfig["tokens"][self.nowuser]["name"] = username
                     except MisskeyPyExceptions:
                         pass
@@ -342,17 +363,17 @@ class MkAPIs():
 
     def get_miauth(self) -> MiAuth:
         """miauthを取得するやつ"""
-        permissions = [Mi_enum.Permissions.WRITE_NOTES.value,
-                       Mi_enum.Permissions.READ_ACCOUNT.value,
-                       Mi_enum.Permissions.WRITE_ACCOUNT.value,
-                       Mi_enum.Permissions.READ_REACTIONS.value,
-                       Mi_enum.Permissions.WRITE_REACTIONS.value,
-                       Mi_enum.Permissions.READ_MESSAGING.value,
-                       Mi_enum.Permissions.WRITE_MESSAGING.value,
-                       Mi_enum.Permissions.READ_NOTIFICATIONS.value,
-                       Mi_enum.Permissions.WRITE_NOTIFICATIONS.value]
-
-        return MiAuth(address=self.__instance, name=PROGRAM_NAME, permission=permissions)
+        return MiAuth(address=self.__instance, name=PROGRAM_NAME, permission=[
+            Mi_enum.Permissions.WRITE_NOTES.value,
+            Mi_enum.Permissions.READ_ACCOUNT.value,
+            Mi_enum.Permissions.WRITE_ACCOUNT.value,
+            Mi_enum.Permissions.READ_REACTIONS.value,
+            Mi_enum.Permissions.WRITE_REACTIONS.value,
+            Mi_enum.Permissions.READ_MESSAGING.value,
+            Mi_enum.Permissions.WRITE_MESSAGING.value,
+            Mi_enum.Permissions.READ_NOTIFICATIONS.value,
+            Mi_enum.Permissions.WRITE_NOTIFICATIONS.value
+        ])
 
     def mistconfig_put(self, loadmode: bool = False) -> None:
         """mistconfigの情報を保存させる"""
@@ -365,12 +386,12 @@ class MkAPIs():
                 f.write(json.dumps(self.mistconfig, indent=4))
 
     @staticmethod
-    def misskeypy_wrapper(msk_func: Callable[[P], T], **kargs: P) -> Union[T, None]:
+    def misskeypy_wrapper(msk_func: Callable[..., T], *args: Any, **kwargs: Any) -> Union[T, None]:
         """
         misskey.pyの例外が発生したらNoneを返すやーつ"""
         if callable(msk_func):
             try:
-                return msk_func(**kargs)
+                return msk_func(*args, **kwargs)
             except MisskeyPyExceptions:
                 return None
         else:

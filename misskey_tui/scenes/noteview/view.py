@@ -1,4 +1,4 @@
-from typing import Callable, Optional, NoReturn, TYPE_CHECKING
+from typing import Callable, Optional, NoReturn, Sequence, TYPE_CHECKING
 from functools import partial
 
 from asciimatics.widgets import Frame, Layout, TextBox, PopUpDialog, Button, Divider
@@ -82,7 +82,7 @@ class NoteView(Frame):
 
     def popup(self,
               txt: str,
-              button: list[str],
+              button: Sequence[str],
               on_close: Optional[Callable[[int], None]] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
 

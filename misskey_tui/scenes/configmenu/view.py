@@ -1,4 +1,4 @@
-from typing import Optional, Callable, NoReturn
+from typing import Optional, Callable, NoReturn, Sequence, TYPE_CHECKING
 from functools import partial
 
 from asciimatics.screen import Screen
@@ -13,15 +13,17 @@ from asciimatics.widgets import (Frame,
                                  Divider,
                                  PopUpDialog)
 
-from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.textenums import CM_T
 from misskey_tui.util import check_terminal_haba
+
+if TYPE_CHECKING:
+    from misskey_tui.scenes.configmenu.viewmodel import ConfigMenuModel
 
 
 class ConfigMenuView(Frame):
     def __init__(self,
                  screen: Screen,
-                 mv: AbstractViewModel) -> None:
+                 mv: "ConfigMenuModel") -> None:
         super(ConfigMenuView, self).__init__(screen,
                                              screen.height,
                                              screen.width,
@@ -78,7 +80,7 @@ class ConfigMenuView(Frame):
 
     def popup(self,
               txt: str,
-              button: list[str],
+              button: Sequence[str],
               on_close: Optional[Callable[[int], None]] = None) -> None:
         self._scene.add_effect(PopUpDialog(self.screen, txt, button, on_close))
 
