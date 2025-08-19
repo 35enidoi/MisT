@@ -1,6 +1,6 @@
 from typing import Callable, Any, Literal, TYPE_CHECKING
 
-from misskey_tui.model.model import MkAPIs
+from misskey_tui.model.model import Model
 from misskey_tui.textenums import NV_T
 from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.enum.misskeypy_return import Note
@@ -12,17 +12,17 @@ if TYPE_CHECKING:
 
 class NoteViewModel(AbstractViewModel):
     """NoteViewのViewModel"""
-    def __init__(self, msk: MkAPIs) -> None:
+    def __init__(self, model: Model) -> None:
         # modelの保存
-        self.msk_ = msk
+        self.model = model
         # 変数作成
         self.txtbx_txt: str = NV_T.WELCOME_MESSAGE.value
         self.notes: list[Note] = []
         self.notes_point: int = 0
         self.TL: Literal["HTL", "LTL", "STL", "GTL"] = "LTL"
-        self.theme = self.msk_.theme
+        self.theme = self.model.mkapi.theme
         # フック作成
-        self.msk_.add_on_change_instance(self._on_instance_change)
+        self.model.mkapi.add_on_change_instance(self._on_instance_change)
         # 型ヒント
         self.view: "NoteView"
 
@@ -34,7 +34,7 @@ class NoteViewModel(AbstractViewModel):
 
     def recreate_before(self, view_: "NoteView") -> None:
         self.view = view_
-        self.theme = self.msk_.theme
+        self.theme = self.model.mkapi.theme
 
     def recreate_after(self) -> None:
         self.view.textbox.value = self.txtbx_txt
@@ -45,19 +45,19 @@ class NoteViewModel(AbstractViewModel):
 
     def note_get_func(self) -> Callable[[Any], list[Note]]:
         if self.TL == "HTL":
-            return self.msk_.mk.notes_timeline  # type: ignore  list[Note]が返ってくる
+            return self.model.mkapi.mk.notes_timeline  # type: ignore  list[Note]が返ってくる
         elif self.TL == "LTL":
-            return self.msk_.mk.notes_local_timeline  # type: ignore  同文
+            return self.model.mkapi.mk.notes_local_timeline  # type: ignore  同文
         elif self.TL == "STL":
-            return self.msk_.mk.notes_hybrid_timeline  # type: ignore  同文
+            return self.model.mkapi.mk.notes_hybrid_timeline  # type: ignore  同文
         elif self.TL == "GTL":
-            return self.msk_.mk.notes_global_timeline  # type: ignore  同文
+            return self.model.mkapi.mk.notes_global_timeline  # type: ignore  同文
         else:
             raise ValueError(f"Unknown TL type: {self.TL}")
 
     def note_get(self) -> None:
-        if self.msk_.is_valid_misskeypy:
-            notes = self.msk_.misskeypy_wrapper(self.note_get_func(), limit=10)
+        if self.model.mkapi.is_valid_misskeypy:
+            notes = self.model.mkapi.misskeypy_wrapper(self.note_get_func(), limit=10)
             if notes is not None:
                 # get success
                 self.notes = notes
@@ -66,7 +66,7 @@ class NoteViewModel(AbstractViewModel):
             else:
                 # get fail
                 additional_text = ""
-                if self.msk_.now_user_info is None:
+                if self.model.mkapi.now_user_info is None:
                     additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_1.value
                     if self.TL in ("HTL", "STL"):
                         additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_2.value + f"; {self.TL}"
@@ -135,7 +135,7 @@ class NoteViewModel(AbstractViewModel):
 
         # usernameの取得
         if note["user"]["host"] is None:
-            username = f'@{note["user"]["username"]}@{self.msk_.instance}'
+            username = f'@{note["user"]["username"]}@{self.model.mkapi.instance}'
         else:
             username = f'@{note["user"]["username"]}@{note["user"]["host"]}'
 

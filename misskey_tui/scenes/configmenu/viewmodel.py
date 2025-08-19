@@ -5,7 +5,7 @@ from asciimatics.exceptions import ResizeScreenError
 from misskey import MiAuth
 from misskey.exceptions import MisskeyMiAuthFailedException
 
-from misskey_tui.model.model import MkAPIs
+from misskey_tui.model.model import Model
 from misskey_tui.scenes.configmenu.view import ConfigMenuView
 from misskey_tui.enum import MisskeyPyExceptions
 from misskey_tui.util import web_show
@@ -14,11 +14,11 @@ from misskey_tui.abstract import AbstractViewModel
 
 
 class ConfigMenuModel(AbstractViewModel):
-    def __init__(self, msk: MkAPIs) -> None:
+    def __init__(self, model: Model) -> None:
         # modelの保存
-        self.msk_ = msk
+        self.model = model
         # 変数作成
-        self.theme = self.msk_.theme
+        self.theme = self.model.mkapi.theme
         self.view: ConfigMenuView
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
@@ -32,7 +32,7 @@ class ConfigMenuModel(AbstractViewModel):
 
     def recreate_before(self, view_: ConfigMenuView) -> None:
         self.view = view_
-        self.theme = self.msk_.theme
+        self.theme = self.model.mkapi.theme
 
     def recreate_after(self) -> None:
         self.ok_enable(self.ok_mode)
@@ -65,23 +65,23 @@ class ConfigMenuModel(AbstractViewModel):
 
     def language(self) -> None:
         self.view.popup(CM_T.LANGUAGE_QUESTION.value,
-                        [*self.msk_.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
+                        [*self.model.mkapi.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
                         self.language_sel)
 
     def current(self) -> None:
-        if self.msk_.now_user_info is not None:
-            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.msk_.instance,
+        if self.model.mkapi.now_user_info is not None:
+            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
                           CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
-                          CM_T.CURRENT_NAME.value + ": " + self.msk_.now_user_info["name"],
-                          CM_T.CURRENT_TOKENID.value + ": " + self.msk_.now_user_info["token"][:8] + "...")
+                          CM_T.CURRENT_NAME.value + ": " + self.model.mkapi.now_user_info["name"],
+                          CM_T.CURRENT_TOKENID.value + ": " + self.model.mkapi.now_user_info["token"][:8] + "...")
         else:
-            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.msk_.instance,
+            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
                           CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_INVALID.value)
 
     def token_sel(self, arg: int) -> None:
         if arg == 0:
             # Select
-            if len(self.msk_.users_info) != 0:
+            if len(self.model.mkapi.users_info) != 0:
                 self.token_on_select(0)
             else:
                 self.view.popup(CM_T.TOKEN_SELECT_NO_USER.value, CM_T.OK.value)
@@ -97,10 +97,10 @@ class ConfigMenuModel(AbstractViewModel):
                     # check
                     try:
                         token = mia.check()
-                        is_ok = self.msk_.add_user(token)
+                        is_ok = self.model.mkapi.add_user(token)
                         if is_ok:
                             self.view.popup(CM_T.TOKEN_ADD_SUCCESS.value, button=[CM_T.OK.value])
-                            is_ok_select_user = self.msk_.select_user(-1)
+                            is_ok_select_user = self.model.mkapi.select_user(-1)
                             if is_ok_select_user:
                                 self.add_text(CM_T.TOKEN_SELECT_SUCCESS.value)
                             else:
@@ -116,7 +116,7 @@ class ConfigMenuModel(AbstractViewModel):
                     # nocheck
                     pass
 
-            mia = self.msk_.get_miauth()
+            mia = self.model.mkapi.get_miauth()
             url = mia.generate_url()
             web_show(url)
             text = "URL" + "\n\n" + url
@@ -130,9 +130,9 @@ class ConfigMenuModel(AbstractViewModel):
     def token_on_select(self, position: int) -> None:
         BUTTONS = (CM_T.TOKEN_USER_SEL.value, CM_T.TOKEN_NOW_USER_L.value,
                    CM_T.TOKEN_NOW_USER_R.value, CM_T.RETURN.value)
-        userinfo = self.msk_.users_info[position]
+        userinfo = self.model.mkapi.users_info[position]
         text = "\n".join([
-            f"<{position+1}/{len(self.msk_.users_info)}> " + CM_T.TOKEN_NOW_USER_INFO.value,
+            f"<{position+1}/{len(self.model.mkapi.users_info)}> " + CM_T.TOKEN_NOW_USER_INFO.value,
             CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo['instance']}",
             CM_T.TOKEN_USER_NAME.value + f": {userinfo['name']}",
             CM_T.TOKEN_USER_TOKEN.value + f": {userinfo['token'][:8]}..."
@@ -154,7 +154,7 @@ class ConfigMenuModel(AbstractViewModel):
             self.token_on_select(pos)
         elif arg == 2:
             # R
-            if pos + 1 != len(self.msk_.users_info):
+            if pos + 1 != len(self.model.mkapi.users_info):
                 pos += 1
             self.token_on_select(pos)
         elif arg == 3:
@@ -164,7 +164,7 @@ class ConfigMenuModel(AbstractViewModel):
     def select_token_pop(self, pos: int) -> None:
         CHOICES = (CM_T.TOKEN_USER_SEL.value, CM_T.TOKEN_USER_SELECT_DELETE.value,
                    CM_T.TOKEN_USER_DEFAULT_SET.value, CM_T.RETURN.value)
-        userinfo = self.msk_.users_info[pos]
+        userinfo = self.model.mkapi.users_info[pos]
         text = "\n".join([
             CM_T.TOKEN_SELECTED_INFO.value,
             CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo['instance']}",
@@ -180,7 +180,7 @@ class ConfigMenuModel(AbstractViewModel):
     def on_select_token_pop(self, arg: int, pos: int) -> None:
         if arg == 0:
             # Set
-            is_ok = self.msk_.select_user(pos)
+            is_ok = self.model.mkapi.select_user(pos)
             if is_ok:
                 text = CM_T.TOKEN_SELECT_SUCCESS.value
             else:
@@ -191,7 +191,7 @@ class ConfigMenuModel(AbstractViewModel):
             def _del_check(is_ok: int):
                 if is_ok == 1:
                     # 消す
-                    self.msk_.del_user(pos)
+                    self.model.mkapi.del_user(pos)
                     self.add_text(CM_T.TOKEN_DELETED.value)
                 else:
                     pass
@@ -202,22 +202,22 @@ class ConfigMenuModel(AbstractViewModel):
                 on_close=_del_check)
         elif arg == 2:
             # Default Set
-            self.msk_.default_set_user(pos)
+            self.model.mkapi.default_set_user(pos)
             self.add_text(CM_T.TOKEN_DEFAULT_SETTED.value)
         elif arg == 3:
             # Return
             pass
 
     def token_on_ok(self, text: str) -> None:
-        is_ok = self.msk_.add_user(text)
+        is_ok = self.model.mkapi.add_user(text)
         if is_ok:
-            self.msk_.select_user(-1)
+            self.model.mkapi.select_user(-1)
             self.add_text(CM_T.TOKEN_ADD_SUCCESS.value)
         else:
             self.add_text(CM_T.TOKEN_ADD_FAIL.value)
 
     def instance_on_ok(self, text: str) -> None:
-        is_ok = self.msk_.connect_mk_instance(text)
+        is_ok = self.model.mkapi.connect_mk_instance(text)
         if is_ok:
             self.add_text(CM_T.OK_INSTANCE_CONNECT.value)
         else:
@@ -230,21 +230,21 @@ class ConfigMenuModel(AbstractViewModel):
         else:
             # select theme
             theme = ("default", "monochrome", "green", "bright")[arg]
-            self.msk_.theme = theme
+            self.model.mkapi.theme = theme
             self.view.set_theme(theme)
             raise ResizeScreenError("honi", self.view._scene)
 
     def language_sel(self, arg: int) -> None:
-        if arg <= len(self.msk_.valid_langs)-1:
+        if arg <= len(self.model.mkapi.valid_langs)-1:
             # sel lang
-            lang = self.msk_.valid_langs[arg]
-        elif arg == len(self.msk_.valid_langs):
+            lang = self.model.mkapi.valid_langs[arg]
+        elif arg == len(self.model.mkapi.valid_langs):
             # reset lang
             lang = ""
-        elif arg == len(self.msk_.valid_langs)+1:
+        elif arg == len(self.model.mkapi.valid_langs)+1:
             # return
             return
-        self.msk_.translation(lang)
+        self.model.mkapi.translation(lang)
         raise ResizeScreenError("honi", self.view._scene)
 
     def clear_text(self) -> None:

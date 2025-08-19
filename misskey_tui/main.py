@@ -4,7 +4,7 @@ from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError
 
-from misskey_tui.model.model import MkAPIs
+from misskey_tui.model.model import Model
 from misskey_tui.scenes import SCENES
 from misskey_tui.abstract import AbstractViewModel
 
@@ -18,8 +18,8 @@ def wrapper(screen: Screen, last_scene: Union[Scene, None], vm: list[AbstractVie
 
 
 def main():
-    msk = MkAPIs()
-    view_models = [i[1](msk) for i in SCENES]
+    model = Model()
+    view_models = [i[1](model) for i in SCENES]
     last_scene = None
     try:
         while True:
@@ -29,7 +29,7 @@ def main():
             except ResizeScreenError as e:
                 last_scene = e.scene
     finally:
-        msk.mistconfig_put()
+        model.mkapi.mistconfig_put()
 
 
 if __name__ == "__main__":
