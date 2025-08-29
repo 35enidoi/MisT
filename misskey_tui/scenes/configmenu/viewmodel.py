@@ -21,7 +21,7 @@ class ConfigMenuModel(AbstractViewModel):
         self.model = model
         # 変数作成
         self.theme = self.model.mkapi.theme
-        self.view: ConfigMenuView
+        self.view: "ConfigMenuView"
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
         self.ok_selections: dict[str, Callable[[str], None]] = {
@@ -32,7 +32,7 @@ class ConfigMenuModel(AbstractViewModel):
         self.ok_mode: bool = False
         self.ok_val: str = ""
 
-    def recreate_before(self, view_: ConfigMenuView) -> None:
+    def recreate_before(self, view_: "ConfigMenuView") -> None:
         self.view = view_
         self.theme = self.model.mkapi.theme
 

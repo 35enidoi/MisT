@@ -1,6 +1,13 @@
 from misskey_tui.model.mkapi import MkAPIs
+from misskey_tui.model.mistconfig import MisTConfig
+
+
+# version
+# syoumi tekitouni ageteru noha naisyo
+VERSION = 0.42
 
 
 class Model:
     def __init__(self):
-        self.mkapi = MkAPIs()
+        self.config = MisTConfig(VERSION)
+        self.mkapi = MkAPIs(self.config)

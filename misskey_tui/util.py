@@ -1,3 +1,4 @@
+from os import path
 from unicodedata import east_asian_width
 import webbrowser
 
@@ -28,3 +29,9 @@ def web_show(url: str) -> None:
 def nyaize(text: str) -> str:
     """テキストをnyaize処理する関数"""
     return text.replace("な", "にゃ").replace("ナ", "ニャ")
+
+
+def get_path(file_path: str) -> str:
+    """ファイルパスを展開する関数"""
+    project_root = path.abspath(path.join(path.dirname(__file__), "../"))
+    return path.join(project_root, file_path)

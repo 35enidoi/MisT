@@ -1,0 +1,123 @@
+from os import path
+from glob import glob
+import gettext
+import json
+
+from misskey_tui.enum.mkapis_enum import MistConfig_Kata, MistConfig_Kata_Default, MistConfig_Kata_Token
+from misskey_tui.util import get_path
+
+
+class MisTConfig:
+    __settings: MistConfig_Kata
+    __valid_langs: tuple[str, ...]
+
+    def __init__(self, version: float):
+        # 言語ファイルの読み込み
+        self.__valid_langs = tuple(path.basename(path.dirname(i)) for i in glob(get_path("./locale/*/LC_MESSAGES")))
+        # Configファイルの読み込み
+        self.__config_file_path = get_path("./mistconfig.conf")
+        if path.exists(self.__config_file_path):
+            self.__settings = self.load_config()
+            if self.__settings["version"] < version:
+                self.__settings = self.__setting_init(version)
+                self.save_config()
+        else:
+            self.__settings = self.__setting_init(version)
+
+    @property
+    def valid_langs(self) -> tuple[str, ...]:
+        return self.__valid_langs
+
+    @property
+    def lang(self) -> str | None:
+        return self.__settings["default"]["lang"]
+
+    @property
+    def version(self) -> float:
+        return self.__settings["version"]
+
+    @property
+    def default_token(self) -> MistConfig_Kata_Token | None:
+        if (token_pos := self.__settings["default"]["defaulttoken"]) is None:
+            return None
+        else:
+            return self.__settings["tokens"][token_pos]
+
+    @property
+    def tokens(self) -> list[MistConfig_Kata_Token]:
+        return self.__settings["tokens"].copy()
+
+    def __setting_init(self, version: float) -> MistConfig_Kata:
+        return MistConfig_Kata(
+            version=version,
+            default=MistConfig_Kata_Default(
+                theme="default",
+                lang=None,
+                defaulttoken=None
+            ),
+            tokens=[]
+        )
+
+    def load_config(self) -> MistConfig_Kata:
+        with open(self.__config_file_path, 'r') as f:
+            return json.load(f)
+
+    def save_config(self):
+        with open(self.__config_file_path, 'w') as f:
+            json.dump(self.__settings, f, indent=4)
+
+    def translation(self, lang: str | None) -> None:
+        """文字の翻訳をする関数
+
+        Parameters
+        ----------
+        lang: str | None
+            言語の種類
+
+        Raises
+        ------
+        ValueError
+            言語の種類が不適の時
+
+        Note
+        ----
+        有効な言語の種類は:obj:`valid_langs`にリストで載っています。"""
+        # 翻訳ファイルを配置するディレクトリ
+        path_to_locale_dir = get_path("./locale")
+
+        # ちゃんと使えるか確認
+        if lang not in self.valid_langs and lang is not None:
+            raise ValueError(f"language `{lang}` is invalid.")
+
+        # 保存
+        self.__settings["default"]["lang"] = lang
+        self.save_config()
+
+        # 翻訳用クラスの設定
+        translater = gettext.translation(
+            'messages',                          # domain: 辞書ファイルの名前
+            localedir=path_to_locale_dir,        # 辞書ファイル配置ディレクトリ
+            languages=[lang] if lang else lang,  # 翻訳に使用する言語
+            fallback=True                        # .moファイルが見つからなかった時は未翻訳の文字列を出力
+        )
+
+        # Pythonの組み込みグローバル領域に_という関数を束縛する
+        translater.install()
+
+    def token_position_check(self, token: MistConfig_Kata_Token) -> int | None:
+        """トークンの位置を調べる関数
+
+        Parameters
+        ----------
+        token: MistConfig_Kata_Token
+            調べたいトークン
+
+        Returns
+        -------
+        int | None
+            トークンの位置。存在しない場合はNoneを返す"""
+        for i, v in enumerate(self.__settings["tokens"]):
+            if v["token"] == token["token"]:
+                return i
+
+        return None  # 存在しない場合はNoneを返す

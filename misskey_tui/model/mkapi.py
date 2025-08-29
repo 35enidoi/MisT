@@ -1,9 +1,7 @@
 from copy import deepcopy
 from os import path as os_path
-from glob import glob
 import json
-import gettext
-from typing import Union, Callable, Final, TypeVar, Any
+from typing import Union, Callable, TypeVar, Any
 
 from requests import exceptions as Req_exceptions
 from asciimatics.widgets.utilities import THEMES
@@ -16,19 +14,18 @@ from misskey import (
 
 from misskey_tui.enum import (
     MisskeyPyExceptions,
-    MistConfig_Kata_Token,
-    MistConfig_Kata_Default,
-    MistConfig_Kata
+    MistConfig_Kata_Token
 )
+from misskey_tui.model.mistconfig import MisTConfig
 
-__all__ = ["VERSION", "PROGRAM_NAME", "MkAPIs"]
+
+# TODO  mistconfigの削除
+# TODO  langの削除
+
+__all__ = ["PROGRAM_NAME", "MkAPIs"]
 
 T = TypeVar("T")
 P = TypeVar("P")
-
-# version
-# syoumi tekitouni ageteru noha naisyo
-VERSION = 0.42
 
 # program name
 # kore kasyounanode kaerukanousei takai
@@ -37,26 +34,18 @@ PROGRAM_NAME = "MisT"
 
 class MkAPIs():
     """MVVMモデルのMの部分"""
-    def __init__(self) -> None:
+    def __init__(self, config: MisTConfig) -> None:
         DEFAULT_INSTANCE = "misskey.io"
-        self.VERSION: Final = VERSION
-        # mistconfig init
-        self.__mistconfig_init()
-        self.mistconfig: MistConfig_Kata
-        self.__lang: str
-        self.__theme: str
-        # check valid languages
-        self.valid_langs: Final = tuple(os_path.basename(os_path.dirname(i)) for i in
-                                        glob(self._getpath("./locale/*/LC_MESSAGES")))
-        # translation
-        self.translation(self.__lang)
+        self.config = config
         # variable set
         self.__on_instance_changes: list[Callable[[], None]] = []
         self.mk: Union[Misskey, None] = None
         self.__instance: str = DEFAULT_INSTANCE
         self.nowuser: Union[int, None] = None
-        if self.mistconfig["default"]["defaulttoken"] is not None:
-            self.select_user(self.mistconfig["default"]["defaulttoken"])
+        if self.config.default_token is not None:
+            user_pos = self.config.token_position_check(self.config.default_token)
+            if user_pos is not None:
+                self.select_user(user_pos)
         else:
             self.connect_mk_instance(DEFAULT_INSTANCE)
 
@@ -84,11 +73,6 @@ class MkAPIs():
         return self.mk is not None
 
     @property
-    def lang(self) -> str:
-        """現在の使用言語"""
-        return self.__lang
-
-    @property
     def theme(self) -> str:
         """現在のテーマ"""
         return self.__theme
@@ -101,74 +85,6 @@ class MkAPIs():
             self.mistconfig_put()
         else:
             raise ValueError(f"theme `{val}` not in THEMES.")
-
-    def __mistconfig_init(self) -> None:
-        if os_path.isfile(self._getpath("./mistconfig.conf")):
-            # mistconfigがあったら、まずロード
-            self.mistconfig_put(True)
-            if self.mistconfig["version"] < VERSION:
-                # バージョンが下なら、mistconfigのバージョン上げ
-                self.mistconfig["version"] = VERSION
-                # もしdefaultがなければ作る
-                # v0.43で廃止予定
-                if not self.mistconfig.get("default"):
-                    self.mistconfig["default"] = {"theme": "default",
-                                                  "lang": None,
-                                                  "defaulttoken": None}
-                # 保存
-                self.mistconfig_put()
-            self.__lang = lang if (lang := self.mistconfig["default"].get("lang")) is not None else ""
-            self.__theme = self.mistconfig["default"]["theme"]
-        else:
-            # mistconfig無ければ
-            self.__lang = ""
-            self.__theme = "default"
-            self.mistconfig = MistConfig_Kata(version=self.VERSION,
-                                              default=MistConfig_Kata_Default(theme=self.__theme,
-                                                                              lang=self.__lang,
-                                                                              defaulttoken=None),
-                                              tokens=[])
-            # 保存
-            self.mistconfig_put()
-
-    def translation(self, lang: str) -> None:
-        """文字の翻訳をする関数
-
-        Parameters
-        ----------
-        lang: str
-            言語の種類
-
-        Raises
-        ------
-        ValueError
-            言語の種類が不適の時
-
-        Note
-        ----
-        有効な言語の種類は:obj:`valid_langs`にリストで載っています。"""
-        # 翻訳ファイルを配置するディレクトリ
-        path_to_locale_dir = self._getpath("./locale")
-
-        # ちゃんと使えるか確認
-        if lang not in self.valid_langs and lang != "":
-            raise ValueError(f"language `{lang}` is invalid.")
-
-        # 保存
-        self.__lang = lang
-        self.mistconfig["default"]["lang"] = self.__lang
-        self.mistconfig_put()
-
-        # 翻訳用クラスの設定
-        translater = gettext.translation(
-            'messages',                    # domain: 辞書ファイルの名前
-            localedir=path_to_locale_dir,  # 辞書ファイル配置ディレクトリ
-            languages=[self.__lang],              # 翻訳に使用する言語
-            fallback=True                  # .moファイルが見つからなかった時は未翻訳の文字列を出力
-        )
-
-        # Pythonの組み込みグローバル領域に_という関数を束縛する
-        translater.install()
 
     def add_on_change_instance(self, func: Callable[[], None]) -> None:
         """接続するインスタンスが変わった時に引数の関数を呼び出すようにする
