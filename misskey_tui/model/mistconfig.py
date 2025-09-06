@@ -10,6 +10,7 @@ from misskey_tui.util import get_path
 class MisTConfig:
     __settings: MistConfig_Kata
     __valid_langs: tuple[str, ...]
+    __current_user: int | None
 
     def __init__(self, version: float):
         # 言語ファイルの読み込み
@@ -23,6 +24,9 @@ class MisTConfig:
                 self.save_config()
         else:
             self.__settings = self.__setting_init(version)
+        # MisTConfigから色々情報持ってくる
+        self.__current_user = self.__settings["default"]["defaulttoken"]
+        self.translation(self.__settings["default"]["lang"])
 
     @property
     def valid_langs(self) -> tuple[str, ...]:
@@ -46,6 +50,22 @@ class MisTConfig:
     @property
     def tokens(self) -> list[MistConfig_Kata_Token]:
         return self.__settings["tokens"].copy()
+
+    @property
+    def current_user(self) -> int | None:
+        return self.__current_user
+
+    @current_user.setter
+    def current_user(self, pos: int | None) -> None:
+        if pos is None:
+            # TODO USER_NONEハンドラ的なイベントを発火
+            self.__current_user = None
+        elif 0 <= pos < len(self.__settings["tokens"]):
+            # TODO USER_CHANGEハンドラ的なイベントを発火
+            self.__current_user = pos
+        else:
+            # 範囲外の値が来た場合は例外送出
+            raise IndexError("current_user index is out of range.")
 
     def __setting_init(self, version: float) -> MistConfig_Kata:
         return MistConfig_Kata(
