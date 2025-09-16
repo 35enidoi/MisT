@@ -71,7 +71,7 @@ class ConfigMenuModel(AbstractViewModel):
 
     def language(self) -> None:
         self.view.popup(CM_T.LANGUAGE_QUESTION.value,
-                        [*self.model.mkapi.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
+                        [*self.model.config.valid_langs, CM_T.LANGUAGE_RESET.value, CM_T.RETURN.value],
                         self.language_sel)
 
     def current(self) -> None:
@@ -241,16 +241,16 @@ class ConfigMenuModel(AbstractViewModel):
             raise ResizeScreenError("honi", self.view._scene)
 
     def language_sel(self, arg: int) -> None:
-        if arg <= len(self.model.mkapi.valid_langs)-1:
+        if arg <= len(self.model.config.valid_langs)-1:
             # sel lang
-            lang = self.model.mkapi.valid_langs[arg]
-        elif arg == len(self.model.mkapi.valid_langs):
+            lang = self.model.config.valid_langs[arg]
+        elif arg == len(self.model.config.valid_langs):
             # reset lang
             lang = ""
-        elif arg == len(self.model.mkapi.valid_langs)+1:
+        elif arg == len(self.model.config.valid_langs)+1:
             # return
             return
-        self.model.mkapi.translation(lang)
+        self.model.config.translation(lang)
         raise ResizeScreenError("honi", self.view._scene)
 
     def clear_text(self) -> None:
