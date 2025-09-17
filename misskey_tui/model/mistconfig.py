@@ -4,6 +4,8 @@ import gettext
 import json
 
 from misskey_tui.enum.mkapis_enum import MistConfig_Kata, MistConfig_Kata_Default, MistConfig_Kata_Token
+from misskey_tui.enum.events import UserChangeEventMessageUserChange, UserChangeEventMessageUserNone
+from misskey_tui.model.events import EventHandler
 from misskey_tui.util import get_path
 
 
@@ -58,10 +60,25 @@ class MisTConfig:
     @current_user.setter
     def current_user(self, pos: int | None) -> None:
         if pos is None:
-            # TODO USER_NONEハンドラ的なイベントを発火
+            message = UserChangeEventMessageUserNone(
+                mistconfig_position=None,
+                user_name=None,
+                reacdeck=None,
+                instance=None
+            )
+            EventHandler.fire_user_change(message)
+
             self.__current_user = None
         elif 0 <= pos < len(self.__settings["tokens"]):
-            # TODO USER_CHANGEハンドラ的なイベントを発火
+            token = self.__settings["tokens"][pos]
+            message = UserChangeEventMessageUserChange(
+                mistconfig_position=pos,
+                user_name=token["name"],
+                reacdeck=token["reacdeck"],
+                instance=token["instance"]
+            )
+            EventHandler.fire_user_change(message)
+
             self.__current_user = pos
         else:
             # 範囲外の値が来た場合は例外送出
