@@ -5,7 +5,7 @@ import json
 
 from misskey_tui.enum.mkapis_enum import MistConfig_Kata, MistConfig_Kata_Default, MistConfig_Kata_Token
 from misskey_tui.enum.events import UserChangeEventMessageUserChange, UserChangeEventMessageUserNone
-from misskey_tui.model.events import EventHandler
+from misskey_tui.model.events import UserChangeEventHandler
 from misskey_tui.util import get_path
 
 
@@ -66,7 +66,7 @@ class MisTConfig:
                 reacdeck=None,
                 instance=None
             )
-            EventHandler.fire_user_change(message)
+            UserChangeEventHandler.fire_event(message)
 
             self.__current_user = None
         elif 0 <= pos < len(self.__settings["tokens"]):
@@ -77,7 +77,7 @@ class MisTConfig:
                 reacdeck=token["reacdeck"],
                 instance=token["instance"]
             )
-            EventHandler.fire_user_change(message)
+            UserChangeEventHandler.fire_event(message)
 
             self.__current_user = pos
         else:
