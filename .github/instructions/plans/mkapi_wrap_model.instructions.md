@@ -169,6 +169,106 @@ class TimelineService:
     def bind_emitter(self, emit: Callable[[ChangeEvent], None]) -> None: ...
 ```
 
+## TimelineService クラス詳細仕様
+
+### 🎯 役割と責務
+- **タイムライン状態の中核管理**：現在のNoteViewModelが持っている `notes`, `notes_point`, `TL` の状態管理を統合
+- **API呼び出しの抽象化**：TL種別→API マッピングを内部でカプセル化
+- **状態操作のみに特化**：イベント購読は行わず、発火のみを担当
+
+### 📊 保持する状態
+```python
+# 内部状態（プロパティで公開）
+current_tl: Literal["HTL","LTL","STL","GTL"]  # 現在選択中のTL
+notes: tuple[Note, ...]                       # 取得済みノート（読み取り専用）
+index: int                                    # 現在位置（0ベース）
+count: int                                    # ノート総数
+has_prev: bool                                # 前のノートがあるか
+has_next: bool                                # 次のノートがあるか  
+current_note: Note | None                     # 現在表示中のノート
+```
+
+### 🔧 提供する操作
+```python
+# タイムライン操作
+def set_tl(tl: Literal["HTL","LTL","STL","GTL"]) -> None:
+    # TL切り替え + ノートクリア + イベント発火
+
+def refresh(limit: int = 10) -> bool:
+    # ノート取得 + 成否を返す + 詳細はイベントで通知
+    
+def move_next() -> bool:
+    # インデックス+1 (範囲チェック付き)
+    
+def move_prev() -> bool:
+    # インデックス-1 (範囲チェック付き)
+    
+def clear() -> None:
+    # 全状態リセット
+```
+
+### 🔌 イベントシステム
+```python
+def bind_emitter(self, emit: Callable[[ChangeEvent], None]) -> None:
+    # Modelから受け取った単一エミッタをバインド
+    # 購読管理はModelが行い、TimelineServiceは発火のみ
+```
+
+### 🏗️ 内部実装の想定
+```python
+class TimelineService:
+    def __init__(self, mkapi: MkAPIs):
+        self._mkapi = mkapi
+        self._current_tl: Literal["HTL","LTL","STL","GTL"] = "LTL"
+        self._notes: list[Note] = []
+        self._index: int = 0
+        self._emit: Callable[[ChangeEvent], None] | None = None
+    
+    # TL→API関数のマッピング（内部でカプセル化）
+    def _get_tl_function(self):
+        mapping = {
+            "HTL": self._mkapi.mk.notes_timeline,
+            "LTL": self._mkapi.mk.notes_local_timeline, 
+            "STL": self._mkapi.mk.notes_hybrid_timeline,
+            "GTL": self._mkapi.mk.notes_global_timeline,
+        }
+        return mapping[self._current_tl]
+    
+    def refresh(self, limit: int = 10) -> bool:
+        if not self._mkapi.is_valid_misskeypy:
+            self._emit_error("misskeypy_invalid")
+            return False
+            
+        api_func = self._get_tl_function()
+        notes = self._mkapi.misskeypy_wrapper(api_func, limit=limit)
+        
+        if notes is not None:
+            self._notes = notes
+            self._index = 0
+            self._emit_success("refresh", count=len(notes))
+            return True
+        else:
+            self._emit_error("token_missing" if self._mkapi.now_user_info is None else "unknown")
+            return False
+```
+
+### 🎨 現在のNoteViewModelとの違い
+| 項目 | 現在のNoteViewModel | 計画のTimelineService |
+|------|---------------------|----------------------|
+| **状態保持** | `notes`, `notes_point`, `TL` | `notes`, `index`, `current_tl` |
+| **API呼び出し** | `note_get_func()` で分岐 | `_get_tl_function()` で内包 |
+| **イベント** | 直接ViewModelが処理 | イベント発火のみ、購読はModel |
+| **UI更新** | 直接view更新 | 状態変更のみ、UI更新はViewModel |
+| **エラー処理** | popup直接表示 | イベントで理由通知 |
+
+### 🎯 設計思想
+1. **単一責任**: タイムライン状態管理に特化
+2. **疎結合**: UIに依存せず、純粋な状態操作
+3. **テスタブル**: 副作用を分離し、単体テスト可能
+4. **型安全**: 全てのプロパティ・メソッドが型付き
+
+この `TimelineService` により、現在 `NoteViewModel` に散らばっているタイムライン関連の責務が整理され、将来的な拡張（キャッシュ、非同期処理など）も容易になります。
+
 イベント型の明確化（events.py 追加）
 以下の内容で新規ファイル `misskey_tui/model/events.py` を作成することを前提にします。イベントはすべて型付きで扱い、IDE 補完と型安全を確保します。
 
@@ -245,3 +345,59 @@ if self._emit:
 - イベントは呼び出しスレッド（通常は UI メインループ）で同期的に配信されます。購読側は重い処理を避けるか非同期化してください。
 - 例外は Model の `_emit` 内で握り潰し（UIを落とさない）。必要に応じてログを追加。
 - TimelineService は購読者リストを持たず、単一エミッタへの委譲のみを行います。
+
+## 📊 実装進捗状況 (最終更新: 2025年 10月1日)
+
+### ✅ 完了している部分
+1. **基本的な Model クラス** - `misskey_tui/model/model.py`
+   - `Model` クラスが作成済み
+   - `MkAPIs` と `MisTConfig` の統合完了
+   - 基本構造は計画通り
+
+2. **イベントシステムの基盤** - `misskey_tui/model/events.py`
+   - `UserChangeEventHandler` クラスが実装済み
+   - スレッドセーフなイベント処理機能あり
+   - 例外処理も組み込み済み
+
+3. **MkAPIs の実装** - `misskey_tui/model/mkapi.py`  
+   - インスタンス変更フック (`add_on_change_instance`) 実装済み
+   - `misskeypy_wrapper` 機能あり
+   - 既存の API ラッパー機能完成
+
+### 🔄 部分的に完了している部分
+1. **NoteViewModel の状態管理**
+   - タイムライン状態 (`notes`, `notes_point`, `TL`) は `NoteViewModel` 内で管理されている
+   - 前後移動機能 (`next_note()`, `prev_note()`) 実装済み
+   - ナビゲーションボタン制御 (`update_nav_buttons()`) 実装済み
+
+### ❌ 未実装の部分
+1. **TimelineService クラス** - `misskey_tui/model/timeline.py`
+   - **完全に未実装** (最優先実装対象)
+   - 計画書で最も重要な部分が未作成
+
+2. **計画書準拠のイベント型** - `misskey_tui/model/events.py`
+   - 現在は `UserChangeEvent` のみ
+   - 計画書の `TimelineChangeEvent`, `InstanceChangeEvent`, `ErrorChangeEvent` が未実装
+
+3. **Model クラスの完全実装**
+   - 現在の `Model` は基本的な初期化のみ
+   - 計画書の `timeline` プロパティ、イベント購読機能が未実装
+
+4. **NoteViewModel のリファクタリング**
+   - まだ直接 `mkapi` に依存している
+   - `Model` 経由でのアクセスに切り替わっていない
+
+### 📈 進捗率の推定
+**全体進捗: 約 25-30%**
+
+- **Step 1 (TimelineService実装)**: **0%完了** ❌
+- **Step 2 (Model作成)**: **40%完了** 🔄
+- **Step 3 (NoteViewModel切り替え)**: **0%完了** ❌  
+- **Step 4 (表示系確認)**: **0%完了** ❌
+- **Step 5 (テスト)**: **0%完了** ❌
+
+### 🎯 次に実装すべき優先順位
+1. **最優先**: `TimelineService` クラスの完全実装
+2. **次点**: 計画書準拠のイベント型の実装  
+3. **その後**: `Model` クラスの完全実装
+4. **最後**: `NoteViewModel` のリファクタリング
