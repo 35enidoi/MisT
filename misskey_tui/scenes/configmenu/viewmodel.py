@@ -20,7 +20,7 @@ class ConfigMenuModel(AbstractViewModel):
         # modelの保存
         self.model = model
         # 変数作成
-        self.theme = self.model.mkapi.theme
+        self.theme = self.model.config.theme
         self.view: "ConfigMenuView"
         self.txtbx_txt: str = ""
         self.inpbx_txt: str = ""
@@ -34,7 +34,7 @@ class ConfigMenuModel(AbstractViewModel):
 
     def recreate_before(self, view_: "ConfigMenuView") -> None:
         self.view = view_
-        self.theme = self.model.mkapi.theme
+        self.theme = self.model.config.theme
 
     def recreate_after(self) -> None:
         self.ok_enable(self.ok_mode)
@@ -75,11 +75,11 @@ class ConfigMenuModel(AbstractViewModel):
                         self.language_sel)
 
     def current(self) -> None:
-        if self.model.mkapi.now_user_info is not None:
+        if (current_user_info := self.model.config.current_user) is not None:
             self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
                           CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
-                          CM_T.CURRENT_NAME.value + ": " + self.model.mkapi.now_user_info["name"],
-                          CM_T.CURRENT_TOKENID.value + ": " + self.model.mkapi.now_user_info["token"][:8] + "...")
+                          CM_T.CURRENT_NAME.value + ": " + current_user_info["name"],
+                          CM_T.CURRENT_TOKENID.value + ": " + current_user_info["token"][:8] + "...")
         else:
             self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
                           CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_INVALID.value)

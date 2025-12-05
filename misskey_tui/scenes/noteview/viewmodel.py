@@ -20,7 +20,7 @@ class NoteViewModel(AbstractViewModel):
         self.notes: list[Note] = []
         self.notes_point: int = 0
         self.TL: Literal["HTL", "LTL", "STL", "GTL"] = "LTL"
-        self.theme = self.model.mkapi.theme
+        self.theme = self.model.config.theme
         # フック作成
         self.model.mkapi.add_on_change_instance(self._on_instance_change)
         # 型ヒント
@@ -34,7 +34,7 @@ class NoteViewModel(AbstractViewModel):
 
     def recreate_before(self, view_: "NoteView") -> None:
         self.view = view_
-        self.theme = self.model.mkapi.theme
+        self.theme = self.model.config.theme
 
     def recreate_after(self) -> None:
         self.view.textbox.value = self.txtbx_txt
@@ -70,7 +70,7 @@ class NoteViewModel(AbstractViewModel):
             else:
                 # get fail
                 additional_text = ""
-                if self.model.mkapi.now_user_info is None:
+                if self.model.config.current_user is None:
                     additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_1.value
                     if self.TL in ("HTL", "STL"):
                         additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_2.value + f"; {self.TL}"

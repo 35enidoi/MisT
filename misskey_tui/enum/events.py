@@ -1,30 +1,86 @@
-from typing import TypedDict
+from typing import Literal
+from dataclasses import dataclass
 
 
-class ConfigUserChangeEventMessage(TypedDict):
+@dataclass
+class ConfigUserChangeEventMessage:
     mistconfig_position: int
     user_name: str
     reacdeck: list[str]
     instance: str
+    token: str
 
 
-class ConfigUserNoneChangeEventMessage(TypedDict):
-    mistconfig_position: None
-    user_name: None
-    reacdeck: None
-    instance: None
+@dataclass
+class ConfigUserNoneChangeEventMessage:
+    pass
 
 
-class ConfigUserAddEventMessage(TypedDict):
+@dataclass
+class ConfigUserAddEventMessage:
     name: str
     instance: str
     token: str
     reacdeck: list[str]
 
 
-class ConfigUserDelEventMessage(TypedDict):
+@dataclass
+class ConfigUserDelEventMessage:
     mistconfig_position: int
 
 
-ConfigUserEvent = ConfigUserChangeEventMessage | ConfigUserNoneChangeEventMessage \
-    | ConfigUserAddEventMessage | ConfigUserDelEventMessage
+ConfigUserEvent = (
+        ConfigUserChangeEventMessage |
+        ConfigUserNoneChangeEventMessage |
+        ConfigUserAddEventMessage |
+        ConfigUserDelEventMessage
+    )
+
+
+@dataclass
+class TimelineRefreshSuccessEvent:
+    action: Literal["refresh"]
+    reason: None
+    detail: dict | None
+
+
+@dataclass
+class TimelineIndexChangeEvent:
+    action: Literal["index_change"]
+    reason: None
+    detail: dict[Literal["index"], int]
+
+
+@dataclass
+class TimelineTLChangeEvent:
+    action: Literal["tl_change"]
+    reason: None
+    detail: dict[Literal["tl"], Literal["HTL", "LTL", "STL", "GTL"]]
+
+
+@dataclass
+class TimelineClearEvent:
+    action: Literal["clear"]
+    reason: None
+    detail: None
+
+
+@dataclass
+class TimelineErrorChangeEvent:
+    action: Literal["error"]
+    reason: Literal[
+        "misskeypy_invalid",  # misskeypy未初期化
+        "token_missing",      # トークンなし
+        "invalid_tl",         # 不正なTL（HTL/STLでトークンなし）
+        "unknown"             # その他のエラー
+    ]
+    detail: None
+
+
+TimelineChangeEvent = (
+    TimelineRefreshSuccessEvent |
+    TimelineIndexChangeEvent |
+    TimelineTLChangeEvent |
+    TimelineClearEvent |
+    TimelineErrorChangeEvent
+)
