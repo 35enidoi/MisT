@@ -29,7 +29,7 @@ def main():
             except ResizeScreenError as e:
                 last_scene = e.scene
     finally:
-        model.mkapi.mistconfig_put()
+        model.config.save_config()
 
 
 if __name__ == "__main__":

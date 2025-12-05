@@ -1,37 +1,40 @@
-from typing import Callable
+from typing import Callable, TypeVar, Generic
 from threading import RLock
 
-from misskey_tui.enum.events import UserChangeEvent
+from misskey_tui.enum.events import UserChangeEvent, ConfigUserEvent
 
 
-class UserChangeEventHandler:
-    __handlers: list[Callable[[UserChangeEvent], None]] = []
-    __lock = RLock()
+T = TypeVar('T')
 
-    @classmethod
-    def add_handler(cls, handler: Callable[[UserChangeEvent], None]) -> None:
+
+class _EventDispatcher(Generic[T]):
+    def __init__(self):
+        self.__handlers: list[Callable[[T], None]] = []
+        self.__lock = RLock()
+
+    def add_handler(self, handler: Callable[[T], None]) -> None:
         if not callable(handler):
             raise TypeError("handler is not function.")
-        else:
-            with cls.__lock:
-                if handler not in cls.__handlers:
-                    cls.__handlers.append(handler)
+        with self.__lock:
+            if handler not in self.__handlers:
+                self.__handlers.append(handler)
 
-    @classmethod
-    def remove_handler(cls, handler: Callable[[UserChangeEvent], None]) -> None:
-        with cls.__lock:
-            if handler in cls.__handlers:
-                cls.__handlers.remove(handler)
-
-    @classmethod
-    def fire_event(cls, message: UserChangeEvent) -> None:
-        with cls.__lock:
-            # ハンドラの実行中に変更されないようにコピーを取る
-            handlers = tuple(cls.__handlers)
+    def fire(self, message: T) -> None:
+        with self.__lock:
+            handlers = tuple(self.__handlers)
 
         for handler in handlers:
             try:
                 handler(message)
             except Exception:
-                # 例外はとりあえず握りつぶす
                 pass
+
+    def remove_handler(self, handler: Callable[[T], None]) -> None:
+        with self.__lock:
+            if handler in self.__handlers:
+                self.__handlers.remove(handler)
+
+
+class EventHandler:
+    user_change = _EventDispatcher[UserChangeEvent]()
+    config_user = _EventDispatcher[ConfigUserEvent]()

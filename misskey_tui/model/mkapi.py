@@ -1,6 +1,5 @@
 from copy import deepcopy
 from os import path as os_path
-import json
 from typing import Union, Callable, TypeVar, Any
 
 from requests import exceptions as Req_exceptions
@@ -38,6 +37,7 @@ class MkAPIs():
         DEFAULT_INSTANCE = "misskey.io"
         self.config = config
         # variable set
+        self.__theme = self.config.default_theme
         self.__on_instance_changes: list[Callable[[], None]] = []
         self.mk: Union[Misskey, None] = None
         self.__instance: str = DEFAULT_INSTANCE
@@ -53,14 +53,14 @@ class MkAPIs():
     def now_user_info(self) -> Union[MistConfig_Kata_Token, None]:
         """現在のユーザーの情報"""
         if self.nowuser is not None:
-            return self.mistconfig["tokens"][self.nowuser].copy()
+            return self.config.tokens[self.nowuser]
         else:
             return None
 
     @property
     def users_info(self) -> list[MistConfig_Kata_Token]:
         """ユーザー達の情報"""
-        return deepcopy(self.mistconfig["tokens"])
+        return deepcopy(self.config["tokens"])
 
     @property
     def instance(self) -> str:
@@ -81,8 +81,8 @@ class MkAPIs():
     def theme(self, val: str) -> None:
         if val in THEMES:
             self.__theme = val
-            self.mistconfig["default"]["theme"] = val
-            self.mistconfig_put()
+            self.config.default_theme = val
+            self.config.save_config()
         else:
             raise ValueError(f"theme `{val}` not in THEMES.")
 
@@ -153,7 +153,7 @@ class MkAPIs():
                 name = self.mk.i()["name"]
             except MisskeyPyExceptions:
                 name = "Fail to get user info"
-            self.mistconfig["tokens"].append(MistConfig_Kata_Token(name=name,
+            self.config["tokens"].append(MistConfig_Kata_Token(name=name,
                                                                    instance=self.__instance,
                                                                    token=token,
                                                                    reacdeck=[]))
@@ -161,51 +161,6 @@ class MkAPIs():
         except (MisskeyPyExceptions,
                 Mi_exceptions.MisskeyAuthorizeFailedException):
             return False
-
-    def del_user(self, user_pos: int) -> None:
-        """ユーザー情報を消す
-
-        Parameters
-        ----------
-        user_pos: int
-            ユーザー情報の場所
-
-        Raises
-        ------
-        IndexError
-            場所が不適の時"""
-        # 削除対象の位置が有効範囲か検査
-        if 0 <= user_pos <= len(self.mistconfig["tokens"]) - 1:
-            # デフォルトユーザー設定への影響を調整
-            if self.mistconfig["default"]["defaulttoken"] is not None:
-                # 削除位置がデフォルト位置より前ならインデックスを詰める
-                if user_pos < self.mistconfig["default"]["defaulttoken"]:
-                    self.mistconfig["default"]["defaulttoken"] -= 1
-                # デフォルト本人を削除するならデフォルト解除
-                elif user_pos == self.mistconfig["default"]["defaulttoken"]:
-                    self.mistconfig["default"]["defaulttoken"] = None
-                # 変更を設定ファイルへ保存
-                self.mistconfig_put()
-
-            # 現在選択中ユーザーへの影響を調整
-            if self.nowuser is not None:
-                # 削除位置が現在位置より前ならインデックスを詰める
-                if user_pos < self.nowuser:
-                    self.nowuser -= 1
-                # 現在のユーザー本人を削除ならログアウト相当
-                elif user_pos == self.nowuser:
-                    # ログアウト処理
-                    if self.mk is not None:
-                        del self.mk.token
-
-                    self.nowuser = None
-
-            # 実際に対象ユーザー情報をリストから削除
-            self.mistconfig["tokens"].pop(user_pos)
-
-        else:
-            # 範囲外の位置なら例外を送出
-            raise IndexError("Invalid position.")
 
     def select_user(self, user_pos: int) -> bool:
         """ユーザーを選択する
@@ -225,21 +180,21 @@ class MkAPIs():
         bool
             成功したかどうか"""
         # 範囲内かどうか調べる
-        if user_pos < 0 or len(self.mistconfig["tokens"]) <= user_pos:
+        if user_pos < 0 or len(self.config["tokens"]) <= user_pos:
             raise IndexError("Invalid position.")
 
         # いったん格納
         bef_mk = self.mk
         try:
-            is_ok = self.connect_mk_instance(self.mistconfig["tokens"][user_pos]["instance"])
+            is_ok = self.connect_mk_instance(self.config["tokens"][user_pos]["instance"])
             if is_ok:
-                self.mk.token = self.mistconfig["tokens"][user_pos]["token"]  # type: ignore connect_mk_instanceがTrueでmkは必ず存在
+                self.mk.token = self.config["tokens"][user_pos]["token"]  # type: ignore connect_mk_instanceがTrueでmkは必ず存在
                 self.nowuser = user_pos
-                if self.mistconfig["tokens"][self.nowuser]["name"] == "Fail to get user info":
+                if self.config["tokens"][self.nowuser]["name"] == "Fail to get user info":
                     # 名前がadd時に手に入ってなかったときに再取得する奴
                     try:
                         username = self.mk.i()["name"]  # type: ignore 上と同様
-                        self.mistconfig["tokens"][self.nowuser]["name"] = username
+                        self.config["tokens"][self.nowuser]["name"] = username
                     except MisskeyPyExceptions:
                         pass
                 return True
@@ -264,8 +219,8 @@ class MkAPIs():
         IndexError
             場所が不適の時
         """
-        if 0 <= user_pos <= len(self.mistconfig["tokens"]) - 1:
-            self.mistconfig["default"]["defaulttoken"] = user_pos
+        if 0 <= user_pos <= len(self.config["tokens"]) - 1:
+            self.config["default"]["defaulttoken"] = user_pos
         else:
             raise IndexError("Invalid position.")
 
@@ -275,7 +230,7 @@ class MkAPIs():
         Note
         ----
         デフォルトユーザーがいない場合、何も起きません。実際同じ値代入してるだけ。実際そう。"""
-        self.mistconfig["default"]["defaulttoken"] = None
+        self.config.default_token = None
 
     def get_miauth(self) -> MiAuth:
         """miauthを取得するやつ"""
@@ -290,16 +245,6 @@ class MkAPIs():
             Mi_enum.Permissions.READ_NOTIFICATIONS.value,
             Mi_enum.Permissions.WRITE_NOTIFICATIONS.value
         ])
-
-    def mistconfig_put(self, loadmode: bool = False) -> None:
-        """mistconfigの情報を保存させる"""
-        filepath = self._getpath("./mistconfig.conf")
-        if loadmode:
-            with open(filepath, "r") as f:
-                self.mistconfig = json.loads(f.read())
-        else:
-            with open(filepath, "w") as f:
-                f.write(json.dumps(self.mistconfig, indent=4))
 
     @staticmethod
     def misskeypy_wrapper(msk_func: Callable[..., T], *args: Any, **kwargs: Any) -> Union[T, None]:

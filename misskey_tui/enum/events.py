@@ -16,3 +16,17 @@ class UserChangeEventMessageUserNone(TypedDict):
 
 
 UserChangeEvent = UserChangeEventMessageUserChange | UserChangeEventMessageUserNone
+
+
+class ConfigUserAddEventMessage(TypedDict):
+    name: str
+    instance: str
+    token: str
+    reacdeck: list[str]
+
+
+class ConfigUserDelEventMessage(TypedDict):
+    mistconfig_position: int
+
+
+ConfigUserEvent = ConfigUserAddEventMessage | ConfigUserDelEventMessage
