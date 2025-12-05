@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar, Generic
 from threading import RLock
 
-from misskey_tui.enum.events import UserChangeEvent, ConfigUserEvent
+from misskey_tui.enum.events import ConfigUserEvent
 
 
 T = TypeVar('T')
@@ -35,6 +35,4 @@ class _EventDispatcher(Generic[T]):
                 self.__handlers.remove(handler)
 
 
-class EventHandler:
-    user_change = _EventDispatcher[UserChangeEvent]()
-    config_user = _EventDispatcher[ConfigUserEvent]()
+config_user_hundler = _EventDispatcher[ConfigUserEvent]()

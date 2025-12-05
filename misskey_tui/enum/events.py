@@ -1,21 +1,18 @@
 from typing import TypedDict
 
 
-class UserChangeEventMessageUserChange(TypedDict):
+class ConfigUserChangeEventMessage(TypedDict):
     mistconfig_position: int
     user_name: str
     reacdeck: list[str]
     instance: str
 
 
-class UserChangeEventMessageUserNone(TypedDict):
+class ConfigUserNoneChangeEventMessage(TypedDict):
     mistconfig_position: None
     user_name: None
     reacdeck: None
     instance: None
-
-
-UserChangeEvent = UserChangeEventMessageUserChange | UserChangeEventMessageUserNone
 
 
 class ConfigUserAddEventMessage(TypedDict):
@@ -29,4 +26,5 @@ class ConfigUserDelEventMessage(TypedDict):
     mistconfig_position: int
 
 
-ConfigUserEvent = ConfigUserAddEventMessage | ConfigUserDelEventMessage
+ConfigUserEvent = ConfigUserChangeEventMessage | ConfigUserNoneChangeEventMessage \
+    | ConfigUserAddEventMessage | ConfigUserDelEventMessage

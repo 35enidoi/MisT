@@ -43,7 +43,7 @@ class MkAPIs():
         self.__instance: str = DEFAULT_INSTANCE
         self.nowuser: Union[int, None] = None
         if self.config.default_token is not None:
-            user_pos = self.config.token_position_check(self.config.default_token)
+            user_pos = self.config.default_token
             if user_pos is not None:
                 self.select_user(user_pos)
         else:
@@ -60,7 +60,7 @@ class MkAPIs():
     @property
     def users_info(self) -> list[MistConfig_Kata_Token]:
         """ユーザー達の情報"""
-        return deepcopy(self.config["tokens"])
+        return self.config.tokens
 
     @property
     def instance(self) -> str:
@@ -153,10 +153,12 @@ class MkAPIs():
                 name = self.mk.i()["name"]
             except MisskeyPyExceptions:
                 name = "Fail to get user info"
-            self.config["tokens"].append(MistConfig_Kata_Token(name=name,
-                                                                   instance=self.__instance,
-                                                                   token=token,
-                                                                   reacdeck=[]))
+            self.config.add_user(
+                name=name,
+                instance=self.__instance,
+                token=token,
+                reacdeck=[]
+            )
             return True
         except (MisskeyPyExceptions,
                 Mi_exceptions.MisskeyAuthorizeFailedException):
@@ -180,7 +182,7 @@ class MkAPIs():
         bool
             成功したかどうか"""
         # 範囲内かどうか調べる
-        if user_pos < 0 or len(self.config["tokens"]) <= user_pos:
+        if user_pos < 0 or len(self.config.tokens) <= user_pos:
             raise IndexError("Invalid position.")
 
         # いったん格納
