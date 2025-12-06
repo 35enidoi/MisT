@@ -76,10 +76,12 @@ class ConfigMenuModel(AbstractViewModel):
 
     def current(self) -> None:
         if (current_user_info := self.model.config.current_user) is not None:
-            self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
-                          CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
-                          CM_T.CURRENT_NAME.value + ": " + current_user_info["name"],
-                          CM_T.CURRENT_TOKENID.value + ": " + current_user_info["token"][:8] + "...")
+            self.add_text(
+                CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
+                CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_VALID.value,
+                CM_T.CURRENT_NAME.value + ": " + "none" if current_user_info.name is None else current_user_info.name,
+                CM_T.CURRENT_TOKENID.value + ": " + current_user_info.token[:8] + "..."
+                )
         else:
             self.add_text(CM_T.CURRENT_INSTANCE.value + ": " + self.model.mkapi.instance,
                           CM_T.CURRENT_TOKEN.value + ": " + CM_T.CURRENT_INVALID.value)
@@ -87,7 +89,7 @@ class ConfigMenuModel(AbstractViewModel):
     def token_sel(self, arg: int) -> None:
         if arg == 0:
             # Select
-            if len(self.model.mkapi.users_info) != 0:
+            if len(self.model.config.users) != 0:
                 self.token_on_select(0)
             else:
                 self.view.popup(CM_T.TOKEN_SELECT_NO_USER.value, [CM_T.OK.value])
@@ -103,14 +105,17 @@ class ConfigMenuModel(AbstractViewModel):
                     # check
                     try:
                         token = mia.check()
-                        is_ok = self.model.mkapi.add_user(token)
+                        is_ok = self.model.mkapi.verify_token(self.model.mkapi.instance, token)
                         if is_ok:
+                            self.model.config.add_user(
+                                name=None,
+                                instance=self.model.mkapi.instance,
+                                token=token,
+                                reacdeck=[]
+                            )
                             self.view.popup(CM_T.TOKEN_ADD_SUCCESS.value, button=[CM_T.OK.value])
-                            is_ok_select_user = self.model.mkapi.select_user(-1)
-                            if is_ok_select_user:
-                                self.add_text(CM_T.TOKEN_SELECT_SUCCESS.value)
-                            else:
-                                self.add_text(CM_T.TOKEN_SELECT_FAIL.value)
+                            self.model.config.select_user(-1)
+                            self.add_text(CM_T.TOKEN_SELECT_SUCCESS.value)
                     except (MisskeyMiAuthFailedException,
                             MisskeyPyExceptions):
                         text = "\n".join((CM_T.MIAUTH_CHECK_FAIL.value,
@@ -136,12 +141,12 @@ class ConfigMenuModel(AbstractViewModel):
     def token_on_select(self, position: int) -> None:
         BUTTONS = (CM_T.TOKEN_USER_SEL.value, CM_T.TOKEN_NOW_USER_L.value,
                    CM_T.TOKEN_NOW_USER_R.value, CM_T.RETURN.value)
-        userinfo = self.model.mkapi.users_info[position]
+        userinfo = self.model.config.users[position]
         text = "\n".join([
-            f"<{position+1}/{len(self.model.mkapi.users_info)}> " + CM_T.TOKEN_NOW_USER_INFO.value,
-            CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo['instance']}",
-            CM_T.TOKEN_USER_NAME.value + f": {userinfo['name']}",
-            CM_T.TOKEN_USER_TOKEN.value + f": {userinfo['token'][:8]}..."
+            f"<{position+1}/{len(self.model.config.users)}> " + CM_T.TOKEN_NOW_USER_INFO.value,
+            CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo.instance}",
+            CM_T.TOKEN_USER_NAME.value + f": {userinfo.name}",
+            CM_T.TOKEN_USER_TOKEN.value + f": {userinfo.token[:8]}..."
         ])
         self.view.popup(
             txt=text,
@@ -160,7 +165,7 @@ class ConfigMenuModel(AbstractViewModel):
             self.token_on_select(pos)
         elif arg == 2:
             # R
-            if pos + 1 != len(self.model.mkapi.users_info):
+            if pos + 1 != len(self.model.config.users):
                 pos += 1
             self.token_on_select(pos)
         elif arg == 3:
@@ -170,12 +175,12 @@ class ConfigMenuModel(AbstractViewModel):
     def select_token_pop(self, pos: int) -> None:
         CHOICES = (CM_T.TOKEN_USER_SEL.value, CM_T.TOKEN_USER_SELECT_DELETE.value,
                    CM_T.TOKEN_USER_DEFAULT_SET.value, CM_T.RETURN.value)
-        userinfo = self.model.mkapi.users_info[pos]
+        userinfo = self.model.config.users[pos]
         text = "\n".join([
             CM_T.TOKEN_SELECTED_INFO.value,
-            CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo['instance']}",
-            CM_T.TOKEN_USER_NAME.value + f": {userinfo['name']}",
-            CM_T.TOKEN_USER_TOKEN.value + f": {userinfo['token'][:8]}..."
+            CM_T.TOKEN_USER_INSTANCE.value + f": {userinfo.instance}",
+            CM_T.TOKEN_USER_NAME.value + f": {userinfo.name}",
+            CM_T.TOKEN_USER_TOKEN.value + f": {userinfo.token[:8]}..."
         ])
         self.view.popup(
             txt=text,
@@ -186,8 +191,10 @@ class ConfigMenuModel(AbstractViewModel):
     def on_select_token_pop(self, arg: int, pos: int) -> None:
         if arg == 0:
             # Set
-            is_ok = self.model.mkapi.select_user(pos)
+            user = self.model.config.users[pos]
+            is_ok = self.model.mkapi.verify_token(user.instance, user.token)
             if is_ok:
+                self.model.config.select_user(pos)
                 text = CM_T.TOKEN_SELECT_SUCCESS.value
             else:
                 text = CM_T.TOKEN_SELECT_FAIL.value
@@ -197,7 +204,7 @@ class ConfigMenuModel(AbstractViewModel):
             def _del_check(is_ok: int):
                 if is_ok == 1:
                     # 消す
-                    self.model.mkapi.del_user(pos)
+                    self.model.config.del_user(pos)
                     self.add_text(CM_T.TOKEN_DELETED.value)
                 else:
                     pass
@@ -208,16 +215,22 @@ class ConfigMenuModel(AbstractViewModel):
                 on_close=_del_check)
         elif arg == 2:
             # Default Set
-            self.model.mkapi.default_set_user(pos)
+            user = self.model.config.users[pos]
+            self.model.config.set_default_user(user)
             self.add_text(CM_T.TOKEN_DEFAULT_SETTED.value)
         elif arg == 3:
             # Return
             pass
 
     def token_on_ok(self, text: str) -> None:
-        is_ok = self.model.mkapi.add_user(text)
+        is_ok = self.model.mkapi.verify_token(self.model.mkapi.instance, text)
         if is_ok:
-            self.model.mkapi.select_user(-1)
+            self.model.config.add_user(
+                name=is_ok["name"],
+                instance=self.model.mkapi.instance,
+                token=text,
+                reacdeck=[]
+                )
             self.add_text(CM_T.TOKEN_ADD_SUCCESS.value)
         else:
             self.add_text(CM_T.TOKEN_ADD_FAIL.value)
@@ -236,18 +249,18 @@ class ConfigMenuModel(AbstractViewModel):
         else:
             # select theme
             theme = ("default", "monochrome", "green", "bright")[arg]
-            self.model.mkapi.theme = theme
+            self.model.config.set_theme(theme)
             self.view.set_theme(theme)
             raise ResizeScreenError("honi", self.view._scene)
 
     def language_sel(self, arg: int) -> None:
-        if arg <= len(self.model.config.valid_langs)-1:
+        if 0 <= arg <= len(self.model.config.valid_langs)-1:
             # sel lang
             lang = self.model.config.valid_langs[arg]
         elif arg == len(self.model.config.valid_langs):
             # reset lang
             lang = ""
-        elif arg == len(self.model.config.valid_langs)+1:
+        else:
             # return
             return
         self.model.config.translation(lang)

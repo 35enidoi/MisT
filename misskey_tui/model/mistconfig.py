@@ -1,4 +1,5 @@
 from os import path
+from copy import copy
 from glob import glob
 from typing import Optional
 import gettext
@@ -26,15 +27,15 @@ class MisTConfig:
         self.__config_file_path = get_path("./mistconfig.conf")
         if path.exists(self.__config_file_path):
             self.__settings = self.load_config()
-            if self.__settings["version"] < version:
+            if self.__settings.version < version:
                 self.__settings = self.__setting_init(version)
                 self.save_config()
         else:
             self.__settings = self.__setting_init(version)
 
         # MisTConfigから色々情報持ってくる
-        self.__current_user = self.__settings["default"]["defaulttoken"]
-        self.translation(self.__settings["default"]["lang"])
+        self.__current_user = self.__settings.default.defaulttoken
+        self.translation(self.__settings.default.lang)
 
     @property
     def valid_langs(self) -> tuple[str, ...]:
@@ -42,50 +43,30 @@ class MisTConfig:
 
     @property
     def lang(self) -> str | None:
-        return self.__settings["default"]["lang"]
+        return self.__settings.default.lang
 
     @property
     def version(self) -> float:
-        return self.__settings["version"]
+        return self.__settings.version
 
     @property
     def default_token(self) -> int | None:
-        if (token_pos := self.__settings["default"]["defaulttoken"]) is None:
+        if (token_pos := self.__settings.default.defaulttoken) is None:
             return None
         else:
             return token_pos
 
-    @default_token.setter
-    def default_token(self, token: int | None) -> None:
-        if token is None:
-            self.__settings["default"]["defaulttoken"] = None
-        else:
-            if 0 <= token <= len(self.__settings["tokens"]) - 1:
-                self.__settings["default"]["defaulttoken"] = token
-            else:
-                raise IndexError("Invalid position.")
-
-        self.save_config()
-
     @property
-    def tokens(self) -> list[MistConfig_Kata_Token]:
-        return self.__settings["tokens"].copy()
+    def users(self) -> list[MistConfig_Kata_Token]:
+        return self.__settings.tokens.copy()
 
     @property
     def current_user(self) -> MistConfig_Kata_Token | None:
-        return self.__settings["tokens"][self.__current_user].copy() if self.__current_user is not None else None
+        return copy(self.__settings.tokens[self.__current_user]) if self.__current_user is not None else None
 
     @property
     def theme(self) -> str:
-        return self.__settings["default"]["theme"]
-
-    @theme.setter
-    def theme(self, theme: str) -> None:
-        if theme in THEMES:
-            self.__settings["default"]["theme"] = theme
-            self.save_config()
-        else:
-            raise ValueError(f"theme `{theme}` not in THEMES.")
+        return self.__settings.default.theme
 
     def __setting_init(self, version: float) -> MistConfig_Kata:
         return MistConfig_Kata(
@@ -98,14 +79,14 @@ class MisTConfig:
             tokens=[]
         )
 
-    def add_user(self, name: str, instance: str, token: str, reacdeck: list[str]) -> None:
+    def add_user(self, name: str | None, instance: str, token: str, reacdeck: list[str]) -> None:
         """ユーザーを追加する
 
         Parameters
         ----------
         token: str
             トークン"""
-        self.__settings["tokens"].append(
+        self.__settings.tokens.append(
             MistConfig_Kata_Token(
                 name=name,
                 instance=instance,
@@ -131,16 +112,16 @@ class MisTConfig:
         IndexError
             場所が不適の時"""
         # 更新対象の位置が有効範囲か検査
-        if 0 <= user_pos <= len(self.__settings["tokens"]) - 1:
+        if 0 <= user_pos <= len(self.__settings.tokens) - 1:
             # 実際に対象ユーザー情報をリストから更新
-            current_info = self.__settings["tokens"][user_pos]
+            current_info = self.__settings.tokens[user_pos]
 
             if name is not None:
-                current_info["name"] = name
+                current_info.name = name
             if reacdeck is not None:
-                current_info["reacdeck"] = reacdeck
+                current_info.reacdeck = reacdeck
 
-            self.__settings["tokens"][user_pos] = current_info
+            self.__settings.tokens[user_pos] = current_info
 
             self.save_config()
         else:
@@ -160,15 +141,15 @@ class MisTConfig:
         IndexError
             場所が不適の時"""
         # 削除対象の位置が有効範囲か検査
-        if 0 <= user_pos <= len(self.__settings["tokens"]) - 1:
+        if 0 <= user_pos <= len(self.__settings.tokens) - 1:
             # デフォルトユーザー設定への影響を調整
-            if self.__settings["default"]["defaulttoken"] is not None:
+            if self.__settings.default.defaulttoken is not None:
                 # 削除位置がデフォルト位置より前ならインデックスを詰める
-                if user_pos < self.__settings["default"]["defaulttoken"]:
-                    self.__settings["default"]["defaulttoken"] -= 1
+                if user_pos < self.__settings.default.defaulttoken:
+                    self.__settings.default.defaulttoken -= 1
                 # デフォルト本人を削除するならデフォルト解除
-                elif user_pos == self.__settings["default"]["defaulttoken"]:
-                    self.__settings["default"]["defaulttoken"] = None
+                elif user_pos == self.__settings.default.defaulttoken:
+                    self.__settings.default.defaulttoken = None
                 # 変更を設定ファイルへ保存
                 self.save_config()
 
@@ -183,7 +164,7 @@ class MisTConfig:
                     config_user_hundler.fire(ConfigUserNoneChangeEventMessage())
 
             # 実際に対象ユーザー情報をリストから削除
-            self.__settings["tokens"].pop(user_pos)
+            self.__settings.tokens.pop(user_pos)
 
             config_user_hundler.fire(ConfigUserDelEventMessage(
                 mistconfig_position=user_pos
@@ -208,22 +189,46 @@ class MisTConfig:
         IndexError
             場所が不適の時"""
         # 範囲内かどうか調べる
-        if user_pos < 0 or len(self.__settings["tokens"]) <= user_pos:
+        if user_pos < 0 or len(self.__settings.tokens) <= user_pos:
             raise IndexError("Invalid position.")
         else:
             self.__current_user = user_pos
+            user = MistConfig_Kata_Token(
+                name=self.__settings.tokens[user_pos].name,
+                reacdeck=self.__settings.tokens[user_pos].reacdeck,
+                instance=self.__settings.tokens[user_pos].instance,
+                token=self.__settings.tokens[user_pos].token
+            )
             config_user_hundler.fire(ConfigUserChangeEventMessage(
                 mistconfig_position=user_pos,
-                user_name=self.__settings["tokens"][user_pos]["name"],
-                reacdeck=self.__settings["tokens"][user_pos]["reacdeck"],
-                instance=self.__settings["tokens"][user_pos]["instance"],
-                token=self.__settings["tokens"][user_pos]["token"]
+                user=user
             ))
 
     def logout_user(self) -> None:
         """ユーザーをログアウトする"""
         self.__current_user = None
         config_user_hundler.fire(ConfigUserNoneChangeEventMessage())
+
+    def set_default_user(self, user: MistConfig_Kata_Token | None) -> None:
+        if user is None:
+            self.__settings.default.defaulttoken = None
+        else:
+            user_position = self.token_position_check(user)
+            if user_position is None:
+                raise ValueError("The user is not registered.")
+            if 0 <= user_position <= len(self.__settings.tokens) - 1:
+                self.__settings.default.defaulttoken = user_position
+            else:
+                raise IndexError("Invalid position.")
+
+        self.save_config()
+
+    def set_theme(self, theme: str) -> None:
+        if theme in THEMES:
+            self.__settings.default.theme = theme
+            self.save_config()
+        else:
+            raise ValueError(f"theme `{theme}` not in THEMES.")
 
     def load_config(self) -> MistConfig_Kata:
         with open(self.__config_file_path, 'r') as f:
@@ -257,7 +262,7 @@ class MisTConfig:
             raise ValueError(f"language `{lang}` is invalid.")
 
         # 保存
-        self.__settings["default"]["lang"] = lang
+        self.__settings.default.lang = lang
         self.save_config()
 
         # 翻訳用クラスの設定
@@ -283,8 +288,8 @@ class MisTConfig:
         -------
         int | None
             トークンの位置。存在しない場合はNoneを返す"""
-        for i, v in enumerate(self.__settings["tokens"]):
-            if v["token"] == token["token"]:
+        for i, v in enumerate(self.__settings.tokens):
+            if v.token == token.token:
                 return i
 
         return None  # 存在しない場合はNoneを返す

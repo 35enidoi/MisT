@@ -1,6 +1,5 @@
 from os import path as os_path
-import json
-from typing import Union, Callable, TypeVar, Any, Literal
+from typing import Union, Callable, TypeVar, Any, Literal, cast
 
 from requests import exceptions as Req_exceptions
 from misskey import (
@@ -12,7 +11,7 @@ from misskey import (
 
 from misskey_tui.enum.mkapis_exceptions import MisskeyPyExceptions
 from misskey_tui.enum.events import ConfigUserEvent, ConfigUserChangeEventMessage, ConfigUserNoneChangeEventMessage
-from misskey_tui.enum.misskeypy_return import Note
+from misskey_tui.enum.misskeypy_return import Note, User
 from misskey_tui.model.mistconfig import MisTConfig
 from misskey_tui.model.events import config_user_hundler
 
@@ -67,11 +66,11 @@ class MkAPIs():
                 # いったん格納
                 bef_mk = self.mk
                 try:
-                    is_ok = self.connect_mk_instance(event.instance)
+                    is_ok = self.connect_mk_instance(event.user.instance)
                     if is_ok:
                         self.mk.token = event.token  # type: ignore connect_mk_instanceがTrueでmkは必ず存在
                         self.nowuser = event.mistconfig_position
-                        if event.user_name == "Fail to get user info":
+                        if event.user.name is None:
                             # 名前がadd時に手に入ってなかったときに再取得する奴
                             try:
                                 username = self.mk.i()["name"]  # type: ignore 上と同様
@@ -147,15 +146,15 @@ class MkAPIs():
             Mi_enum.Permissions.WRITE_NOTIFICATIONS.value
         ])
 
-    def mistconfig_put(self, loadmode: bool = False) -> None:
-        """mistconfigの情報を保存させる"""
-        filepath = self._getpath("./mistconfig.conf")
-        if loadmode:
-            with open(filepath, "r") as f:
-                self.mistconfig = json.loads(f.read())
-        else:
-            with open(filepath, "w") as f:
-                f.write(json.dumps(self.mistconfig, indent=4))
+    def verify_token(self, instance: str, token: str) -> User | None:
+        """トークンが有効かどうかを確認するやつ"""
+        try:
+            mk = Misskey(instance, i=token)
+            user = mk.i()
+            user = cast(User, user)
+            return user
+        except MisskeyPyExceptions:
+            return None
 
     def mk_get_tl(
             self,
