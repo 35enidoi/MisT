@@ -6,7 +6,7 @@ from misskey import MiAuth
 from misskey.exceptions import MisskeyMiAuthFailedException
 
 from misskey_tui.model.model import Model
-from misskey_tui.enum import MisskeyPyExceptions
+from misskey_tui.enum.mkapis_exceptions import MisskeyPyExceptions
 from misskey_tui.util import web_show
 from misskey_tui.textenums import CM_T
 from misskey_tui.abstract import AbstractViewModel

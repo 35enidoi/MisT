@@ -7,14 +7,14 @@ import json
 
 from asciimatics.widgets.utilities import THEMES
 
-from misskey_tui.enum.mkapis_enum import MistConfig_Kata, MistConfig_Kata_Default, MistConfig_Kata_Token
+from misskey_tui.enum.mkapis_enum import MistConfig, MistConfigDefault, MistConfigToken
 from misskey_tui.enum.events import ConfigUserDelEventMessage, ConfigUserNoneChangeEventMessage, ConfigUserChangeEventMessage
 from misskey_tui.model.events import config_user_hundler
 from misskey_tui.util import get_path
 
 
-class MisTConfig:
-    __settings: MistConfig_Kata
+class Config:
+    __settings: MistConfig
     __valid_langs: tuple[str, ...]
     __current_user: int | None
     __config_file_path: str
@@ -57,21 +57,21 @@ class MisTConfig:
             return token_pos
 
     @property
-    def users(self) -> list[MistConfig_Kata_Token]:
+    def users(self) -> list[MistConfigToken]:
         return self.__settings.tokens.copy()
 
     @property
-    def current_user(self) -> MistConfig_Kata_Token | None:
+    def current_user(self) -> MistConfigToken | None:
         return copy(self.__settings.tokens[self.__current_user]) if self.__current_user is not None else None
 
     @property
     def theme(self) -> str:
         return self.__settings.default.theme
 
-    def __setting_init(self, version: float) -> MistConfig_Kata:
-        return MistConfig_Kata(
+    def __setting_init(self, version: float) -> MistConfig:
+        return MistConfig(
             version=version,
-            default=MistConfig_Kata_Default(
+            default=MistConfigDefault(
                 theme="default",
                 lang=None,
                 defaulttoken=None
@@ -87,7 +87,7 @@ class MisTConfig:
         token: str
             トークン"""
         self.__settings.tokens.append(
-            MistConfig_Kata_Token(
+            MistConfigToken(
                 name=name,
                 instance=instance,
                 token=token,
@@ -193,7 +193,7 @@ class MisTConfig:
             raise IndexError("Invalid position.")
         else:
             self.__current_user = user_pos
-            user = MistConfig_Kata_Token(
+            user = MistConfigToken(
                 name=self.__settings.tokens[user_pos].name,
                 reacdeck=self.__settings.tokens[user_pos].reacdeck,
                 instance=self.__settings.tokens[user_pos].instance,
@@ -209,7 +209,7 @@ class MisTConfig:
         self.__current_user = None
         config_user_hundler.fire(ConfigUserNoneChangeEventMessage())
 
-    def set_default_user(self, user: MistConfig_Kata_Token | None) -> None:
+    def set_default_user(self, user: MistConfigToken | None) -> None:
         if user is None:
             self.__settings.default.defaulttoken = None
         else:
@@ -230,7 +230,7 @@ class MisTConfig:
         else:
             raise ValueError(f"theme `{theme}` not in THEMES.")
 
-    def load_config(self) -> MistConfig_Kata:
+    def load_config(self) -> MistConfig:
         with open(self.__config_file_path, 'r') as f:
             return json.load(f)
 
@@ -276,12 +276,12 @@ class MisTConfig:
         # Pythonの組み込みグローバル領域に_という関数を束縛する
         translater.install()
 
-    def token_position_check(self, token: MistConfig_Kata_Token) -> int | None:
+    def token_position_check(self, token: MistConfigToken) -> int | None:
         """トークンの位置を調べる関数
 
         Parameters
         ----------
-        token: MistConfig_Kata_Token
+        token: MistConfigToken
             調べたいトークン
 
         Returns

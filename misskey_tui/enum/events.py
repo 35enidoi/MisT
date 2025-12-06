@@ -1,13 +1,13 @@
 from typing import Literal
 from dataclasses import dataclass
 
-from misskey_tui.enum.mkapis_enum import MistConfig_Kata_Token
+from misskey_tui.enum.mkapis_enum import MistConfigToken
 
 
 @dataclass
 class ConfigUserChangeEventMessage:
     mistconfig_position: int
-    user: MistConfig_Kata_Token
+    user: MistConfigToken
 
 
 @dataclass
@@ -18,7 +18,7 @@ class ConfigUserNoneChangeEventMessage:
 @dataclass
 class ConfigUserAddEventMessage:
     mistconfig_position: int
-    user: MistConfig_Kata_Token
+    user: MistConfigToken
 
 
 @dataclass

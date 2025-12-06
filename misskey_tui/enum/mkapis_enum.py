@@ -2,18 +2,18 @@ from typing import Union
 from dataclasses import dataclass
 
 
-__all__ = ["MistConfig_Kata_Default", "MistConfig_Kata_Token", "MistConfig_Kata"]
+__all__ = ["MistConfigDefault", "MistConfigToken", "MistConfig"]
 
 
 @dataclass
-class MistConfig_Kata_Default:
+class MistConfigDefault:
     theme: str
     lang: Union[str, None]
     defaulttoken: Union[int, None]
 
 
 @dataclass
-class MistConfig_Kata_Token:
+class MistConfigToken:
     name: str | None
     instance: str
     token: str
@@ -21,7 +21,7 @@ class MistConfig_Kata_Token:
 
 
 @dataclass
-class MistConfig_Kata:
+class MistConfig:
     version: float
-    default: MistConfig_Kata_Default
-    tokens: list[MistConfig_Kata_Token]
+    default: MistConfigDefault
+    tokens: list[MistConfigToken]

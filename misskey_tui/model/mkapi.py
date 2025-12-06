@@ -12,7 +12,7 @@ from misskey import (
 from misskey_tui.enum.mkapis_exceptions import MisskeyPyExceptions
 from misskey_tui.enum.events import ConfigUserEvent, ConfigUserChangeEventMessage, ConfigUserNoneChangeEventMessage
 from misskey_tui.enum.misskeypy_return import Note, User
-from misskey_tui.model.mistconfig import MisTConfig
+from misskey_tui.model.mistconfig import Config
 from misskey_tui.model.events import config_user_hundler
 
 
@@ -31,7 +31,7 @@ PROGRAM_NAME = "MisT"
 
 class MkAPIs():
     """MVVMモデルのMの部分"""
-    def __init__(self, config: MisTConfig) -> None:
+    def __init__(self, config: Config) -> None:
         # ConfigUserEventハンドラ登録
         config_user_hundler.add_handler(self.__config_user_hundler)
 

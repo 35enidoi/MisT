@@ -1,5 +1,5 @@
 from misskey_tui.model.mkapi import MkAPIs
-from misskey_tui.model.mistconfig import MisTConfig
+from misskey_tui.model.mistconfig import Config
 
 
 # version
@@ -9,5 +9,5 @@ VERSION = 0.42
 
 class Model:
     def __init__(self):
-        self.config = MisTConfig(VERSION)
+        self.config = Config(VERSION)
         self.mkapi = MkAPIs(self.config)
