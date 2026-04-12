@@ -1,5 +1,5 @@
 from misskey_tui.model.mkapi import MkAPIs
-from misskey_tui.model.mistconfig import Config
+from misskey_tui.model.config import Config
 
 
 # version
