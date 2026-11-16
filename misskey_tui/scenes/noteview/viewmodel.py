@@ -1,9 +1,16 @@
-from typing import Callable, Any, Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
+from misskey_tui.enum.timeline import Timeline
 from misskey_tui.model.model import Model
 from misskey_tui.textenums import NV_T
 from misskey_tui.abstract import AbstractViewModel
 from misskey_tui.enum.misskeypy_return import Note
+from misskey_tui.model.events import timeline_hundler, config_user_hundler
+from misskey_tui.enum.events import (
+    ConfigUserEvent, ConfigThemeChangeEventMessage,
+    TimelineRefreshSuccessEvent, TimelineIndexChangeEvent, TimelineErrorChangeEvent,
+    TimelineTLChangeEvent, TimelineClearEvent, TimelineEvent
+)
 from misskey_tui.util import nyaize
 
 if TYPE_CHECKING:
@@ -17,12 +24,10 @@ class NoteViewModel(AbstractViewModel):
         self.model = model
         # 変数作成
         self.txtbx_txt: str = NV_T.WELCOME_MESSAGE.value
-        self.notes: list[Note] = []
-        self.notes_point: int = 0
-        self.TL: Literal["HTL", "LTL", "STL", "GTL"] = "LTL"
         self.theme = self.model.config.theme
         # フック作成
         self.model.mkapi.add_on_change_instance(self._on_instance_change)
+        timeline_hundler.add_handler(self._on_timeline_event)
         # 型ヒント
         self.view: "NoteView"
 
@@ -31,6 +36,30 @@ class NoteViewModel(AbstractViewModel):
         self.notes_point = 0
         self.view.textbox.value = NV_T.NOTE_NONE.value
         self.update_nav_buttons()
+
+    def _on_timeline_event(self, event: TimelineEvent) -> None:
+        match event:
+            case TimelineRefreshSuccessEvent():
+                self.note_write()
+            case TimelineIndexChangeEvent():
+                self.note_write()
+            case TimelineTLChangeEvent():
+                self.note_write()
+            case TimelineClearEvent():
+                self.note_write()
+            case TimelineErrorChangeEvent():
+                message = "something was occured: " + event.reason
+                if event.detail is not None:
+                    message += f"\n(detail: {event.detail})"
+                self.view.popup(message, [NV_T.OK.value], lambda _: None)
+            case _:
+                print("Unknown timeline event:", event)  # debug
+                pass
+
+    def _on_config_event(self, event: ConfigUserEvent):
+        match event:
+            case ConfigThemeChangeEventMessage():
+                self.theme = event.theme
 
     def recreate_before(self, view_: "NoteView") -> None:
         self.view = view_
@@ -47,90 +76,69 @@ class NoteViewModel(AbstractViewModel):
         else:
             self.txtbx_txt = str(value)
 
-    def note_get_func(self) -> Callable[[Any], list[Note]]:
-        if self.TL == "HTL":
-            return self.model.mkapi.mk.notes_timeline  # type: ignore  list[Note]が返ってくる
-        elif self.TL == "LTL":
-            return self.model.mkapi.mk.notes_local_timeline  # type: ignore  同文
-        elif self.TL == "STL":
-            return self.model.mkapi.mk.notes_hybrid_timeline  # type: ignore  同文
-        elif self.TL == "GTL":
-            return self.model.mkapi.mk.notes_global_timeline  # type: ignore  同文
-        else:
-            raise ValueError(f"Unknown TL type: {self.TL}")
+    def button_tl_change(self) -> None:
+        def on_select(arg: int) -> None:
+            tl_types = [i for i in Timeline]
+            if 0 <= arg < len(tl_types):
+                self.model.timeline_service.set_tl(tl_types[arg])
+                self.model.timeline_service.refresh()
+            else:
+                # return
+                pass
+
+        self.view.popup("Select a timeline:", [i for i in Timeline] + ["return"], on_select)
 
     def note_get(self) -> None:
-        if self.model.mkapi.is_valid_misskeypy:
-            notes = self.model.mkapi.misskeypy_wrapper(self.note_get_func(), limit=10)
-            if notes is not None:
-                # get success
-                self.notes = notes
-                self.notes_point = 0  # 新規取得時は先頭にリセット
-                self.view.popup(NV_T.GET_NOTE_SUCCESS.value, [NV_T.OK.value])
-            else:
-                # get fail
-                additional_text = ""
-                if self.model.config.current_user is None:
-                    additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_1.value
-                    if self.TL in ("HTL", "STL"):
-                        additional_text = NV_T.GET_NOTE_FAIL_ADDITIONAL_2.value + f"; {self.TL}"
-                self.view.popup(NV_T.GET_NOTE_FAIL.value + "\n" + additional_text, [NV_T.OK.value])
-        else:
-            self.view.popup(NV_T.GET_NOTE_MISSKEYPY_INVALID.value, [NV_T.OK.value])
-
-        self.note_write()
+        self.model.timeline_service.refresh()
 
     def next_note(self) -> None:
-        """次のノートへ移動 (末尾を超えない)."""
-        if not self.notes:
-            return
+        """次のノートへ移動"""
+        try:
+            self.model.timeline_service.index += 1
+        except IndexError:
+            pass
 
-        if self.notes_point < len(self.notes) - 1:
-            self.notes_point += 1
-            self.note_write()
-        else:
-            # note_write内で呼ぶはずだったので呼ぶ
-            self.update_nav_buttons()
+        self.update_nav_buttons()
+        self.note_write()
 
     def prev_note(self) -> None:
-        """前のノートへ移動 (0未満にならない)."""
-        if not self.notes:
-            return
+        """前のノートへ移動"""
+        try:
+            self.model.timeline_service.index -= 1
+        except IndexError:
+            pass
 
-        if self.notes_point > 0:
-            self.notes_point -= 1
-            self.note_write()
-        else:
-            # next_noteの同節
-            self.update_nav_buttons()
+        self.update_nav_buttons()
+        self.note_write()
 
     def update_nav_buttons(self) -> None:
         """Prev/Nextボタンの有効無効を更新"""
-        if not self.notes:
+        if not self.model.timeline_service.notes:
             self.view.set_nav_enabled(False, False)
         else:
-            prev_en = self.notes_point > 0
-            next_en = self.notes_point < len(self.notes) - 1
+            prev_en = self.model.timeline_service.index > 0
+            next_en = self.model.timeline_service.index < len(self.model.timeline_service.notes) - 1
 
             self.view.set_nav_enabled(prev_en, next_en)
 
     def note_write(self) -> None:
         self.view.textbox.value = ""  # 初期化
 
-        if self.notes != []:
+        if self.model.timeline_service.notes:
             # ノートがある時
             return_strs = []
 
-            return_strs.append(f"<{self.notes_point + 1}/{len(self.notes)}>\n")
+            return_strs.append(f"<{self.model.timeline_service.index + 1}/{len(self.model.timeline_service.notes)}>\n")
 
-            return_strs.append(self._note_inp(self.notes[self.notes_point]))
-            if (renote := self.notes[self.notes_point].get("renote")):
+            return_strs.append(self._note_inp(self.model.timeline_service.notes[self.model.timeline_service.index]))
+            if (renote := self.model.timeline_service.notes[self.model.timeline_service.index].get("renote")):
                 return_strs.append(self._note_inp(renote))
 
             self.view.textbox.value = "\n".join(return_strs)
         else:
             # ノート無い時
             self.view.textbox.value = NV_T.NOTE_NONE.value
+
         self.update_nav_buttons()
 
     def _note_inp(self, note: Note) -> str:

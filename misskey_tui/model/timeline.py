@@ -1,25 +1,26 @@
-from typing import Literal
-
 from misskey_tui.enum.misskeypy_return import Note
 from misskey_tui.enum import events
+from misskey_tui.enum.timeline import Timeline
 from misskey_tui.model.mkapi import MkAPIs
 from misskey_tui.model.events import timeline_hundler
 
 
 class TimelineService:
     __mkapi: MkAPIs
-    __current_tl: Literal["HTL", "LTL", "STL", "GTL"]
+    __current_tl: Timeline
     __notes: list[Note]
     __index: int = 0
 
     def __init__(self, mkapi: MkAPIs) -> None:
         self.__mkapi = mkapi
-        self.__current_tl = "HTL"
+        self.__current_tl = Timeline.HOME
         self.__notes = []
         self.__index = 0
 
+        self.__mkapi.add_on_change_instance(self.clear)
+
     @property
-    def current_tl(self) -> Literal["HTL", "LTL", "STL", "GTL"]:
+    def current_tl(self) -> Timeline:
         return self.__current_tl
 
     @property
@@ -48,24 +49,28 @@ class TimelineService:
         else:
             try:
                 notes = self.__mkapi.mk_get_tl(self.__current_tl, limit=100)
-            except ValueError:
+            except ValueError as e:
                 timeline_hundler.fire(events.TimelineErrorChangeEvent(
                     action="error",
-                    reason="invalid_tl",
-                    detail=None
+                    reason=e.args[0] if e.args else "unknown",
+                    detail=e
                 ))
                 return False
 
             if notes is not None:
-                current_node_id = self.__notes[self.__index]["id"]
-                self.__notes = notes
+                if self.__notes:
+                    current_node_id = self.__notes[self.__index]["id"]
+                    self.__notes = notes
 
-                for index, note in enumerate(self.__notes):
-                    if note["id"] == current_node_id:
-                        self.__index = index
-                        break
+                    for index, note in enumerate(self.__notes):
+                        if note["id"] == current_node_id:
+                            self.__index = index
+                            break
+                    else:
+                        self.__index = len(self.__notes) - 1 if self.__notes else 0
                 else:
-                    self.__index = len(self.__notes) - 1 if self.__notes else 0
+                    self.__notes = notes
+                    self.__index = 0
 
                 timeline_hundler.fire(events.TimelineRefreshSuccessEvent(
                     action="refresh",
@@ -94,11 +99,11 @@ class TimelineService:
 
     def set_tl(
             self,
-            tl: Literal["HTL", "LTL", "STL", "GTL"]) -> None:
-        if tl not in ["HTL", "LTL", "STL", "GTL"]:
+            tl: Timeline) -> None:
+        if tl not in Timeline:
             raise ValueError("Invalid timeline type")
 
-        if tl in {"HTL", "STL"} and self.__mkapi.nowuser is None:
+        if tl in {Timeline.HOME, Timeline.HYBRID} and self.__mkapi.nowuser is None:
             timeline_hundler.fire(events.TimelineErrorChangeEvent(
                 action="error",
                 reason="token_missing",

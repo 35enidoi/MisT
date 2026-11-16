@@ -1,14 +1,19 @@
 from os import path
 from copy import copy
 from glob import glob
+from dataclasses import asdict
 from typing import Optional
 import gettext
 import json
+from json import JSONDecodeError
 
 from asciimatics.widgets.utilities import THEMES
 
 from misskey_tui.enum.mkapis_enum import MistConfig, MistConfigDefault, MistConfigToken
-from misskey_tui.enum.events import ConfigUserDelEventMessage, ConfigUserNoneChangeEventMessage, ConfigUserChangeEventMessage
+from misskey_tui.enum.events import (
+    ConfigUserDelEventMessage, ConfigUserNoneChangeEventMessage,
+    ConfigUserChangeEventMessage, ConfigThemeChangeEventMessage
+    )
 from misskey_tui.model.events import config_user_hundler
 from misskey_tui.util import get_path
 
@@ -25,13 +30,9 @@ class Config:
 
         # Configファイルの読み込み
         self.__config_file_path = get_path("./mistconfig.conf")
-        if path.exists(self.__config_file_path):
-            self.__settings = self.load_config()
-            if self.__settings.version < version:
-                self.__settings = self.__setting_init(version)
-                self.save_config()
-        else:
-            self.__settings = self.__setting_init(version)
+        self.__settings, should_save = self.__load_settings(version)
+        if should_save:
+            self.save_config()
 
         # MisTConfigから色々情報持ってくる
         self.__current_user = self.__settings.default.defaulttoken
@@ -230,13 +231,125 @@ class Config:
         else:
             raise ValueError(f"theme `{theme}` not in THEMES.")
 
+    def __load_settings(self, version: float) -> tuple[MistConfig, bool]:
+        if not path.exists(self.__config_file_path):
+            return self.__setting_init(version), True
+
+        try:
+            with open(self.__config_file_path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+        except (OSError, JSONDecodeError, TypeError):
+            return self.__setting_init(version), True
+
+        normalized, repaired = self.__normalize_loaded_config(loaded, version)
+        return normalized, repaired
+
+    def __normalize_loaded_config(self, loaded: object, version: float) -> tuple[MistConfig, bool]:
+        if not isinstance(loaded, dict):
+            return self.__setting_init(version), True
+
+        repaired = False
+        loaded_version = loaded.get("version")
+        if isinstance(loaded_version, (int, float)):
+            normalized_version = max(float(loaded_version), version)
+            repaired = repaired or normalized_version != loaded_version
+        else:
+            normalized_version = version
+            repaired = True
+
+        raw_default = loaded.get("default")
+        if not isinstance(raw_default, dict):
+            raw_default = {}
+            repaired = True
+
+        raw_tokens = loaded.get("tokens")
+        if not isinstance(raw_tokens, list):
+            raw_tokens = []
+            repaired = True
+
+        tokens: list[MistConfigToken] = []
+        for token in raw_tokens:
+            if not isinstance(token, dict):
+                repaired = True
+                continue
+
+            instance = token.get("instance")
+            token_value = token.get("token")
+            if not isinstance(instance, str) or instance == "":
+                repaired = True
+                continue
+            if not isinstance(token_value, str) or token_value == "":
+                repaired = True
+                continue
+
+            name = token.get("name")
+            if not isinstance(name, str) and name is not None:
+                name = None
+                repaired = True
+
+            raw_reacdeck = token.get("reacdeck")
+            if isinstance(raw_reacdeck, list):
+                reacdeck = [i for i in raw_reacdeck if isinstance(i, str)]
+                if len(reacdeck) != len(raw_reacdeck):
+                    repaired = True
+            else:
+                reacdeck = []
+                if raw_reacdeck is not None:
+                    repaired = True
+
+            tokens.append(
+                MistConfigToken(
+                    name=name,
+                    instance=instance,
+                    token=token_value,
+                    reacdeck=reacdeck
+                )
+            )
+
+        theme = raw_default.get("theme")
+        if not isinstance(theme, str) or theme not in THEMES:
+            theme = "default"
+            repaired = True
+
+        lang = raw_default.get("lang")
+        if lang == "":
+            lang = None
+            repaired = True
+        if not isinstance(lang, str) and lang is not None:
+            lang = None
+            repaired = True
+        if isinstance(lang, str) and lang not in self.__valid_langs:
+            lang = None
+            repaired = True
+
+        default_token = raw_default.get("defaulttoken")
+        if not isinstance(default_token, int):
+            default_token = None
+            repaired = True
+        elif default_token < 0 or default_token >= len(tokens):
+            default_token = None
+            repaired = True
+
+        return (
+            MistConfig(
+                version=normalized_version,
+                default=MistConfigDefault(
+                    theme=theme,
+                    lang=lang,
+                    defaulttoken=default_token
+                ),
+                tokens=tokens
+            ),
+            repaired
+        )
+
     def load_config(self) -> MistConfig:
-        with open(self.__config_file_path, 'r') as f:
-            return json.load(f)
+        settings, _ = self.__load_settings(self.__settings.version if hasattr(self, "_Config__settings") else 0.0)
+        return settings
 
     def save_config(self):
-        with open(self.__config_file_path, 'w') as f:
-            json.dump(self.__settings, f, indent=4)
+        with open(self.__config_file_path, "w", encoding="utf-8") as f:
+            json.dump(asdict(self.__settings), f, indent=4)
 
     def translation(self, lang: str | None) -> None:
         """文字の翻訳をする関数

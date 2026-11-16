@@ -1,7 +1,7 @@
 from typing import Callable, TypeVar, Generic
 from threading import RLock
 
-from misskey_tui.enum.events import ConfigUserEvent, TimelineChangeEvent
+from misskey_tui.enum.events import ConfigUserEvent, TimelineEvent
 
 
 T = TypeVar('T')
@@ -36,4 +36,4 @@ class _EventDispatcher(Generic[T]):
 
 
 config_user_hundler = _EventDispatcher[ConfigUserEvent]()
-timeline_hundler = _EventDispatcher[TimelineChangeEvent]()
+timeline_hundler = _EventDispatcher[TimelineEvent]()

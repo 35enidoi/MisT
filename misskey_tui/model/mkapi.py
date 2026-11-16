@@ -1,5 +1,5 @@
 from os import path as os_path
-from typing import Union, Callable, TypeVar, Any, Literal, cast
+from typing import Union, Callable, TypeVar, Any, cast
 
 from requests import exceptions as Req_exceptions
 from misskey import (
@@ -158,7 +158,7 @@ class MkAPIs():
 
     def mk_get_tl(
             self,
-            tl: Literal["HTL", "LTL", "STL", "GTL"],
+            tl: str,
             limit: int = 30,
             since_id: str | None = None,
             until_id: str | None = None) -> Union[list[Note], None]:
@@ -166,36 +166,39 @@ class MkAPIs():
         if self.mk is None:
             return None
 
-        if tl == "HTL":
-            return self.misskeypy_wrapper(
-                self.mk.notes_timeline,
-                limit=limit,
-                since_id=since_id,
-                until_id=until_id
-            )  # type: ignore
-        elif tl == "LTL":
-            return self.misskeypy_wrapper(
-                self.mk.notes_local_timeline,
-                limit=limit,
-                since_id=since_id,
-                until_id=until_id
-            )  # type: ignore
-        elif tl == "STL":
-            return self.misskeypy_wrapper(
-                self.mk.notes_hybrid_timeline,
-                limit=limit,
-                since_id=since_id,
-                until_id=until_id
-            )  # type: ignore
-        elif tl == "GTL":
-            return self.misskeypy_wrapper(
-                self.mk.notes_global_timeline,
-                limit=limit,
-                since_id=since_id,
-                until_id=until_id
-            )  # type: ignore
-        else:
-            raise ValueError(f"Unknown TL type: {tl}")
+        try:
+            if tl == "HTL":
+                return self.misskeypy_wrapper(
+                    self.mk.notes_timeline,
+                    limit=limit,
+                    since_id=since_id,
+                    until_id=until_id
+                )  # type: ignore
+            elif tl == "LTL":
+                return self.misskeypy_wrapper(
+                    self.mk.notes_local_timeline,
+                    limit=limit,
+                    since_id=since_id,
+                    until_id=until_id
+                )  # type: ignore
+            elif tl == "STL":
+                return self.misskeypy_wrapper(
+                    self.mk.notes_hybrid_timeline,
+                    limit=limit,
+                    since_id=since_id,
+                    until_id=until_id
+                )  # type: ignore
+            elif tl == "GTL":
+                return self.misskeypy_wrapper(
+                    self.mk.notes_global_timeline,
+                    limit=limit,
+                    since_id=since_id,
+                    until_id=until_id
+                )  # type: ignore
+            else:
+                raise ValueError(f"Unknown TL type: {tl}")
+        except Mi_exceptions.MisskeyAPIException as e:
+            raise ValueError(e.message)
 
     @staticmethod
     def misskeypy_wrapper(msk_func: Callable[..., T], *args: Any, **kwargs: Any) -> Union[T, None]:
