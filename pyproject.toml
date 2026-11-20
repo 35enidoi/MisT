@@ -1,0 +1,20 @@
+[project]
+name = "mist"
+version = "0.43.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "いおぢね", email = "143810964+35enidoi@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "asciimatics>=1.15.0",
+    "misskey-py>=4.1.0",
+]
+
+[project.scripts]
+mist = "mist.main:main"
+
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14.0"]
+build-backend = "uv_build"
